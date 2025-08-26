@@ -1,0 +1,82 @@
+flowchart TD
+    A[ランディングページ] --> B[基本情報入力開始]
+    B --> C{入力形式選択}
+    
+    C --> D[名前入力]
+    D --> E[生年月日入力]
+    E --> F[算命学・動物占い<br/>自動算出処理]
+    F --> G[MBTI入力<br/>不明の場合は簡易診断]
+    G --> H[体癖理解促進ページ]
+    H --> I[体癖診断システム<br/>リンク誘導]
+    I --> J[体癖理論解説<br/>リンク誘導]
+    J --> K[体癖番号入力<br/>不明の場合はスキップ]
+    K --> L[基本情報確認画面]
+    
+    
+    L --> M{基本情報OK?}
+    M -->|No| D
+    M -->|Yes| N[AIチャット開始]
+    
+    N --> O[導入メッセージ表示]
+    O --> P[相談目的選択]
+    P --> Q{悩み相談 or 性格診断のみ?}
+    
+    Q -->|悩み相談| R[現在の悩み・関心事<br/>ヒアリング開始]
+    Q -->|性格診断のみ| S[性格・価値観<br/>深掘り質問開始]
+    
+    R --> T[Claude API<br/>悩み関連質問生成]
+    S --> U[Claude API<br/>性格分析質問生成]
+    
+    T --> V[ユーザー回答入力]
+    U --> V
+    V --> W[回答内容分析]
+    W --> X{深掘り必要?}
+    
+    X -->|Yes| Y[追加質問生成]
+    Y --> V
+    X -->|No| Z[次のテーマへ]
+    
+    Z --> AA{全テーマ完了?}
+    AA -->|No| R
+    AA -->|Yes| BB[データ収集完了]
+    
+    BB --> CC[.mdドキュメント生成]
+    CC --> DD[ダウンロード・共有オプション]
+    DD --> EE[完了画面]
+    
+    %% 管理者フロー（別システム）
+    CC --> FF[管理者：mdファイル取得]
+    FF --> GG[AI占い師プロジェクト<br/>に投入]
+    GG --> HH[本格診断結果生成]
+    
+    %% サブプロセス
+    F --> F1[CSVルックアップ<br/>動物占い特定]
+    F --> F2[Pythonスクリプト実行<br/>算命学計算]
+    
+    G --> G1[MBTI簡易診断<br/>12問程度]
+    
+    I --> I1[体癖診断システムページ<br/>（20問診断）]
+    J --> J1[体癖理論解説サイト<br/>（基本知識学習）]
+    
+    T --> T1[体癖論参照]
+    T --> T2[動物占い特性参照]
+    T --> T3[悩み解決質問パターン]
+    
+    U --> U1[体癖論参照]
+    U --> U2[動物占い特性参照]  
+    U --> U3[性格分析質問パターン]
+    
+    %% スタイリング
+    classDef userAction fill:#e1f5fe
+    classDef systemProcess fill:#f3e5f5
+    classDef decision fill:#fff3e0
+    classDef output fill:#e8f5e8
+    classDef external fill:#ffebee
+    classDef guidance fill:#e8f5e8
+    
+    class A,B,D,E,G,H,K,L,P,V,DD userAction
+    class F,O,T,U,W,Y,Z,CC systemProcess
+    class C,M,Q,X,AA decision
+    class BB,EE,HH output
+    class FF,GG external
+    class I,J guidance

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体癖論入門 - 人間理解の新しい視点</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #4c63d2 0%, #5a4fcf 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ヘッダー */
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* ヒーローセクション */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255,255,255,0.6)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/></radialGradient><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(128,222,234,0.5)"/><stop offset="100%" stop-color="rgba(128,222,234,0.05)"/></radialGradient><radialGradient id="g3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255,138,128,0.4)"/><stop offset="100%" stop-color="rgba(255,138,128,0.02)"/></radialGradient></defs><g><circle cx="15" cy="25" r="1.5" fill="url(%23g1)"><animate attributeName="cx" values="15;85;15" dur="8s" repeatCount="indefinite"/><animate attributeName="cy" values="25;75;25" dur="6s" repeatCount="indefinite"/><animate attributeName="r" values="1.5;3;1.5" dur="4s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0 50 50;360 50 50" dur="12s" repeatCount="indefinite"/></circle></g><g><circle cx="75" cy="15" r="2" fill="url(%23g2)"><animate attributeName="cx" values="75;25;75" dur="10s" repeatCount="indefinite"/><animate attributeName="cy" values="15;85;15" dur="7s" repeatCount="indefinite" begin="1s"/><animate attributeName="r" values="2;4.5;2" dur="5s" repeatCount="indefinite" begin="0.5s"/><animateTransform attributeName="transform" type="rotate" values="360 50 50;0 50 50" dur="15s" repeatCount="indefinite"/></circle></g><g><circle cx="50" cy="50" r="1" fill="url(%23g3)"><animate attributeName="cx" values="50;20;80;50" dur="12s" repeatCount="indefinite" begin="2s"/><animate attributeName="cy" values="50;80;20;50" dur="9s" repeatCount="indefinite"/><animate attributeName="r" values="1;5;1" dur="6s" repeatCount="indefinite" begin="1.5s"/><animateTransform attributeName="transform" type="scale" values="1;2;1" dur="8s" repeatCount="indefinite"/></circle></g><g><circle cx="30" cy="70" r="1.2" fill="url(%23g1)"><animate attributeName="cx" values="30;70;30" dur="11s" repeatCount="indefinite" begin="3s"/><animate attributeName="cy" values="70;30;70" dur="8s" repeatCount="indefinite" begin="1s"/><animate attributeName="r" values="1.2;3.5;1.2" dur="7s" repeatCount="indefinite" begin="2s"/><animateTransform attributeName="transform" type="rotate" values="0 50 50;-360 50 50" dur="18s" repeatCount="indefinite"/></circle></g><g><circle cx="85" cy="65" r="0.8" fill="url(%23g2)"><animate attributeName="cx" values="85;15;85" dur="13s" repeatCount="indefinite" begin="4s"/><animate attributeName="cy" values="65;35;65" dur="9s" repeatCount="indefinite" begin="2s"/><animate attributeName="r" values="0.8;2.8;0.8" dur="5.5s" repeatCount="indefinite" begin="3s"/><animateTransform attributeName="transform" type="scale" values="1;1.5;1" dur="10s" repeatCount="indefinite" begin="1s"/></circle></g><g><circle cx="10" cy="80" r="1.8" fill="url(%23g3)"><animate attributeName="cx" values="10;90;10" dur="16s" repeatCount="indefinite" begin="5s"/><animate attributeName="cy" values="80;20;80" dur="12s" repeatCount="indefinite" begin="3s"/><animate attributeName="r" values="1.8;4;1.8" dur="8s" repeatCount="indefinite" begin="2.5s"/><animateTransform attributeName="transform" type="rotate" values="0 50 50;720 50 50" dur="20s" repeatCount="indefinite"/></circle></g><g><circle cx="65" cy="85" r="1.3" fill="url(%23g1)"><animate attributeName="cx" values="65;35;65" dur="14s" repeatCount="indefinite" begin="6s"/><animate attributeName="cy" values="85;15;85" dur="10s" repeatCount="indefinite" begin="4s"/><animate attributeName="r" values="1.3;3.2;1.3" dur="6.5s" repeatCount="indefinite" begin="3.5s"/><animateTransform attributeName="transform" type="scale" values="1;2.5;1" dur="12s" repeatCount="indefinite" begin="2s"/></circle></g><g><circle cx="40" cy="10" r="0.9" fill="url(%23g2)"><animate attributeName="cx" values="40;60;40" dur="9s" repeatCount="indefinite" begin="7s"/><animate attributeName="cy" values="10;90;10" dur="15s" repeatCount="indefinite" begin="5s"/><animate attributeName="r" values="0.9;2.5;0.9" dur="7.5s" repeatCount="indefinite" begin="4s"/><animateTransform attributeName="transform" type="rotate" values="360 50 50;0 50 50" dur="25s" repeatCount="indefinite"/></circle></g></svg>') repeat;
+            opacity: 0.7;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff8a80, #80deea, #64b5f6, #aed581);
+            background-size: 300% 300%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 4s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            color: #f8fafc;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* セクション共通 */
+        section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .section-white {
+            background: white;
+        }
+
+        .section-gradient {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        /* 基本理論セクション */
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .theory-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .theory-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .theory-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .theory-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 体癖タイプセクション */
+        .types-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .type-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .type-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--type-color);
+        }
+
+        .type-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .type-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--type-color);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            line-height: 40px;
+            margin-bottom: 1rem;
+        }
+
+        .type-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .type-subtitle {
+            color: #666;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .type-features {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .type-features li {
+            padding: 0.5rem 0;
+            color: #555;
+            position: relative;
+            padding-left: 1.5rem;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .type-features li strong {
+            color: var(--type-color);
+            font-weight: 600;
+        }
+
+        .type-features li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: var(--type-color);
+            font-size: 0.8rem;
+        }
+
+        /* 各タイプのカラー定義 */
+        .type-1 { --type-color: #3b82f6; }
+        .type-2 { --type-color: #8b5cf6; }
+        .type-3 { --type-color: #ec4899; }
+        .type-4 { --type-color: #f97316; }
+        .type-5 { --type-color: #ef4444; }
+        .type-6 { --type-color: #06b6d4; }
+        .type-7 { --type-color: #dc2626; }
+        .type-8 { --type-color: #92400e; }
+        .type-9 { --type-color: #eab308; }
+        .type-10 { --type-color: #22c55e; }
+
+        /* フッター */
+        footer {
+            background: #1a202c;
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .types-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* スムーズスクロール */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ローディングアニメーション */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4c63d2 0%, #5a4fcf 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- ヘッダー -->
+    <header>
+        <nav>
+            <a href="#" class="logo">体癖論入門</a>
+            <ul class="nav-links">
+                <li><a href="#theory">基本理論</a></li>
+                <li><a href="#types">10種の体癖</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- ヒーローセクション -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>体癖論</h1>
+            <p>野口整体が解き明かした、身体と心の深い関係性を理解する</p>
+        </div>
+    </section>
+
+    <!-- 基本理論セクション -->
+    <section id="theory" class="section-white">
+        <div class="container">
+            <h2 class="section-title">体癖論とは</h2>
+            <p style="text-align: center; max-width: 900px; margin: 0 auto 3rem; color: #666; font-size: 1.1rem; line-height: 1.8;">
+                野口整体の創始者・野口晴哉が昭和20年代から30年かけて開発した、人間の体型と心理的傾向の関係を体系化した理論です。
+                30年間で10万人以上の臨床観察から生まれたこのシステムは、生まれながらの身体構造と感受性パターンの関連性を実証的に示しています。
+                体癖は「体の癖」を意味し、個人の本質的な特性として生涯にわたって影響を与える重要な要素です。
+            </p>
+            <div class="theory-grid">
+                <div class="theory-card">
+                    <h3>🧠 腰椎との対応関係</h3>
+                    <p>5つの腰椎（L1-L5）とそれぞれに対応する感受性の関係に基づき、身体構造と心理パターンの関連性を分析します。各腰椎は特定の器官系と連動し、1-2種（脳系）、3-4種（消化器系）、5-6種（呼吸器系）、7-8種（泌尿器系）、9-10種（生殖器系）に対応しています。</p>
+                </div>
+                <div class="theory-card">
+                    <h3>🎯 運動方向による分類</h3>
+                    <p>5つの基本的な運動方向（上下・左右・前後・捻れ・開閉）に基づいて人間を分類します。各方向には能動的な奇数型と受動的な偶数型があり、合計10種類の基本パターンを形成。この分類により、個人の自然な動きや反応パターンを理解できます。</p>
+                </div>
+                <div class="theory-card">
+                    <h3>🌈 奇数型・偶数型の特性</h3>
+                    <p>奇数型（1,3,5,7,9種）は能動的でエネルギーを外に向ける傾向があり、偶数型（2,4,6,8,10種）は受動的でエネルギーを内に向ける特性があります。この基本的な違いが、各タイプの行動パターンや感受性の方向性を決定する重要な要素となります。</p>
+                </div>
+                <div class="theory-card">
+                    <h3>🔍 観察可能な特徴</h3>
+                    <p>体癖は首の形状、体型の特徴、姿勢、動作パターンなど、外見から判別可能な身体的特徴によって識別できます。これにより主観的な心理分析に頼ることなく、客観的な観察に基づいた人間理解が可能となり、日常生活での実践的な応用が実現します。</p>
+                </div>
+                <div class="theory-card">
+                    <h3>🎭 複合体癖の理解</h3>
+                    <p>多くの人は単一の体癖ではなく、2-3種類の体癖を組み合わせて持っています。顔と体で異なる体癖を示すことも多く、主要な体癖を軸としながら副次的な特徴も考慮することで、より正確で深い人間理解を達成できます。</p>
+                </div>
+                <div class="theory-card">
+                    <h3>💡 実生活への応用</h3>
+                    <p>体癖理論は人間関係の改善、教育・指導方法の最適化、健康管理、自己理解の深化など、日常生活の様々な場面で活用できます。相手の体癖を理解することで、より効果的なコミュニケーションが可能となり、互いの特性を活かした関係性を築くことができます。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10種の体癖セクション -->
+    <section id="types" class="section-gradient">
+        <div class="container">
+            <h2 class="section-title">10種の体癖</h2>
+            <div class="types-container">
+                <div class="type-card type-1">
+                    <div class="type-number">1</div>
+                    <div class="type-title">頭脳明晰な理論家</div>
+                    <div class="type-subtitle">上下型・能動（L1対応・脳系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>首が太くまっすぐ上に伸びる（樹の幹のような首）</li>
+                        <li><strong>体型：</strong>細身で筋肉質、顔が縦に長く額が発達</li>
+                        <li><strong>思考：</strong>論理的思考を重視し「なぜ」を追求する</li>
+                        <li><strong>感受性：</strong>正邪・善悪の判断に敏感</li>
+                        <li><strong>行動：</strong>原則論を重んじ、筋道立てて説明する</li>
+                        <li><strong>見分け方：</strong>考え事をするとき自然に上を向く</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-2">
+                    <div class="type-number">2</div>
+                    <div class="type-title">敏感な受信者</div>
+                    <div class="type-subtitle">上下型・受動（L1対応・脳系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>首が細く前に突き出る（シャワーヘッドのような首）</li>
+                        <li><strong>体型：</strong>後頭部が平坦、頬骨が目立つ、全体的に華奢</li>
+                        <li><strong>思考：</strong>イメージで考え、言語化が苦手</li>
+                        <li><strong>感受性：</strong>他人の意見や情報を敏感に受信</li>
+                        <li><strong>行動：</strong>許可を求める傾向、家族への強い愛着</li>
+                        <li><strong>見分け方：</strong>考え事をするとき自然に下を向く</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-3">
+                    <div class="type-number">3</div>
+                    <div class="type-title">社交的な楽天家</div>
+                    <div class="type-subtitle">左右型・能動（L2対応・消化器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>丸みを帯びた柔らかな体型、肩が下がる</li>
+                        <li><strong>体型：</strong>カーブを描く体のライン、筋肉がつきにくい</li>
+                        <li><strong>思考：</strong>好き嫌いで判断、感情の論理を重視</li>
+                        <li><strong>感受性：</strong>好悪の感情に敏感、食べ物への関心が高い</li>
+                        <li><strong>行動：</strong>感情表現が豊か、人懐っこく社交的</li>
+                        <li><strong>見分け方：</strong>自然に右足に重心をかけて立つ</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-4">
+                    <div class="type-number">4</div>
+                    <div class="type-title">感情豊かな芸術家</div>
+                    <div class="type-subtitle">左右型・受動（L2対応・消化器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>角ばった肩で四角い印象、頬骨が高い</li>
+                        <li><strong>体型：</strong>痩せ型で胸が薄く、体重が増えにくい</li>
+                        <li><strong>思考：</strong>感情的な判断、内面の複雑さ</li>
+                        <li><strong>感受性：</strong>感情の変化が激しく、美的感覚に優れる</li>
+                        <li><strong>行動：</strong>批判で気分転換、自分の感情が不明確</li>
+                        <li><strong>見分け方：</strong>自然に左足に重心をかけて立つ</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-5">
+                    <div class="type-number">5</div>
+                    <div class="type-title">行動的な実業家</div>
+                    <div class="type-subtitle">前後型・能動（L3対応・呼吸器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>逆三角形の体型、肩幅が広く前傾姿勢</li>
+                        <li><strong>体型：</strong>胸筋が発達、運動神経が良い、モデル体型</li>
+                        <li><strong>思考：</strong>損得勘定で判断、合理的な計算</li>
+                        <li><strong>感受性：</strong>利益・効率に敏感、実用性を重視</li>
+                        <li><strong>行動：</strong>行動派でリーダーシップを発揮、常に動く</li>
+                        <li><strong>見分け方：</strong>胸を張って肘を後ろに引く姿勢</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-6">
+                    <div class="type-number">6</div>
+                    <div class="type-title">ロマンチックな夢想家</div>
+                    <div class="type-subtitle">前後型・受動（L3対応・呼吸器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>猫背で背中が丸い、顎が尖り華奢</li>
+                        <li><strong>体型：</strong>呼吸が浅く体力に不安、上品な雰囲気</li>
+                        <li><strong>思考：</strong>損得は考えるが夢想的、想像力豊か</li>
+                        <li><strong>感受性：</strong>非日常への憧れ、ロマンへの志向</li>
+                        <li><strong>行動：</strong>鬱的になりやすく、他人の支援が必要</li>
+                        <li><strong>見分け方：</strong>骨盤を後ろに引いた猫背の姿勢</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-7">
+                    <div class="type-number">7</div>
+                    <div class="type-title">闘争心旺盛な戦士</div>
+                    <div class="type-subtitle">捻れ型・能動（L4対応・泌尿器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>がっしりした上半身、ファイター体型</li>
+                        <li><strong>体型：</strong>太い腕と発達した背筋、力強い印象</li>
+                        <li><strong>思考：</strong>勝敗の論理、具体的経験を重視</li>
+                        <li><strong>感受性：</strong>勝ち負けに敏感、上下関係を意識</li>
+                        <li><strong>行動：</strong>負けを認めず謝ることが苦手、競争を好む</li>
+                        <li><strong>見分け方：</strong>机に対して斜めに座る、字を書くとき体を傾ける</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-8">
+                    <div class="type-number">8</div>
+                    <div class="type-title">忍耐強い支援者</div>
+                    <div class="type-subtitle">捻れ型・受動（L4対応・泌尿器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>腰幅が肩幅より広い、胴体が太い</li>
+                        <li><strong>体型：</strong>下半身がしっかり、安定感のある体型</li>
+                        <li><strong>思考：</strong>歴史的比較を好む、長期的視点</li>
+                        <li><strong>感受性：</strong>正義感が強く、弱者への共感</li>
+                        <li><strong>行動：</strong>縁の下の力持ち、我慢強く支援的</li>
+                        <li><strong>見分け方：</strong>下半身の捻りで力を発揮、謙遜する話し方</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-9">
+                    <div class="type-number">9</div>
+                    <div class="type-title">完璧主義の専門家</div>
+                    <div class="type-subtitle">開閉型・能動（L5対応・生殖器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>骨盤が非常に狭く、お尻が突き出る</li>
+                        <li><strong>体型：</strong>小柄だが筋肉密度が高い、顔の中心に特徴</li>
+                        <li><strong>思考：</strong>完璧主義で白黒つける、極端な論理</li>
+                        <li><strong>感受性：</strong>愛憎に敏感、中途半端を嫌う</li>
+                        <li><strong>行動：</strong>集中力が極めて高く、恨みを忘れない</li>
+                        <li><strong>見分け方：</strong>膝をつけてかかとを地面につけてしゃがめる</li>
+                    </ul>
+                </div>
+
+                <div class="type-card type-10">
+                    <div class="type-number">10</div>
+                    <div class="type-title">包容力のある母性型</div>
+                    <div class="type-subtitle">開閉型・受動（L5対応・生殖器系）</div>
+                    <ul class="type-features">
+                        <li><strong>身体特徴：</strong>骨盤が広く、お尻が横に平たく広がる</li>
+                        <li><strong>体型：</strong>全体的に大きく、どっしりとした安定感</li>
+                        <li><strong>思考：</strong>包容的で寛容、全体を受け入れる</li>
+                        <li><strong>感受性：</strong>愛情に敏感、母性・父性的反応</li>
+                        <li><strong>行動：</strong>人の世話で元気になる、極めて忘れっぽい</li>
+                        <li><strong>見分け方：</strong>しゃがもうとするとかかとが上がり後ろに倒れそうになる</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 体癖論入門サイト. 野口整体の智慧を現代に活かす</p>
+            <p style="margin-top: 1rem; opacity: 0.7;">
+                ※ 正確な体癖判定には身体的特徴と行動パターンの総合的な観察、および専門家の指導が必要です。
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // ローディング画面
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hide');
+            }, 1500);
+        });
+
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ヘッダーのスクロール効果
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.color = '#333';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.1)';
+                header.style.color = 'white';
+            }
+        });
+
+        // アニメーション効果
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // 要素にアニメーション効果を適用
+        document.querySelectorAll('.theory-card, .type-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
