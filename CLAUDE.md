@@ -1,3 +1,5 @@
+# COCOSiL プロジェクト運用ガイド
+
 ## 【MUST GLOBAL】Gemini・o3活用（プロジェクトのCLAUDE.mdより優先）
 
 - **ユーザーの要求を受けたら即座にGeminiとo3に壁打ち**を必ず実施
@@ -38,6 +40,287 @@
 6. **コードレビュー**: 品質・保守性・パフォーマンスの評価（例: `このコードの改善点は？`）
 7. **計画立案**: タスクの実行計画レビュー・改善提案（例: `この実装計画の問題点は？`）
 8. **技術選定**: ライブラリ・手法の比較検討 （例: `このライブラリは他と比べてどうか？`）
+
+---
+
+## COCOSiL 専用 Claude AI 運用ルール
+
+### システム設計・実装時のガイドライン
+
+#### 1. 診断システム特有の注意点
+- **個人情報保護の徹底**: 診断データの取り扱いは個人情報保護法に準拠
+- **医療診断ではない旨の明示**: 結果は参考情報である旨を必ず表示
+- **統計的妥当性の確保**: 診断ロジックには統計学的根拠を要求
+- **バイアス回避**: 文化的・社会的バイアスを含まない中立的な設計
+
+#### 2. 体癖理論の取り扱い
+- **専門知識の正確性**: 野口整体の体癖理論に忠実な実装
+- **10種体癖の特徴**: 各体癖の特徴は学術的文献に基づく記述
+- **主体癖・副体癖**: 組み合わせによる複合的解釈の実装
+- **教育的配慮**: 体癖理論を学習コンテンツとして適切に構成
+
+#### 3. MBTI統合の注意点
+- **公式準拠**: Myers-Briggs Type Indicatorの公式理論に基づく
+- **16タイプ分類**: 4軸（E/I, S/N, T/F, J/P）の正確な判定
+- **簡易診断の限界**: 12問診断の制約と精度について明示
+- **既知情報の活用**: ユーザーが既に知っているMBTI情報の有効活用
+
+#### 4. 技術実装のベストプラクティス
+
+**Next.js 14 App Router**
+- **サーバーコンポーネント優先**: 'use client'の使用を最小限に
+- **Suspense境界**: 非同期処理の適切なローディング状態管理
+- **Dynamic Import**: 大きなコンポーネントの遅延ローディング
+- **Image最適化**: Next.js Imageコンポーネントでの画像最適化
+
+**Zustand状態管理**
+```typescript
+// 診断データストアの基本構造
+interface DiagnosisStore {
+  basicInfo: BasicInfo | null;
+  mbti: MBTIResult | null;
+  taiheki: TaihekiResult | null;
+  fortune: FortuneResult | null;
+  progress: ProgressState;
+  // アクション
+  setBasicInfo: (info: BasicInfo) => void;
+  setMBTI: (result: MBTIResult) => void;
+  clearAll: () => void;
+}
+```
+
+**OpenAI API 統合**
+```typescript
+// システムプロンプトテンプレート
+const SYSTEM_PROMPT = `
+あなたはCOCOSiL診断システムのAI相談員です。
+以下の診断結果を持つ方の相談に乗ってください：
+
+## 診断データ
+- 年齢: {{age}}歳
+- MBTI: {{mbti}}
+- 体癖: 主体癖{{primary}}種・副体癖{{secondary}}種
+- 算命学: {{fortune}}
+
+## 相談方針
+1. 診断結果を統合した個別化アドバイス
+2. 実用的で具体的な改善提案
+3. ユーザーの自律性を重視
+4. 医療的判断は一切行わない
+`;
+```
+
+### データ保護・プライバシー管理
+
+#### 1. クライアントサイドデータ管理
+```typescript
+// localStorageデータの暗号化
+import CryptoJS from 'crypto-js';
+
+const encryptData = (data: any, key: string) => {
+  return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+};
+
+const decryptData = (encryptedData: string, key: string) => {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+};
+```
+
+#### 2. 自動削除機能
+```typescript
+// 30日後の自動削除設定
+const setDataWithExpiry = (key: string, value: any, ttl: number) => {
+  const now = new Date();
+  const item = {
+    value: value,
+    expiry: now.getTime() + ttl,
+  };
+  localStorage.setItem(key, JSON.stringify(item));
+};
+```
+
+#### 3. 管理者向けデータ匿名化
+```typescript
+interface AnonymizedRecord {
+  id: string;        // ハッシュ化ID
+  age: number;       // 年齢のみ
+  mbti: string;      // MBTI結果
+  taiheki: {         // 体癖結果
+    primary: number;
+    secondary: number;
+  };
+  timestamp: Date;   // 診断実施日時
+  // 個人識別情報は含まない
+}
+```
+
+### エラーハンドリング・フォールバック
+
+#### 1. API障害時の対応
+```typescript
+// リトライ機構付きAPI呼び出し
+const callAPIWithRetry = async (url: string, data: any, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+};
+```
+
+#### 2. オフライン対応
+```typescript
+// ネットワーク状態の監視
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
+  return isOnline;
+};
+```
+
+### テスト・品質管理
+
+#### 1. 診断ロジックのテスト
+```typescript
+// 体癖算出ロジックのテスト例
+describe('体癖算出ロジック', () => {
+  test('極端な1種選択で主体癖1種が算出される', () => {
+    const answers = Array(20).fill(1); // すべて1種選択
+    const result = calculateTaiheki(answers);
+    expect(result.primary).toBe(1);
+  });
+  
+  test('バランス型回答で妥当な組み合わせが算出される', () => {
+    const balancedAnswers = [1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4];
+    const result = calculateTaiheki(balancedAnswers);
+    expect(result.primary).toBeGreaterThan(0);
+    expect(result.primary).toBeLessThanOrEqual(10);
+    expect(result.secondary).not.toBe(result.primary);
+  });
+});
+```
+
+#### 2. アクセシビリティテスト
+```typescript
+// アクセシビリティのテスト
+import { axe, toHaveNoViolations } from 'jest-axe';
+
+test('診断フォームがWCAG基準を満たす', async () => {
+  expect.extend(toHaveNoViolations);
+  
+  const { container } = render(<DiagnosisForm />);
+  const results = await axe(container);
+  
+  expect(results).toHaveNoViolations();
+});
+```
+
+### パフォーマンス最適化
+
+#### 1. Code Splitting
+```typescript
+// ルート別のコード分割
+const TaihekiDiagnosis = dynamic(() => import('./taiheki-diagnosis'), {
+  loading: () => <DiagnosisLoader />,
+  ssr: false
+});
+
+const AdminDashboard = dynamic(() => import('./admin'), {
+  loading: () => <AdminLoader />,
+  ssr: false
+});
+```
+
+#### 2. 画像最適化
+```typescript
+// 結果画像生成の最適化
+const generateResultImage = async (result: TaihekiResult): Promise<Blob> => {
+  const canvas = new OffscreenCanvas(1200, 630);
+  const ctx = canvas.getContext('2d');
+  
+  // WebPフォーマットでの出力
+  return canvas.convertToBlob({ 
+    type: 'image/webp',
+    quality: 0.8
+  });
+};
+```
+
+### 運用・モニタリング
+
+#### 1. エラートラッキング
+```typescript
+// エラーの自動報告
+const logError = (error: Error, context: any) => {
+  console.error('COCOSiL Error:', {
+    message: error.message,
+    stack: error.stack,
+    context,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+  });
+  
+  // 本番環境では外部サービスに送信
+  if (process.env.NODE_ENV === 'production') {
+    sendToErrorService({ error, context });
+  }
+};
+```
+
+#### 2. パフォーマンス測定
+```typescript
+// Web Vitalsの測定
+import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+
+const reportWebVitals = (metric: any) => {
+  console.log('Web Vital:', metric);
+  
+  // パフォーマンスデータの送信
+  if (process.env.NODE_ENV === 'production') {
+    sendToAnalytics(metric);
+  }
+};
+
+getCLS(reportWebVitals);
+getFID(reportWebVitals);
+getFCP(reportWebVitals);
+getLCP(reportWebVitals);
+getTTFB(reportWebVitals);
+```
+
+## COCOSiL プロジェクト現在のステータス
+
+**プロジェクトフェーズ**: 要件定義・設計完了 (実装開始前)
+**最新ドキュメント**: docs/output/ に最新の要件定義書を配置済み
+- システム要件定義書 (system_requirements.md)
+- 詳細要件定義書 (detailed_requirements.md)  
+- UI/UX要件定義書 (ココシル_uiux要件定義_v_1.md)
+
+**技術スタック確定**: Next.js 14 + TypeScript + ドメイン駆動設計
+**次のステップ**: ファイル構造設計 → 実装開始
+
+---
 
 あなたは高度な問題解決能力を持つAIアシスタントです。以下の指示に従って、効率的かつ正確にタスクを遂行してください。
 
