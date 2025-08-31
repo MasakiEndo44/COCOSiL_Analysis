@@ -4,99 +4,115 @@
 
 @layer base {
   :root {
-    /* COCOSiL Design System - Colors */
-    --color-brand-primary: #3B82F6;
-    --color-brand-secondary: #8B5CF6;
-    --color-success: #10B981;
-    --color-warning: #F59E0B;
-    --color-error: #EF4444;
-    --color-info: #3B82F6;
+    /* COCOSiL Design System - Colors (proper format for Tailwind) */
+    --brand-500: 122 197 229; /* #7AC5E5 */
+    --brand-700: 74 159 208;  /* #4A9FD0 */
+    --accent-500: 192 98 245; /* #C062F5 */
+    --accent-600: 165 78 230; /* #A54EE6 */
     
-    /* Light Theme */
-    --color-background: #FFFFFF;
-    --color-surface: #F8FAFC;
-    --color-surface-elevated: #FFFFFF;
-    --color-border: #E2E8F0;
-    --color-border-focus: #3B82F6;
+    /* Background colors */
+    --background: 255 255 255;     /* #FFFFFF */
+    --surface: 247 248 250;        /* #F7F8FA */
+    --border: 229 231 235;         /* #E5E7EB */
     
-    --color-text-primary: #1E293B;
-    --color-text-secondary: #475569;
-    --color-text-muted: #64748B;
-    --color-text-disabled: #CBD5E1;
+    /* Text colors */
+    --foreground: 16 24 40;        /* #101828 */
+    --muted-foreground: 71 84 103; /* #475467 */
+    --secondary-foreground: 154 164 178; /* #9AA4B2 */
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Semantic colors */
+    --success: 22 163 74;          /* #16A34A */
+    --warning: 245 158 11;         /* #F59E0B */
+    --destructive: 239 68 68;      /* #EF4444 */
+    --info: 14 165 233;            /* #0EA5E9 */
   }
-  
-  /* Dark Theme Support (Future) */
+
+  /* Dark theme support */
   .dark {
-    --color-background: #0F172A;
-    --color-surface: #1E293B;
-    --color-surface-elevated: #334155;
-    --color-border: #334155;
-    --color-border-focus: #3B82F6;
+    --background: 11 15 26;        /* #0B0F1A */
+    --surface: 18 24 38;           /* #121826 */
+    --border: 35 48 70;            /* #233046 */
     
-    --color-text-primary: #F1F5F9;
-    --color-text-secondary: #CBD5E1;
-    --color-text-muted: #94A3B8;
-    --color-text-disabled: #64748B;
+    --foreground: 230 232 238;     /* #E6E8EE */
+    --muted-foreground: 154 164 178; /* #9AA4B2 */
+    --secondary-foreground: 100 116 139; /* #64748B */
   }
-  
+
   /* Base styles */
   * {
     @apply border-border;
   }
-  
+
   body {
-    @apply bg-background text-text-primary;
+    @apply bg-background text-foreground;
+    font-family: var(--font-noto-sans-jp), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
+
   /* Typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-noto-sans-jp font-semibold tracking-tight;
+    @apply font-semibold tracking-tight;
+    font-family: var(--font-noto-sans-jp), system-ui, sans-serif;
   }
-  
+
   /* Focus styles */
   *:focus-visible {
-    @apply outline-none ring-2 ring-brand-primary ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-background;
   }
-  
+}
+
+@layer components {
+  /* Icon utilities */
+  .icon {
+    @apply w-6 h-6 stroke-2;
+  }
+
+  .icon-sm {
+    @apply w-4 h-4 stroke-2;
+  }
+
+  .icon-lg {
+    @apply w-8 h-8 stroke-2;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-surface border border-border rounded-lg shadow-sm;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:scale-[1.02] hover:shadow-md;
+  }
+
+  /* Container utilities */
+  .container-responsive {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  }
+
+  /* Section spacing */
+  .section-padding {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
   /* Gradient utilities */
   .gradient-brand {
-    background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
+    background: linear-gradient(135deg, rgb(var(--brand-500)), rgb(var(--accent-500)));
   }
-  
-  .gradient-surface {
-    background: linear-gradient(135deg, #FAFAFA, #F0F9FF);
-  }
-  
+
   /* Animation utilities */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
-  
+
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
-  
+
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
-  
+
   @keyframes slideUp {
     from {
       opacity: 0;
@@ -106,121 +122,5 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-  
-  /* Scrollbar styling */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 3px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: var(--color-text-muted);
-  }
-}
-
-@layer components {
-  /* Card component styles */
-  .card {
-    @apply bg-surface-elevated border border-border rounded-2xl shadow-md;
-  }
-  
-  .card-hover {
-    @apply transition-transform duration-normal hover:scale-[1.02] hover:shadow-lg;
-  }
-  
-  /* Form component styles */
-  .form-field {
-    @apply space-y-2;
-  }
-  
-  .form-label {
-    @apply text-sm font-medium text-text-primary;
-  }
-  
-  .form-label-required::after {
-    content: " *";
-    @apply text-error;
-  }
-  
-  .form-input {
-    @apply w-full px-4 py-3 border border-border rounded-xl bg-background text-text-primary placeholder:text-text-muted focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors duration-fast;
-  }
-  
-  .form-error {
-    @apply text-sm text-error;
-  }
-  
-  .form-helper {
-    @apply text-sm text-text-muted;
-  }
-  
-  /* Button component styles */
-  .btn {
-    @apply inline-flex items-center justify-center rounded-xl font-medium transition-all duration-fast focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
-  }
-  
-  .btn-primary {
-    @apply bg-brand-primary text-white hover:bg-blue-600 focus:ring-brand-primary;
-  }
-  
-  .btn-secondary {
-    @apply bg-surface border border-border text-text-primary hover:bg-gray-50 focus:ring-brand-primary;
-  }
-  
-  .btn-sm {
-    @apply px-3 py-2 text-sm;
-  }
-  
-  .btn-md {
-    @apply px-4 py-3 text-base;
-  }
-  
-  .btn-lg {
-    @apply px-6 py-4 text-lg;
-  }
-  
-  /* Progress indicator styles */
-  .progress-bar {
-    @apply w-full bg-border rounded-full overflow-hidden;
-  }
-  
-  .progress-fill {
-    @apply h-2 gradient-brand transition-all duration-slow;
-  }
-  
-  /* Modal styles */
-  .modal-backdrop {
-    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-fade-in;
-  }
-  
-  .modal-content {
-    @apply fixed inset-4 md:inset-8 lg:inset-16 bg-background rounded-2xl shadow-xl z-50 animate-slide-up;
-  }
-  
-  /* Responsive utilities */
-  .container-responsive {
-    @apply container mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  .section-padding {
-    @apply py-12 md:py-20 lg:py-28;
-  }
-  
-  .text-responsive {
-    @apply text-base md:text-lg lg:text-xl;
   }
 }

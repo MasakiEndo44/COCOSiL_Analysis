@@ -27,18 +27,18 @@ export function DiagnosisHeader() {
               <span className="text-white font-bold text-lg">C</span>
             </div>
             <div>
-              <h1 className="text-lg font-heading text-light-fg">COCOSiL</h1>
-              <p className="text-xs text-light-fg-muted">統合診断システム</p>
+              <h1 className="text-lg font-semibold text-foreground">COCOSiL</h1>
+              <p className="text-xs text-muted-foreground">統合診断システム</p>
             </div>
           </Link>
 
           {/* Current Step Info */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm font-medium text-light-fg">
+              <p className="text-sm font-medium text-foreground">
                 {getStepTitle(currentStep)}
               </p>
-              <p className="text-xs text-light-fg-muted">
+              <p className="text-xs text-muted-foreground">
                 セッション: {sessionId?.slice(-8)}
               </p>
             </div>
@@ -48,7 +48,7 @@ export function DiagnosisHeader() {
           <div className="flex items-center space-x-3">
             {/* Help Button */}
             <button
-              className="p-2 text-light-fg-muted hover:text-light-fg hover:bg-light-bg-subtle rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-surface rounded-lg transition-colors"
               title="ヘルプ"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@ export function DiagnosisHeader() {
             {/* Exit Button */}
             <Link 
               href="/"
-              className="p-2 text-light-fg-muted hover:text-error hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-lg transition-colors"
               title="診断を終了"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

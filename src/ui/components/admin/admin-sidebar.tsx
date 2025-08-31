@@ -63,7 +63,7 @@ export function AdminSidebar() {
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-brand-500 text-white'
-                      : 'text-light-fg hover:bg-light-bg-subtle'
+                      : 'text-foreground hover:bg-surface'
                   }`}
                 >
                   {item.icon}

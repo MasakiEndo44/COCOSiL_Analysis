@@ -10,75 +10,44 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ブランドカラー (UI/UX要件定義書より)
+        // Brand colors using CSS variables
         brand: {
-          500: '#7AC5E5',
-          700: '#4A9FD0',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
         },
         accent: {
-          500: '#C062F5',
-          600: '#A54EE6', 
-          700: '#8E3FDA',
+          500: 'rgb(var(--accent-500) / <alpha-value>)',
+          600: 'rgb(var(--accent-600) / <alpha-value>)',
         },
-        // Light mode colors
-        light: {
-          bg: '#FFFFFF',
-          'bg-subtle': '#F7F8FA',
-          border: '#E5E7EB',
-          fg: '#101828',
-          'fg-muted': '#475467',
-          primary: '#7A5AF8',
-          'on-primary': '#FFFFFF',
-        },
-        // Dark mode colors  
-        dark: {
-          bg: '#0B0F1A',
-          'bg-subtle': '#121826',
-          border: '#233046',
-          fg: '#E6E8EE',
-          'fg-muted': '#9AA4B2',
-          primary: '#9C8CFF',
-          'on-primary': '#0B0F1A',
-        },
+        // Background colors
+        background: 'rgb(var(--background) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        
+        // Text colors
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        'muted-foreground': 'rgb(var(--muted-foreground) / <alpha-value>)',
+        'secondary-foreground': 'rgb(var(--secondary-foreground) / <alpha-value>)',
+        
         // Semantic colors
-        success: '#16A34A',
-        warning: '#F59E0B',
-        error: '#EF4444',
-        info: '#0EA5E9',
+        success: 'rgb(var(--success) / <alpha-value>)',
+        warning: 'rgb(var(--warning) / <alpha-value>)',
+        destructive: 'rgb(var(--destructive) / <alpha-value>)',
+        info: 'rgb(var(--info) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Noto Sans JP', 'system-ui', 'sans-serif'],
-        heading: ['Poppins', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        'noto-sans-jp': ['var(--font-noto-sans-jp)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-noto-sans-jp)', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'monospace'],
       },
       fontSize: {
-        // タイポグラフィスケール (UI/UX要件定義書より)
-        'h1-mobile': ['28px', '36px'],
-        'h1-desktop': ['40px', '48px'],
-        'h2-mobile': ['24px', '32px'],
-        'h2-desktop': ['32px', '40px'],
-        'h3-mobile': ['20px', '28px'],
-        'h3-desktop': ['24px', '32px'],
-        'body-l-mobile': ['16px', '24px'],
-        'body-l-desktop': ['18px', '28px'],
-        'body-m-mobile': ['14px', '22px'],
-        'body-m-desktop': ['16px', '24px'],
-        'caption': ['12px', '18px'],
-      },
-      spacing: {
-        // 8pxグリッドシステム
-        '0.5': '2px',
-        '1': '4px',
-        '1.5': '6px',
-        '2': '8px',
-        '3': '12px',
-        '4': '16px',
-        '5': '20px',
-        '6': '24px',
-        '8': '32px',
-        '10': '40px',
-        '12': '48px',
-        '16': '64px',
+        // Typography scale matching UI/UX requirements
+        'h1-mobile': ['28px', { lineHeight: '36px', fontWeight: '600' }],
+        'h1-desktop': ['40px', { lineHeight: '48px', fontWeight: '600' }],
+        'h2-mobile': ['24px', { lineHeight: '32px', fontWeight: '600' }],
+        'h2-desktop': ['32px', { lineHeight: '40px', fontWeight: '600' }],
+        'h3-mobile': ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        'h3-desktop': ['24px', { lineHeight: '32px', fontWeight: '600' }],
       },
       borderRadius: {
         'card': '8px',
@@ -91,8 +60,8 @@ const config: Config = {
         'z3': '0 12px 24px rgba(16, 24, 40, 0.16)',
       },
       backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #3EB1D4 0%, #C062F5 100%)',
-        'gradient-brand-soft': 'linear-gradient(135deg, rgba(62, 177, 212, 0.5) 0%, rgba(192, 98, 245, 0.5) 100%)',
+        'gradient-brand': 'linear-gradient(135deg, rgb(var(--brand-500)), rgb(var(--accent-500)))',
+        'gradient-brand-soft': 'linear-gradient(135deg, rgb(var(--brand-500) / 0.5), rgb(var(--accent-500) / 0.5))',
       },
       animation: {
         'fade-in': 'fadeIn 0.24s cubic-bezier(0.2, 0.0, 0.2, 1)',

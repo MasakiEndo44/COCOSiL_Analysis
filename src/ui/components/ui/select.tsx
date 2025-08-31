@@ -15,17 +15,17 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="space-y-2">
         {label && (
-          <label className="text-sm font-medium text-light-fg">
+          <label className="text-sm font-medium text-foreground">
             {label}
-            {props.required && <span className="text-error ml-1">*</span>}
+            {props.required && <span className="text-destructive ml-1">*</span>}
           </label>
         )}
         <select
           className={cn(
-            "flex h-10 w-full rounded-card border border-light-border bg-light-bg px-3 py-2 text-sm ring-offset-background",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-opacity-40 focus-visible:ring-offset-2",
+            "flex h-10 w-full rounded-card border border-border bg-surface px-3 py-2 text-sm ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-opacity-40 focus-visible:ring-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            error && "border-error",
+            error && "border-destructive",
             className
           )}
           ref={ref}
@@ -43,10 +43,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="text-sm text-error">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         )}
         {helperText && !error && (
-          <p className="text-sm text-light-fg-muted">{helperText}</p>
+          <p className="text-sm text-muted-foreground">{helperText}</p>
         )}
       </div>
     );

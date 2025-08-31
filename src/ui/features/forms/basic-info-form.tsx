@@ -107,12 +107,42 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
         console.warn('18歳未満のユーザーです');
       }
 
+      // 算命学・動物占い計算API呼び出し
+      const fortuneResponse = await fetch('/api/fortune-calc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          year: data.birthdate.year,
+          month: data.birthdate.month,
+          day: data.birthdate.day,
+        }),
+      });
+
+      if (!fortuneResponse.ok) {
+        throw new Error('算命学計算に失敗しました');
+      }
+
+      const fortuneData = await fortuneResponse.json();
+
       // Zustandストアに保存
       setBasicInfo({
         name: data.name.trim(),
         email: data.email.trim().toLowerCase(),
         gender: data.gender,
         birthdate: data.birthdate
+      });
+
+      // 算命学結果も同時に保存
+      const { setFortune } = useDiagnosisStore.getState();
+      setFortune({
+        age: fortuneData.age,
+        zodiac: fortuneData.zodiac,
+        animal: fortuneData.animal,
+        six_star: fortuneData.six_star,
+        fortune_detail: fortuneData.fortune_detail,
+        calculated_at: new Date()
       });
 
       onSuccess?.();

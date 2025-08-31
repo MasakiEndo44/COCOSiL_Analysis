@@ -27,7 +27,7 @@ export function ProgressBar() {
             </div>
           </div>
         </div>
-        <div className="text-sm font-medium text-light-fg min-w-12 text-right">
+        <div className="text-sm font-medium text-foreground min-w-12 text-right">
           {Math.round(progress)}%
         </div>
       </div>
@@ -69,7 +69,7 @@ export function ProgressBar() {
                 
                 <div className="text-center">
                   <p className={`text-xs font-medium ${
-                    isCompleted || isCurrent ? 'text-light-fg' : 'text-light-fg-muted'
+                    isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'
                   }`}>
                     {step.label}
                   </p>
@@ -113,7 +113,7 @@ export function ProgressBar() {
         
         {/* Current Step Label */}
         <div className="text-center mt-2">
-          <p className="text-sm font-medium text-light-fg">
+          <p className="text-sm font-medium text-foreground">
             {steps.find(s => s.key === currentStep)?.label || '診断中'}
           </p>
         </div>

@@ -337,10 +337,19 @@ export function DiagnosisResults() {
       {/* Actions */}
       <div className="text-center space-y-6">
         <div className="space-y-4">
+          <Link href="/diagnosis/chat">
+            <Button
+              className="bg-gradient-brand hover:shadow-lg text-lg px-8 py-4"
+              size="lg"
+            >
+              AIカウンセリングを開始
+            </Button>
+          </Link>
+          
           <Button
             onClick={generateAdminPrompt}
             disabled={isGeneratingPrompt}
-            className="bg-gradient-brand hover:shadow-lg"
+            variant="secondary"
           >
             {isGeneratingPrompt ? 'プロンプト生成中...' : 'OpenAI管理者向けプロンプト生成'}
           </Button>
