@@ -203,13 +203,12 @@ export function DiagnosisResults() {
             </div>
             
             <div>
-              <p className="text-sm font-medium text-light-fg mb-2">あなたの特徴</p>
-              <div className="space-y-1">
+              <p className="text-sm font-medium text-light-fg mb-2">主な特徴</p>
+              <div className="flex flex-wrap gap-2">
                 {taiheki.characteristics.slice(0, 4).map((characteristic, index) => (
-                  <p key={index} className="text-sm text-light-fg-muted flex items-start space-x-2">
-                    <span className="text-green-500 mt-1">•</span>
-                    <span>{characteristic}</span>
-                  </p>
+                  <span key={index} className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
+                    {characteristic}
+                  </span>
                 ))}
               </div>
             </div>
@@ -336,7 +335,7 @@ export function DiagnosisResults() {
 
       {/* Actions */}
       <div className="text-center space-y-6">
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Link href="/diagnosis/chat">
             <Button
               className="bg-gradient-brand hover:shadow-lg text-lg px-8 py-4"
@@ -346,20 +345,18 @@ export function DiagnosisResults() {
             </Button>
           </Link>
           
-          <Button
-            onClick={generateAdminPrompt}
-            disabled={isGeneratingPrompt}
-            variant="secondary"
-          >
-            {isGeneratingPrompt ? 'プロンプト生成中...' : 'OpenAI管理者向けプロンプト生成'}
-          </Button>
-          
-          <div className="flex justify-center space-x-4">
-            <Button variant="secondary" onClick={() => window.print()}>
-              結果を印刷
+          <div className="space-y-4">
+            <Button
+              onClick={generateAdminPrompt}
+              disabled={isGeneratingPrompt}
+              variant="secondary"
+              className="w-full max-w-md mx-auto"
+            >
+              {isGeneratingPrompt ? 'プロンプト生成中...' : 'OpenAI管理者向けプロンプト生成'}
             </Button>
-            <Link href="/">
-              <Button variant="secondary">
+            
+            <Link href="/" className="block">
+              <Button variant="secondary" className="w-full max-w-md mx-auto">
                 ホームに戻る
               </Button>
             </Link>

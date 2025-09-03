@@ -24,28 +24,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // API キーが正しく読み込まれているかデバッグログ
+    console.log('OpenAI API Key length:', process.env.OPENAI_API_KEY?.length);
+    console.log('OpenAI API Key prefix:', process.env.OPENAI_API_KEY?.substring(0, 15));
+
     // ストリーミング対応
     if (stream) {
+      // メッセージに300文字制限の指示を追加
+      const systemMessage = {
+        role: 'system' as const,
+        content: '回答は必ず300文字以内で簡潔に。論理的な深掘り質問を中心とした短い応答のみ。'
+      };
+      
+      const enhancedMessages = [systemMessage, ...messages];
+      
       const response = await openai.chat.completions.create({
         model: 'gpt-4',
-        messages: messages,
+        messages: enhancedMessages,
         stream: true,
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 150, // 300文字制限のため削減
       });
 
       // ReadableStreamを作成
       const encoder = new TextEncoder();
+      let totalLength = 0;
       const readable = new ReadableStream({
         async start(controller) {
           try {
             for await (const chunk of response) {
               const delta = chunk.choices[0]?.delta;
               if (delta?.content) {
+                // 300文字制限チェック
+                const remaining = 300 - totalLength;
+                let content = delta.content;
+                
+                if (content.length > remaining) {
+                  content = content.substring(0, remaining);
+                  if (remaining > 0) {
+                    const data = {
+                      choices: [{
+                        delta: {
+                          content: content
+                        }
+                      }]
+                    };
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+                  }
+                  break; // 300文字に達したら終了
+                }
+                
+                totalLength += content.length;
                 const data = {
                   choices: [{
                     delta: {
-                      content: delta.content
+                      content: content
                     }
                   }]
                 };
@@ -71,15 +104,25 @@ export async function POST(request: NextRequest) {
     }
 
     // 通常のレスポンス（非ストリーミング）
+    const systemMessage = {
+      role: 'system' as const,
+      content: '回答は必ず300文字以内で簡潔に。論理的な深掘り質問を中心とした短い応答のみ。'
+    };
+    
+    const enhancedMessages = [systemMessage, ...messages];
+    
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
-      messages: messages,
+      messages: enhancedMessages,
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 150, // 300文字制限のため削減
     });
 
+    const content = response.choices[0]?.message?.content || '';
+    const truncatedContent = content.length > 300 ? content.substring(0, 300) : content;
+
     return NextResponse.json({
-      message: response.choices[0]?.message?.content || '',
+      message: truncatedContent,
       usage: response.usage
     });
 
