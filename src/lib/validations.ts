@@ -31,7 +31,13 @@ export const basicInfoSchema = z.object({
       .number()
       .min(1, '1日から31日の間で選択してください')
       .max(31, '1日から31日の間で選択してください')
-  })
+  }),
+  
+  privacyConsent: z
+    .boolean()
+    .refine(val => val === true, {
+      message: 'プライバシーポリシーに同意してください'
+    })
 }).refine((data) => {
   // 日付の妥当性チェック
   const { year, month, day } = data.birthdate;

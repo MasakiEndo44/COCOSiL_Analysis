@@ -12,8 +12,15 @@ const config: Config = {
       colors: {
         // Brand colors using CSS variables
         brand: {
+          25: 'rgb(var(--brand-25) / <alpha-value>)',
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
           500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
           700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
         accent: {
           500: 'rgb(var(--accent-500) / <alpha-value>)',
@@ -38,6 +45,7 @@ const config: Config = {
       fontFamily: {
         'noto-sans-jp': ['var(--font-noto-sans-jp)', 'system-ui', 'sans-serif'],
         sans: ['var(--font-noto-sans-jp)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-noto-sans-jp)', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'monospace'],
       },
       fontSize: {
@@ -48,6 +56,10 @@ const config: Config = {
         'h2-desktop': ['32px', { lineHeight: '40px', fontWeight: '600' }],
         'h3-mobile': ['20px', { lineHeight: '28px', fontWeight: '600' }],
         'h3-desktop': ['24px', { lineHeight: '32px', fontWeight: '600' }],
+        'body-l-mobile': ['18px', { lineHeight: '26px', fontWeight: '400' }],
+        'body-l-desktop': ['20px', { lineHeight: '28px', fontWeight: '400' }],
+        'body-m-mobile': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'body-m-desktop': ['16px', { lineHeight: '24px', fontWeight: '400' }],
       },
       borderRadius: {
         'card': '8px',

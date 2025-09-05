@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { PageTag } from '@/lib/dev-tag';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { Button } from '@/ui/components/ui/button';
+import { UserDiagnosisData } from '@/types';
 
 interface ChatMessage {
   id: string;
@@ -54,30 +56,41 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<'topic_selection' | 'consultation' | 'summary'>('topic_selection');
+  const [userData, setUserData] = useState<UserDiagnosisData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  const userData = getUserData();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    // 初期化が既に実行されている場合は何もしない
+    if (initializedRef.current) return;
+    
+    const data = getUserData();
+    
     // 診断データが不完全な場合は診断ページに戻す
-    if (!userData || !userData.basic || !userData.mbti || !userData.taiheki) {
+    if (!data || !data.basic || !data.mbti || !data.taiheki) {
       router.push('/diagnosis');
       return;
     }
 
+    // 初期化フラグを設定
+    initializedRef.current = true;
+    
+    // userDataを設定
+    setUserData(data);
+    
     setCurrentStep('integration');
     
     // 初期メッセージを設定
     const welcomeMessage: ChatMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: `こんにちは、${userData.basic.name}さん！診断結果を基にご相談をお受けします。\n\nあなたの診断結果：\n• MBTI：${userData.mbti.type}\n• 体癖：${userData.taiheki.primary}種（主体癖）\n• 動物占い：${userData.fortune?.animal}\n• 算命学：${userData.fortune?.six_star}\n\nどのようなことについてお聞かせいただけますか？`,
+      content: `こんにちは、${data.basic.name}さん！診断結果を基にご相談をお受けします。\n\nあなたの診断結果：\n• MBTI：${data.mbti.type}\n• 体癖：${data.taiheki.primary}種（主体癖）\n• 動物占い：${data.fortune?.animal}\n• 算命学：${data.fortune?.sixStar}\n\nどのようなことについてお聞かせいただけますか？`,
       timestamp: new Date()
     };
 
     setMessages([welcomeMessage]);
-  }, [userData, router, setCurrentStep]);
+  }, []); // 空の依存配列で一度だけ実行
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -124,7 +137,7 @@ export default function ChatPage() {
 - MBTI: ${userData.mbti?.type}
 - 体癖: 主体癖${userData.taiheki?.primary}種・副体癖${userData.taiheki?.secondary}種
 - 動物占い: ${userData.fortune?.animal}
-- 算命学: ${userData.fortune?.six_star}
+- 算命学: ${userData.fortune?.sixStar}
 
 ## 相談方針
 1. 診断結果を統合した個別化アドバイス
@@ -268,7 +281,8 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-surface">
+    <PageTag route="/diagnosis/chat" description="AI相談チャット - Claude診断結果連携">
+      <div className="flex flex-col h-screen bg-surface">
       {/* Header */}
       <div className="bg-white border-b border-border p-4">
         <div className="flex items-center justify-between">
@@ -380,5 +394,6 @@ export default function ChatPage() {
         </>
       )}
     </div>
+    </PageTag>
   );
 }

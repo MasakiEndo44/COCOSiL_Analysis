@@ -220,7 +220,7 @@ function calculateMBTI(answers) {
 - [ ] MBTI結果はZustandとlocalStorageに保存される
 
 #### F001-3：統合結果表示・管理者向けデータ生成
-**概要**：収集した全データを統合表示し、管理者向けプロンプトファイルを生成
+**概要**：収集した全データを統合表示し、管理者向けプロンプトファイル(.md)を生成
 
 **詳細仕様**：
 
@@ -230,7 +230,7 @@ function calculateMBTI(answers) {
 - 動物占い結果
 - MBTI結果
 - 体癖結果（実施済みの場合）
-- 進捗状況（100%）
+- 相談内容(深掘り質問チャットの要約)
 
 **管理者向けデータ形式**：
 ```markdown
@@ -239,13 +239,13 @@ function calculateMBTI(answers) {
 ## 基本情報
 - 名前: [ユーザー名]
 - 生年月日: [YYYY年MM月DD日] ([年齢]歳)
-- 診断実施日: [YYYY-MM-DD HH:MM:SS]
+- 診断実施日: [YYYY-MM-DD HH:MM]
 
 ## 診断結果サマリー
-- 算命学: [結果]
+- 星座: [結果]
 - 動物占い: [結果]
-- MBTI: [結果] - [特徴説明]
-- 体癖: [主体癖X種・副体癖Y種] - [特徴説明]
+- MBTI: [結果]
+- 体癖: [主体癖X種・副体癖Y種]
 
 ## Claude AI向けプロンプト
 この人物の診断結果を踏まえて、以下の観点から分析してください：
@@ -417,14 +417,12 @@ function generateResultImage(taihekiResult) {
 5. **診断の意義**：自己理解の深化について
 
 **インタラクティブ要素**：
-- 章末クイズ（3-5問）
 - 理解度チェック（進捗表示）
 - 関連する体癖タイプのハイライト
 - 用語集へのリンク
 
 **受入れ基準**：
 - [ ] 全5章のコンテンツが順序通り表示される
-- [ ] 章末クイズで理解度を確認できる
 - [ ] 進捗状況が視覚的に分かる
 - [ ] 体癖診断への導線が適切に配置される
 
@@ -856,7 +854,6 @@ while (true) {
 
 **エラーハンドリング**：
 - **Rate Limit**：429エラー時は指数バックオフで再試行
-- **Token Limit**：4000トークン超過時は会話履歴を要約
 - **Network Error**：接続エラー時はユーザーに再試行ボタン表示
 
 #### 7.1.2 システムプロンプト設計
@@ -914,44 +911,6 @@ interface FortuneCalcResponse {
   };
   error?: string;
 }
-```
-
-**Python実装例**：
-```python
-# fortune_calculator.py
-import csv
-from datetime import datetime
-
-def get_basic_fortune_data(year: int, month: int, day: int):
-    """基本的な占い情報を算出"""
-    
-    # 年齢計算
-    today = datetime.now()
-    age = today.year - year
-    if (today.month, today.day) < (month, day):
-        age -= 1
-    
-    # CSVファイルから動物占い・算命学データを読み込み
-    with open('data/fortune_data.csv', 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if matches_date(row, year, month, day):
-                return {
-                    'age': age,
-                    'zodiac': row['zodiac'],
-                    'animal': row['animal'],
-                    'six_star': row['six_star'],
-                    'element': row['element'],
-                    'fortune': row['fortune']
-                }
-    
-    raise ValueError("該当する占い情報が見つかりません")
-
-def matches_date(row, year, month, day):
-    """日付マッチング処理"""
-    # 複雑な算命学ロジックを実装
-    # ...
-    return True  # 簡略化
 ```
 
 **エラーハンドリング**：
@@ -1369,70 +1328,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 ```
 
 #### 8.2.3 Python 統合
-**fortune_calculator.py**：
-```python
-#!/usr/bin/env python3
-import json
-import sys
-from datetime import datetime
-
-def calculate_fortune(year: int, month: int, day: int):
-    """算命学・動物占い計算のメイン関数"""
-    
-    # 年齢計算
-    today = datetime.now()
-    age = today.year - year
-    if (today.month, today.day) < (month, day):
-        age -= 1
-    
-    # 十二支計算
-    zodiac_animals = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    zodiac = zodiac_animals[(year - 4) % 12]
-    
-    # 動物占い計算（簡略化）
-    animal_map = {
-        '子': 'チータ', '丑': '黒ひょう', '寅': 'ライオン', '卯': 'トラ',
-        '辰': 'カピバラ', '巳': 'モンキー', '午': 'オオカミ', '未': 'チーター',
-        '申': 'パンダ', '酉': 'コアラ', '戌': 'サル', '亥': 'ゾウ'
-    }
-    animal = animal_map.get(zodiac, 'チータ')
-    
-    # 六星占術計算
-    six_star_map = ['土星', '金星', '火星', '天王星', '木星', '水星']
-    six_star = six_star_map[year % 6]
-    
-    # 五行計算
-    elements = ['木', '火', '土', '金', '水']
-    element = elements[year % 5]
-    
-    result = {
-        'age': age,
-        'zodiac': zodiac,
-        'animal': animal,
-        'six_star': six_star,
-        'element': element,
-        'fortune': f'{animal}の年生まれ、{six_star}の運勢を持ちます。'
-    }
-    
-    return result
-
-if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print(json.dumps({'error': '引数が不正です'}))
-        sys.exit(1)
-    
-    try:
-        year = int(sys.argv[1])
-        month = int(sys.argv[2])
-        day = int(sys.argv[3])
-        
-        result = calculate_fortune(year, month, day)
-        print(json.dumps(result, ensure_ascii=False))
-        
-    except Exception as e:
-        print(json.dumps({'error': str(e)}, ensure_ascii=False))
-        sys.exit(1)
-```
 
 ## 9. 制約・前提条件
 
@@ -1790,33 +1685,6 @@ export default function() {
 ```
 
 #### 10.2.3 セキュリティテスト
-**テスト観点**：
-- **XSS攻撃**：入力値のサニタイゼーション確認
-- **CSRF攻撃**：APIエンドポイントの保護確認
-- **個人情報漏洩**：localStorage暗号化確認
-- **API認証**：不正アクセス防止確認
-
-**実装例**：
-```typescript
-// __tests__/security/xss-prevention.test.ts
-describe('XSS攻撃防止', () => {
-  test('名前入力でスクリプトタグがエスケープされる', () => {
-    const maliciousInput = '<script>alert("XSS")</script>';
-    const sanitized = sanitizeUserInput(maliciousInput);
-    
-    expect(sanitized).not.toContain('<script>');
-    expect(sanitized).toBe('&lt;script&gt;alert("XSS")&lt;/script&gt;');
-  });
-  
-  test('診断回答でHTMLタグが除去される', () => {
-    const maliciousAnswer = '<img src="x" onerror="alert(1)">';
-    const sanitized = sanitizeUserInput(maliciousAnswer);
-    
-    expect(sanitized).not.toContain('<img');
-    expect(sanitized).not.toContain('onerror');
-  });
-});
-```
 
 ### 10.3 ユーザビリティテスト要件
 

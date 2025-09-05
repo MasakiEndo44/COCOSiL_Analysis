@@ -124,8 +124,11 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         const { completedSteps } = get();
         if (!completedSteps.includes(step)) {
           const newCompletedSteps = [...completedSteps, step];
-          set({ completedSteps: newCompletedSteps });
-          get().updateProgress();
+          const progress = calculateStepProgress(newCompletedSteps);
+          set({ 
+            completedSteps: newCompletedSteps,
+            progress 
+          });
         }
       },
       

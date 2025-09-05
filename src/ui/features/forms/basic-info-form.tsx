@@ -6,8 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
 import { Select } from '@/ui/components/ui/select';
+import { ErrorDisplay } from '@/ui/components/ui/error-display';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { basicInfoSchema, type BasicInfoFormData } from '@/lib/validations';
+import { FortuneResult } from '@/types';
 import { isValidDate } from '@/lib/utils';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -38,7 +40,8 @@ interface BasicInfoFormProps {
 }
 
 export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
-  const { setBasicInfo, setLoading, setError, basicInfo } = useDiagnosisStore();
+  const { setBasicInfo, setLoading, setError, basicInfo, error, isLoading } = useDiagnosisStore();
+  const [lastSubmitData, setLastSubmitData] = React.useState<BasicInfoFormData | null>(null);
 
   const {
     register,
@@ -56,9 +59,11 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
         year: basicInfo.birthdate.year,
         month: basicInfo.birthdate.month,
         day: basicInfo.birthdate.day
-      }
+      },
+      privacyConsent: false
     } : {
-      gender: 'no_answer'
+      gender: 'no_answer',
+      privacyConsent: false
     }
   });
 
@@ -82,10 +87,18 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
     return days;
   }, [selectedYear, selectedMonth]);
 
+  // エラー時の再試行関数
+  const handleRetry = async () => {
+    if (lastSubmitData) {
+      await onSubmit(lastSubmitData);
+    }
+  };
+
   const onSubmit = async (data: BasicInfoFormData) => {
     try {
       setLoading(true);
       setError(null);
+      setLastSubmitData(data); // 再試行用にデータを保存
 
       // 日付の妥当性を再チェック
       const { year, month, day } = data.birthdate;
@@ -97,34 +110,71 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
         return;
       }
 
-      // 18歳未満チェック（要件で特になしとされたが、念のため警告）
+      // 未来の日付チェック
       const today = new Date();
       const birthDate = new Date(year, month - 1, day);
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const isMinor = age < 18 || (age === 18 && today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()));
+      if (birthDate > today) {
+        setFormError('birthdate', {
+          type: 'manual',
+          message: '未来の日付は入力できません'
+        });
+        return;
+      }
 
-      if (isMinor) {
+      // 150歳以上のチェック
+      const age = today.getFullYear() - birthDate.getFullYear() - 
+        (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()) ? 1 : 0);
+      if (age > 150) {
+        setFormError('birthdate', {
+          type: 'manual',
+          message: '年齢が150歳を超えています。正しい日付を入力してください'
+        });
+        return;
+      }
+
+      // 18歳未満チェック（警告のみ）
+      if (age < 18) {
         console.warn('18歳未満のユーザーです');
       }
 
-      // 算命学・動物占い計算API呼び出し
-      const fortuneResponse = await fetch('/api/fortune-calc', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          year: data.birthdate.year,
-          month: data.birthdate.month,
-          day: data.birthdate.day,
-        }),
-      });
+      // 算命学・動物占い計算API呼び出し（リトライ機能付き）
+      let fortuneData;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          const fortuneResponse = await fetch('/api/fortune-calc', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              year: data.birthdate.year,
+              month: data.birthdate.month,
+              day: data.birthdate.day,
+            }),
+          });
 
-      if (!fortuneResponse.ok) {
-        throw new Error('算命学計算に失敗しました');
+          if (!fortuneResponse.ok) {
+            const errorText = await fortuneResponse.text();
+            throw new Error(`APIエラー: ${fortuneResponse.status} - ${errorText}`);
+          }
+
+          fortuneData = await fortuneResponse.json();
+          break; // 成功したらループを抜ける
+        } catch (apiError) {
+          retryCount++;
+          console.warn(`算命学API呼び出し失敗 (${retryCount}/${maxRetries}):`, apiError);
+          
+          if (retryCount >= maxRetries) {
+            throw new Error(`算命学計算に失敗しました。${maxRetries}回試行しましたが、サーバーエラーのため処理できませんでした。`);
+          }
+          
+          // 次のリトライまで少し待つ
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
       }
-
-      const fortuneData = await fortuneResponse.json();
 
       // Zustandストアに保存
       setBasicInfo({
@@ -136,22 +186,44 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
 
       // 算命学結果も同時に保存
       const { setFortune } = useDiagnosisStore.getState();
-      setFortune({
-        age: fortuneData.age,
+      const fortuneResult: FortuneResult = {
         zodiac: fortuneData.zodiac,
         animal: fortuneData.animal,
-        six_star: fortuneData.six_star,
-        fortune_detail: fortuneData.fortune_detail,
-        calculated_at: new Date()
-      });
+        sixStar: fortuneData.six_star,
+        element: fortuneData.element,
+        fortune: fortuneData.characteristics?.join(' ') || '',
+        characteristics: fortuneData.characteristics || []
+      };
+      
+      setFortune(fortuneResult);
 
       onSuccess?.();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '基本情報の保存に失敗しました';
+      console.error('基本情報フォームエラー:', error);
+      
+      let errorMessage = '基本情報の保存に失敗しました';
+      let errorCode = 'BASIC_INFO_SAVE_FAILED';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // エラータイプに応じたコードとメッセージの設定
+        if (error.message.includes('APIエラー')) {
+          errorCode = 'FORTUNE_API_ERROR';
+        } else if (error.message.includes('ネトワーク')) {
+          errorCode = 'NETWORK_ERROR';
+          errorMessage = 'ネトワークエラーが発生しました。インターネット接続を確認してからもう一度お試しください。';
+        } else if (error.message.includes('タイムアウト')) {
+          errorCode = 'TIMEOUT_ERROR';
+          errorMessage = '処理がタイムアウトしました。しばらく待ってからもう一度お試しください。';
+        }
+      }
+      
       setError({
-        code: 'BASIC_INFO_SAVE_FAILED',
+        code: errorCode,
         message: errorMessage,
-        timestamp: new Date()
+        timestamp: new Date(),
+        retryable: errorCode !== 'BASIC_INFO_SAVE_FAILED'
       });
       onError?.(errorMessage);
     } finally {
@@ -172,6 +244,16 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
           診断に必要な基本情報を入力してください
         </p>
       </div>
+
+      {/* エラー表示 */}
+      {error && (
+        <ErrorDisplay 
+          error={error}
+          onRetry={error.retryable ? handleRetry : undefined}
+          onDismiss={() => setError(null)}
+          className="mb-6"
+        />
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* 名前 */}
@@ -209,6 +291,9 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
           <label className="text-sm font-medium text-light-fg">
             生年月日 <span className="text-error ml-1">*</span>
           </label>
+          <p className="text-xs text-light-fg-muted mb-2">
+            算命学計算に必要なため、正確な生年月日を入力してください
+          </p>
           <div className="grid grid-cols-3 gap-3">
             <Select
               options={years}
@@ -230,10 +315,39 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
               {...register('birthdate.day', { valueAsNumber: true })}
               error={errors.birthdate?.day?.message}
               required
+              disabled={!selectedYear || !selectedMonth}
             />
           </div>
           {errors.birthdate?.message && (
             <p className="text-sm text-error">{errors.birthdate.message}</p>
+          )}
+          {selectedYear && selectedMonth && (
+            <p className="text-xs text-light-fg-muted">
+              {selectedYear}年{selectedMonth}月は{getDaysInMonth(selectedYear, selectedMonth)}日まであります
+            </p>
+          )}
+        </div>
+
+        {/* プライバシーポリシー同意 */}
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              {...register('privacyConsent')}
+              className="mt-1 w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 focus:ring-2"
+            />
+            <label htmlFor="privacyConsent" className="text-sm text-light-fg">
+              <span className="font-medium">プライバシーポリシーに同意する</span>
+              <span className="text-error ml-1">*</span>
+              <p className="text-xs text-light-fg-muted mt-1">
+                入力いただいた情報は診断目的のみに使用し、第三者への提供は行いません。
+                詳しくは<a href="/privacy" className="text-brand-600 underline hover:text-brand-700">プライバシーポリシー</a>をご確認ください。
+              </p>
+            </label>
+          </div>
+          {errors.privacyConsent && (
+            <p className="text-sm text-error">{errors.privacyConsent.message}</p>
           )}
         </div>
 
@@ -242,10 +356,10 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
             type="submit"
             className="w-full"
             size="lg"
-            isLoading={isSubmitting}
-            disabled={isSubmitting}
+            isLoading={isSubmitting || isLoading}
+            disabled={isSubmitting || isLoading}
           >
-            次へ進む
+            {isLoading ? '算命学計算中...' : '次へ進む'}
           </Button>
         </div>
 

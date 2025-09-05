@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Noto_Sans_JP } from 'next/font/google';
+import { DevInspectorPanel } from '@/ui/components/dev-inspector-panel';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -35,6 +36,7 @@ export default function RootLayout({
         <div id="root" className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
           {children}
         </div>
+        <DevInspectorPanel />
         <div id="modal-root" />
       </body>
     </html>

@@ -3,7 +3,7 @@ export function DiagnosisFlow() {
     {
       number: 1,
       title: "基本情報入力",
-      description: "名前・生年月日・既知の診断結果を入力",
+      description: "名前・生年月日・既知の診断結果を入力（星座・算命学・動物占いを自動算出）",
       time: "2分",
       color: "bg-blue-500"
     },
@@ -31,8 +31,8 @@ export function DiagnosisFlow() {
     },
     {
       number: 5,
-      title: "統合結果",
-      description: "全診断結果の統合分析・結果表示",
+      title: "AI統合分析",
+      description: "全5つの診断結果をAIが統合分析・詳細結果を表示",
       time: "即時",
       color: "bg-pink-500"
     }
@@ -45,7 +45,7 @@ export function DiagnosisFlow() {
           診断の流れ
         </h2>
         <p className="text-body-l-mobile md:text-body-l-desktop text-light-fg-muted max-w-2xl mx-auto">
-          5つのステップで、あなたの包括的な分析結果を導き出します。
+          5つのステップで、AIが統合した包括的な分析結果を導き出します。
         </p>
       </div>
 

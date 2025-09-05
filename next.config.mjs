@@ -1,5 +1,12 @@
+import createMDX from '@next/mdx'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeSlug from 'rehype-slug'
+import remarkGfm from 'remark-gfm'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configure `pageExtensions` to include MDX files
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   typescript: {
     // TypeScript errors during build should fail the build
     ignoreBuildErrors: false,
@@ -7,10 +14,6 @@ const nextConfig = {
   eslint: {
     // ESLint errors during build should fail the build
     ignoreDuringBuilds: false,
-  },
-  experimental: {
-    // Enable Server Actions
-    serverActions: true,
   },
   images: {
     domains: [],
@@ -45,4 +48,13 @@ const nextConfig = {
   }
 }
 
-export default nextConfig
+const withMDX = createMDX({
+  // Add markdown plugins here, as desired
+  options: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypeHighlight, rehypeSlug],
+  },
+})
+
+// Wrap MDX and Next.js config with each other
+export default withMDX(nextConfig)

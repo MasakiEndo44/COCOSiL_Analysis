@@ -1,22 +1,35 @@
+import { ComponentTag } from '@/lib/dev-tag';
 import { Button } from '@/ui/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle, Shield, Zap } from 'lucide-react';
 
 export function LandingHero() {
   return (
-    <div className="text-center space-y-8">
+    <ComponentTag name="LandingHero" type="feature">
+      <div className="text-center space-y-8">
       {/* Logo/Title */}
       <div className="space-y-4">
-        <div className="w-32 h-32 mx-auto bg-gradient-brand rounded-3xl flex items-center justify-center mb-8">
-          <span className="text-white text-4xl font-bold">C</span>
+        <div className="w-32 h-32 mx-auto flex items-center justify-center mb-8">
+          <Image
+            src="/images/cocosil-heart-logo.png"
+            alt="COCOSiL（ココシル）ロゴ - 幾何学的ハートマーク"
+            width={128}
+            height={128}
+            priority
+            className="drop-shadow-lg"
+          />
         </div>
         <h1 className="text-h1-mobile md:text-h1-desktop font-bold text-foreground">
           COCOSiL<br />
           <span className="text-brand-500">（ココシル）</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-          体癖理論・MBTI・算命学・動物占いを統合した<br />
-          包括的な人間理解プラットフォーム
+          体癖理論・MBTI・算命学・動物占い・星座占いをAI統合した<br />
+          科学的根拠に基づく包括的な人間理解プラットフォーム
+        </p>
+        <p className="text-sm text-brand-600 font-medium">
+          特に28-34歳女性の自己理解とキャリア・恋愛の悩み解決をサポート
         </p>
       </div>
 
@@ -26,9 +39,9 @@ export function LandingHero() {
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="icon text-blue-600" />
           </div>
-          <h3 className="text-h3-mobile font-bold text-foreground mb-2">科学的診断</h3>
+          <h3 className="text-h3-mobile font-bold text-foreground mb-2">AI統合診断</h3>
           <p className="text-muted-foreground">
-            複数の診断手法を統合した包括的な分析
+            5つの診断手法をAIが統合した科学的で包括的な分析
           </p>
         </div>
 
@@ -65,9 +78,10 @@ export function LandingHero() {
       {/* Additional Info */}
       <div className="pt-4">
         <p className="text-sm text-secondary-foreground">
-          診断時間：約15-20分 | 完全無料
+          診断時間：約15-20分 | 基本診断無料・詳細分析は月額500円〜
         </p>
       </div>
     </div>
+    </ComponentTag>
   );
 }

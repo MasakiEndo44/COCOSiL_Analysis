@@ -5,8 +5,15 @@
 @layer base {
   :root {
     /* COCOSiL Design System - Colors (proper format for Tailwind) */
+    --brand-25: 248 252 255;  /* #F8FCFF */
+    --brand-50: 240 249 255;  /* #F0F9FF */
+    --brand-100: 224 242 254; /* #E0F2FE */
+    --brand-200: 186 230 253; /* #BAE6FD */
     --brand-500: 122 197 229; /* #7AC5E5 */
+    --brand-600: 14 165 233;  /* #0EA5E9 */
     --brand-700: 74 159 208;  /* #4A9FD0 */
+    --brand-800: 7 89 133;    /* #075985 */
+    --brand-900: 12 74 110;   /* #0C4A6E */
     --accent-500: 192 98 245; /* #C062F5 */
     --accent-600: 165 78 230; /* #A54EE6 */
     
@@ -47,6 +54,18 @@
     @apply bg-background text-foreground;
     font-family: var(--font-noto-sans-jp), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Utility classes */
+  .container-responsive {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Typography */

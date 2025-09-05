@@ -3,36 +3,45 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
-import { useAdminContext } from '@/ui/components/admin/admin-provider';
-import { adminAuthSchema } from '@/lib/validations';
-import type { z } from 'zod';
 
-type AdminAuthFormData = z.infer<typeof adminAuthSchema>;
+interface AdminLoginFormData {
+  password: string;
+}
 
 export function AdminLogin() {
   const router = useRouter();
-  const { login } = useAdminContext();
   const [error, setError] = useState('');
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting }
-  } = useForm<AdminAuthFormData>({
-    resolver: zodResolver(adminAuthSchema)
-  });
+  } = useForm<AdminLoginFormData>();
 
-  const onSubmit = async (data: AdminAuthFormData) => {
+  const onSubmit = async (data: AdminLoginFormData) => {
     setError('');
     
-    const success = login(data.password);
-    if (success) {
-      router.push('/admin/dashboard');
-    } else {
-      setError('パスワードが間違っています');
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: 'admin', password: data.password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        router.push('/admin');
+      } else {
+        setError(result.error || 'ログインに失敗しました');
+      }
+    } catch (err) {
+      console.error('ログインエラー:', err);
+      setError('ネットワークエラーが発生しました');
     }
   };
 
@@ -60,11 +69,17 @@ export function AdminLogin() {
             <Input
               type="password"
               label="管理者パスワード"
-              placeholder="4桁の数字を入力"
-              {...register('password')}
-              error={errors.password?.message || error}
+              placeholder="パスワードを入力"
+              {...register('password', { required: 'パスワードは必須です' })}
+              error={errors.password?.message}
               required
             />
+            
+            {error && (
+              <div className="text-red-600 text-sm text-center">
+                {error}
+              </div>
+            )}
 
             <Button
               type="submit"

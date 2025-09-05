@@ -165,6 +165,7 @@ export interface AppError {
   message: string;
   details?: any;
   timestamp: Date;
+  retryable?: boolean;
 }
 
 // ユーティリティ型

@@ -31,8 +31,18 @@ export function FeatureOverview() {
       color: "bg-yellow-500"
     },
     {
-      title: "統合分析結果",
-      description: "複数の診断結果を統合して、より深い自己理解と洞察を提供します。",
+      title: "星座占い",
+      description: "12星座の特性から西洋占星術的な性格傾向を読み解きます。",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      ),
+      color: "bg-indigo-500"
+    },
+    {
+      title: "AI統合分析",
+      description: "全5つの診断結果をAIが統合し、より深い自己理解と洞察を提供します。",
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -46,14 +56,14 @@ export function FeatureOverview() {
     <div className="text-center space-y-12">
       <div className="space-y-4">
         <h2 className="text-h2-mobile md:text-h2-desktop font-heading text-light-fg">
-          4つの診断で包括的に分析
+          AI統合による5つの診断手法
         </h2>
         <p className="text-body-l-mobile md:text-body-l-desktop text-light-fg-muted max-w-3xl mx-auto">
-          異なる理論体系の診断を組み合わせることで、より立体的で正確な自己理解が可能になります。
+          体癖理論・MBTI・算命学・動物占い・星座占いをAIが統合分析。異なる理論体系の診断を組み合わせることで、より立体的で正確な自己理解が可能になります。
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-6xl mx-auto">
         {features.map((feature, index) => (
           <div 
             key={index}
@@ -79,12 +89,41 @@ export function FeatureOverview() {
       <div className="bg-gradient-brand-soft p-8 rounded-modal">
         <div className="max-w-2xl mx-auto">
           <h3 className="text-h3-mobile font-heading text-light-fg mb-4">
-            なぜ統合診断なのか？
+            なぜAI統合診断なのか？
           </h3>
           <p className="text-body-m-mobile text-light-fg-muted leading-relaxed">
-            単一の診断では見えない多面的な人間性を、複数の視点から捉えることで、
+            単一の診断では見えない多面的な人間性を、AIが5つの理論を統合し複数の視点から捉えることで、
             より深く正確な自己理解と成長のヒントを得ることができます。
           </p>
+        </div>
+      </div>
+
+      {/* Pricing Information */}
+      <div className="bg-white border border-brand-200 rounded-modal p-8">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-h3-mobile font-heading text-light-fg mb-6 text-center">
+            料金プラン
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold text-lg text-gray-900 mb-2">基本診断</h4>
+              <p className="text-3xl font-bold text-green-600 mb-4">無料</p>
+              <p className="text-sm text-gray-600">基本的な診断結果とAI分析</p>
+            </div>
+            <div className="text-center p-6 bg-brand-50 border-2 border-brand-300 rounded-lg relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-brand-500 text-white px-3 py-1 rounded-full text-xs">
+                おすすめ
+              </div>
+              <h4 className="font-semibold text-lg text-gray-900 mb-2">詳細分析</h4>
+              <p className="text-3xl font-bold text-brand-600 mb-4">¥500<span className="text-sm">/月</span></p>
+              <p className="text-sm text-gray-600">詳細レポート・日次アドバイス</p>
+            </div>
+            <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold text-lg text-gray-900 mb-2">プレミアム</h4>
+              <p className="text-3xl font-bold text-purple-600 mb-4">¥800<span className="text-sm">/月</span></p>
+              <p className="text-sm text-gray-600">無制限AI相談・専門家監修</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
