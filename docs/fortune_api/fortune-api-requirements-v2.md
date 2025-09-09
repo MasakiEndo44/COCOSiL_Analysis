@@ -32,7 +32,11 @@
 interface FortuneCalcResponse {
   // 基本情報
   age: number;              // 満年齢（JST基準）
-  zodiac: string;           // 十二支（子丑寅卯辰巳午未申酉戌亥）
+  
+  // 西洋星座占い
+  western_zodiac: string;   // 西洋12星座（牡羊座、双子座等）
+  zodiac_element: string;   // 星座のエレメント（火・地・風・水）
+  zodiac_traits: string[];  // 星座特性リスト
   
   // 動物占い（60種対応）
   animal: string;           // 基本12動物名
@@ -44,12 +48,8 @@ interface FortuneCalcResponse {
   six_star: string;         // 星人±（土星人+、金星人-等）
   six_star_cycle: string;   // 当年の運気サイクル
   
-  // 算命学・天中殺
-  tenchusatsu_years: number[];  // 天中殺年（2年連続）
-  tenchusatsu_status: 'active' | 'inactive'; // 現在の天中殺状態
-  
-  // 性格特性
-  personality_traits: string[]; // 統合された性格特性リスト
+  // 性格特性（統合）
+  personality_traits: string[]; // 星座・動物・六星の統合特性
 }
 ```
 
@@ -58,15 +58,15 @@ interface FortuneCalcResponse {
 interface FortuneDetailResponse extends FortuneCalcResponse {
   fortune_detail: {
     birth_date: string;        // 生年月日文字列表示
-    western_zodiac: string;    // 西洋12星座
-    chinese_zodiac: string;    // 干支年表示
     
-    // 算命学詳細
-    sanmeigaku: {
-      celestial_stem: string;  // 天干
-      earthly_branch: string;  // 地支
-      five_elements: string;   // 五行配置
-      destiny_number: number;  // 宿命数
+    // 星座詳細情報
+    zodiac_detail: {
+      ruling_planet: string;   // 守護星
+      lucky_color: string;     // ラッキーカラー  
+      lucky_number: number[];  // ラッキーナンバー
+      compatibility: string[]; // 相性の良い星座
+      career_advice: string;   // 仕事運アドバイス
+      love_advice: string;     // 恋愛運アドバイス
     };
     
     // 運勢サイクル
@@ -127,11 +127,27 @@ type CacheKey = `${number}-${number}-${number}`; // YYYY-MM-DD
 
 #### 3.3 計算エンジン設計
 
-##### 干支・十二支計算
+##### 西洋星座計算
 ```typescript
-function calculateZodiac(year: number): string {
-  const zodiacAnimals = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-  return zodiacAnimals[(year - 4) % 12];
+function calculateWesternZodiac(month: number, day: number): ZodiacResult {
+  const zodiacData = [
+    { name: '牡羊座', element: '火', start: [3, 21], end: [4, 19], planet: '火星' },
+    { name: '牡牛座', element: '地', start: [4, 20], end: [5, 20], planet: '金星' },
+    { name: '双子座', element: '風', start: [5, 21], end: [6, 21], planet: '水星' },
+    // ... 12星座データ
+  ];
+  
+  for (const zodiac of zodiacData) {
+    if (isInZodiacRange(month, day, zodiac.start, zodiac.end)) {
+      return {
+        name: zodiac.name,
+        element: zodiac.element,
+        planet: zodiac.planet,
+        traits: ZODIAC_TRAITS[zodiac.name],
+        compatibility: ZODIAC_COMPATIBILITY[zodiac.name]
+      };
+    }
+  }
 }
 ```
 
@@ -163,18 +179,6 @@ function calculateSixStar(year: number, month: number, day: number): SixStarResu
 }
 ```
 
-##### 天中殺計算
-```typescript
-function calculateTenchusatsu(year: number): TenchusatsuResult {
-  const zodiac = calculateZodiac(year);
-  const tenchusatsuPattern = TENCHUSATSU_PATTERNS[zodiac];
-  
-  return {
-    years: calculateTenchusatsuYears(year, tenchusatsuPattern),
-    status: getCurrentTenchusatsuStatus(year, tenchusatsuPattern)
-  };
-}
-```
 
 ---
 
@@ -203,7 +207,7 @@ const PRECISION_TEST_CASES: FortuneTestCase[] = [
   {
     input: { year: 1990, month: 5, day: 15 },
     expected: {
-      animal: 'チーター', zodiac: '午',
+      animal: 'チーター',
       six_star: '土星人+', animal_number: 43
     }
   },
@@ -220,7 +224,6 @@ describe('Fortune API Precision Tests', () => {
       const result = await fortuneApi.calculate(testCase.input);
       
       expect(result.animal).toBe(testCase.expected.animal);
-      expect(result.zodiac).toBe(testCase.expected.zodiac);
       expect(result.six_star).toBe(testCase.expected.six_star);
       expect(result.animal_number).toBe(testCase.expected.animal_number);
     }
@@ -292,10 +295,11 @@ export default function() {
 **目標**: CSV脱却、計算式ベース実装
 
 #### タスク詳細
-- [ ] **2.1 星座計算実装**（0.5日）
+- [ ] **2.1 基本日付処理・星座計算実装**（0.5日）
   - JST対応の日付処理実装
-  - 十二支・干支計算ロジック
-  - 西洋12星座計算追加
+  - Excel シリアル値変換
+  - 西洋12星座計算（エレメント・守護星含む）
+  - 星座特性とラッキーアイテム算出
 
 - [ ] **2.2 動物占い計算式化**（1.5日）
   - Excel シリアル値変換関数
@@ -307,10 +311,6 @@ export default function() {
   - 運気サイクル計算（年運・月運）
   - 星人±判定アルゴリズム
 
-- [ ] **2.4 算命学・天中殺実装**（1日）
-  - 天中殺年算出ロジック
-  - 現在の天中殺状態判定
-  - 十干・十二支組み合わせ計算
 
 ### Phase 3: 統合・最適化（2日）
 **目標**: パフォーマンス100ms以下、50人同時接続対応
@@ -345,10 +345,9 @@ export default function() {
 ## 📈 成功指標・KPI
 
 ### 1. 精度指標
-- **算命学計算精度**: 100%（10テストケースすべて）
-- **動物占い精度**: 100%（60種分類対応）
-- **六星占術精度**: 100%（星人±含む）
-- **天中殺判定精度**: 100%
+- **動物占い精度**: 100%（60種分類対応・10テストケースすべて）
+- **六星占術精度**: 100%（星人±含む・10テストケースすべて）
+- **年齢計算精度**: 100%（JST基準）
 
 ### 2. パフォーマンス指標
 - **API応答時間**: P95 < 100ms, P99 < 500ms
