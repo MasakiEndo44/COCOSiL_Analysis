@@ -43,8 +43,8 @@ node scripts/seed-admin.js           # Seed admin database
 node scripts/check-admin.js          # Verify admin setup
 node scripts/update-admin-password.js # Update admin password
 
-# Python (fortune calculation engine)
-python scripts/fortune_calculator.py 1990 5 15  # Test fortune calculation
+# Python utilities (data analysis)
+python scripts/analyze_correct_data.py  # Analyze diagnosis data
 ```
 
 ## Architecture & Key Patterns
@@ -55,7 +55,8 @@ python scripts/fortune_calculator.py 1990 5 15  # Test fortune calculation
 - **Zustand** - State management for diagnosis data flow
 - **Tailwind + shadcn/ui** - Styling and component system
 - **OpenAI API** - GPT-4 streaming chat integration
-- **Python scripts** - Fortune calculation engine
+- **MDX** - Learning content with rehype/remark plugins
+- **TypeScript Fortune Engine** - Edge Runtime optimized calculation
 
 ### State Management (Critical)
 The application uses Zustand for cross-component state management:
@@ -107,15 +108,21 @@ src/
 - `@/*` → `./src/*`
 - `@/components/*` → `./src/ui/components/*`  
 - `@/features/*` → `./src/ui/features/*`
+- `@/hooks/*` → `./src/ui/hooks/*`
 - `@/lib/*` → `./src/lib/*`
 - `@/domain/*` → `./src/domain/*`
+- `@/application/*` → `./src/application/*`
+- `@/infrastructure/*` → `./src/infrastructure/*`
+- `@/types/*` → `./src/types/*`
+- `@/data/*` → `./data/*`
+- `@/scripts/*` → `./scripts/*`
 
 ## Core Features Implementation
 
 ### F001: Main Diagnosis System (85% complete)
 - **Entry**: `src/app/diagnosis/page.tsx`
 - **Components**: `src/ui/features/forms/basic-info-form.tsx`
-- **API**: `src/app/api/fortune-calc/route.ts` (Python integration)
+- **API**: `src/app/api/fortune-calc-v2/route.ts` (Edge Runtime TypeScript engine)
 - **Missing**: Enhanced date validation, API retry logic
 
 ### F002: Taiheki Diagnosis (90% complete)
@@ -179,11 +186,12 @@ export async function POST(request: Request) {
 }
 ```
 
-### Python Fortune Calculator Integration
-```bash
-# src/app/api/fortune-calc/route.ts calls:
-python scripts/fortune_calculator.py ${year} ${month} ${day}
-# Returns structured JSON for Sanmeigaku calculations
+### TypeScript Fortune Calculator (Edge Runtime)
+```typescript
+// src/app/api/fortune-calc-v2/route.ts - Edge Runtime optimized
+// Calls: calculateFortuneSimplified() from src/lib/fortune/precision-calculator.ts
+// LRU cache with 7-day TTL, supports 50 concurrent users
+// Returns: age, western_zodiac, animal_character, six_star
 ```
 
 ### Admin API Security
@@ -237,6 +245,25 @@ python scripts/fortune_calculator.py ${year} ${month} ${day}
 3. Use Zod schemas for request/response validation
 4. Add comprehensive error logging
 
+## MDX Learning System Configuration
+
+The learning system uses MDX with custom plugins for educational content:
+
+```javascript
+// next.config.mjs - MDX configuration
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkGfm],           // GitHub Flavored Markdown
+    rehypePlugins: [rehypeHighlight, rehypeSlug], // Syntax highlighting + slugs
+  },
+})
+```
+
+**MDX Content Structure:**
+- `src/content/taiheki/` - Learning chapters as MDX files
+- `src/app/learn/taiheki/[chapter]/page.tsx` - Dynamic MDX rendering
+- Interactive components embedded in MDX content
+
 ## Environment & Configuration
 
 ### Required Environment Variables (.env.example)
@@ -253,13 +280,13 @@ ADMIN_PASSWORD=1234                      # 4-digit admin PIN
 ### Build Requirements
 - **TypeScript**: Strict mode, no build errors allowed
 - **ESLint**: Must pass during build (ignoreDuringBuilds: false)
-- **Python**: Required for fortune calculation engine
+- **MDX**: Required for learning system content
 - **Node.js**: >=18.0.0
 
 ## Deployment Notes
 
-- **Platform**: Vercel (recommended)
-- **Python Runtime**: Ensure availability for `scripts/fortune_calculator.py`
+- **Platform**: Vercel (recommended) 
+- **Edge Runtime**: Fortune calculation optimized for Edge Runtime
 - **Build Validation**: `npm run build` must pass without errors
 - **Security**: Environment variables for OpenAI API key, admin credentials
 
