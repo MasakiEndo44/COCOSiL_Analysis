@@ -1,7 +1,7 @@
 export function FeatureOverview() {
   const features = [
     {
-      title: "体癖理論診断",
+      title: "体癖理論",
       description: "野口整体の体癖理論に基づく20問の診断で、あなたの身体的・心理的特徴を分析します。",
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,7 +11,7 @@ export function FeatureOverview() {
       color: "bg-blue-500"
     },
     {
-      title: "MBTI性格分析",
+      title: "MBTI",
       description: "16の性格タイプから、あなたの心理的傾向と思考パターンを明らかにします。",
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,8 +21,8 @@ export function FeatureOverview() {
       color: "bg-purple-500"
     },
     {
-      title: "算命学・動物占い",
-      description: "生年月日から東洋の占術で運勢と性格の傾向を読み解きます。",
+      title: "動物占い",
+      description: "生年月日から60種類の動物キャラクターで性格と運勢の傾向を読み解きます。",
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -41,8 +41,8 @@ export function FeatureOverview() {
       color: "bg-indigo-500"
     },
     {
-      title: "AI統合分析",
-      description: "全5つの診断結果をAIが統合し、より深い自己理解と洞察を提供します。",
+      title: "6星占術",
+      description: "算命学をベースにした6つの星人タイプで運勢と性格の周期性を分析します。",
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -59,7 +59,7 @@ export function FeatureOverview() {
           AI統合による5つの診断手法
         </h2>
         <p className="text-body-l-mobile md:text-body-l-desktop text-light-fg-muted max-w-3xl mx-auto">
-          体癖理論・MBTI・算命学・動物占い・星座占いをAIが統合分析。異なる理論体系の診断を組み合わせることで、より立体的で正確な自己理解が可能になります。
+          体癖理論・MBTI・動物占い・星座占い・6星占術をAIが統合分析。異なる理論体系の診断を組み合わせることで、より立体的で正確な自己理解が可能になります。
         </p>
       </div>
 
@@ -67,13 +67,13 @@ export function FeatureOverview() {
         {features.map((feature, index) => (
           <div 
             key={index}
-            className="bg-white p-8 rounded-card shadow-z1 hover:shadow-z2 transition-all text-left"
+            className="bg-white p-8 rounded-card shadow-z1 hover:shadow-z2 transition-all text-center"
           >
-            <div className="flex items-start space-x-4">
-              <div className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center text-white flex-shrink-0`}>
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center text-white`}>
                 {feature.icon}
               </div>
-              <div className="flex-1">
+              <div>
                 <h3 className="text-h3-mobile font-heading text-light-fg mb-3">
                   {feature.title}
                 </h3>

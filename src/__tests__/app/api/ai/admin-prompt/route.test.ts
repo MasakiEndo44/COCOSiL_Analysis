@@ -3,7 +3,7 @@
  */
 import { POST } from '@/app/api/ai/admin-prompt/route'
 import { NextRequest } from 'next/server'
-import { createMockBasicInfo, createMockMBTIResult, createMockTaihekiResult, createMockFortuneResult } from '../../../../utils/test-utils'
+import { createMockBasicInfo, createMockMBTIResult, createMockTaihekiResult, createMockFortuneResult } from '@/__tests__/utils/test-utils'
 import type { UserDiagnosisData } from '@/types'
 
 // Mock OpenAI client

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '../../../utils/test-utils'
+import { render, screen, waitFor } from '@/__tests__/utils/test-utils'
 import userEvent from '@testing-library/user-event'
 import { BasicInfoForm } from '@/ui/features/forms/basic-info-form'
 

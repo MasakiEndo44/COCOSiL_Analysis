@@ -1,6 +1,6 @@
 'use client';
 
-import { useDevInspector } from '../../hooks/use-dev-inspector';
+import { useDevInspector } from '@/hooks/use-dev-inspector';
 import { useEffect } from 'react';
 
 export function DevInspectorPanel() {

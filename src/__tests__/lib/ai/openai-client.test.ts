@@ -1,5 +1,5 @@
 import { generateDiagnosisSummary, generateAdminPrompt, generateQuickAnalysis } from '@/lib/ai/openai-client'
-import { createMockBasicInfo, createMockMBTIResult, createMockTaihekiResult, createMockFortuneResult } from '../../utils/test-utils'
+import { createMockBasicInfo, createMockMBTIResult, createMockTaihekiResult, createMockFortuneResult } from '@/__tests__/utils/test-utils'
 import type { UserDiagnosisData } from '@/types'
 
 // Mock fetch globally

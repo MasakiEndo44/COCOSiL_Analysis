@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
-import type { TaihekiType } from '@/types';
+import type { TaihekiType, SecondaryTaihekiType } from '@/types';
 
 interface TaihekiDirectInputProps {
   onBack: () => void;
@@ -25,7 +25,7 @@ export function TaihekiDirectInput({ onBack }: TaihekiDirectInputProps) {
     try {
       const result = {
         primary: primaryType as TaihekiType,
-        secondary: (secondaryType || 0) as TaihekiType,
+        secondary: (secondaryType || 0) as SecondaryTaihekiType,
         scores: {} as Record<TaihekiType, number>,
         characteristics: [getTypeDescription(primaryType, secondaryType)],
         recommendations: ['体癖番号を直接入力いただきました。']

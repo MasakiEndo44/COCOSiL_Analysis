@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
@@ -13,6 +13,11 @@ export function TaihekiStep() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 体癖診断画面表示時に進捗を80%に設定
+  useEffect(() => {
+    setCurrentStep('taiheki_test');
+  }, [setCurrentStep]);
 
   const handleAnswer = (answerIndex: number) => {
     const newAnswers = [...answers, answerIndex];

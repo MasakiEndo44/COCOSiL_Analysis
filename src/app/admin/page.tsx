@@ -1,5 +1,5 @@
 import { PageTag } from '@/lib/dev-tag';
-import AdminDashboard from '../../components/admin/admin-dashboard';
+import AdminDashboard from '@/components/admin/admin-dashboard';
 import { AdminLogin } from '@/ui/features/admin/admin-login';
 import { getServerAdminSession } from '@/lib/admin-session-server';
 

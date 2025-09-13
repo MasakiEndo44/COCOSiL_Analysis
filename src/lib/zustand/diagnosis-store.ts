@@ -7,7 +7,9 @@ import type {
   FortuneResult, 
   UserDiagnosisData, 
   DiagnosisStep, 
-  AppError 
+  AppError,
+  ChatSession,
+  ChatSummary
 } from '@/types';
 import { generateSessionId, calculateAge } from '@/lib/utils';
 
@@ -18,6 +20,11 @@ interface DiagnosisState {
   mbti: MBTIResult | null;
   taiheki: TaihekiResult | null;
   fortune: FortuneResult | null;
+  
+  // AIカウンセリングデータ
+  chatSession: ChatSession | null;
+  chatSummary: ChatSummary | null;
+  hasCompletedCounseling: boolean;
   
   // 状態
   currentStep: DiagnosisStep;
@@ -38,6 +45,11 @@ interface DiagnosisActions {
   setTaiheki: (result: TaihekiResult) => void;
   setFortune: (result: FortuneResult) => void;
   
+  // AIカウンセリング設定
+  setChatSession: (session: ChatSession) => void;
+  setChatSummary: (summary: ChatSummary) => void;
+  markCounselingCompleted: (completed: boolean) => void;
+  
   // 進捗管理
   setCurrentStep: (step: DiagnosisStep) => void;
   completeStep: (step: DiagnosisStep) => void;
@@ -54,18 +66,17 @@ interface DiagnosisActions {
 
 type DiagnosisStore = DiagnosisState & DiagnosisActions;
 
-const calculateStepProgress = (completedSteps: DiagnosisStep[]): number => {
-  const stepWeights: Record<DiagnosisStep, number> = {
-    basic_info: 20,
-    mbti: 20,
-    taiheki_learn: 10, // 任意ステップ
-    taiheki_test: 30,
-    integration: 20
+const calculateStepProgress = (currentStep: DiagnosisStep): number => {
+  // 単純な1対1対応：現在の画面に基づいた進捗値
+  const stepProgressMap: Record<DiagnosisStep, number> = {
+    basic_info: 20,      // 基本情報画面 = 20%
+    mbti: 40,           // MBTI診断画面 = 40%
+    taiheki_learn: 60,  // 体癖学習画面 = 60%（任意ステップ）
+    taiheki_test: 80,   // 体癖診断画面 = 80%
+    integration: 100    // 結果画面 = 100%
   };
   
-  return completedSteps.reduce((total, step) => {
-    return total + (stepWeights[step] || 0);
-  }, 0);
+  return stepProgressMap[currentStep] || 0;
 };
 
 export const useDiagnosisStore = create<DiagnosisStore>()(
@@ -77,6 +88,9 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       mbti: null,
       taiheki: null,
       fortune: null,
+      chatSession: null,
+      chatSummary: null,
+      hasCompletedCounseling: false,
       currentStep: 'basic_info',
       completedSteps: [],
       progress: 0,
@@ -86,7 +100,21 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       // セッション初期化
       initializeSession: () => {
         const sessionId = generateSessionId();
-        set({ sessionId, currentStep: 'basic_info', completedSteps: [], progress: 0 });
+        set({ 
+          sessionId, 
+          currentStep: 'basic_info', 
+          completedSteps: [], 
+          progress: 0,
+          basicInfo: null,
+          mbti: null,
+          taiheki: null,
+          fortune: null,
+          chatSession: null,
+          chatSummary: null,
+          hasCompletedCounseling: false,
+          isLoading: false,
+          error: null
+        });
       },
       
       // データ設定
@@ -115,26 +143,39 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         set({ fortune: result });
       },
       
+      // AIカウンセリング設定
+      setChatSession: (session: ChatSession) => {
+        set({ chatSession: session });
+      },
+      
+      setChatSummary: (summary: ChatSummary) => {
+        set({ chatSummary: summary });
+      },
+      
+      markCounselingCompleted: (completed: boolean) => {
+        set({ hasCompletedCounseling: completed });
+      },
+      
       // 進捗管理
       setCurrentStep: (step: DiagnosisStep) => {
-        set({ currentStep: step });
+        const progress = calculateStepProgress(step);
+        set({ currentStep: step, progress });
       },
       
       completeStep: (step: DiagnosisStep) => {
         const { completedSteps } = get();
         if (!completedSteps.includes(step)) {
           const newCompletedSteps = [...completedSteps, step];
-          const progress = calculateStepProgress(newCompletedSteps);
           set({ 
-            completedSteps: newCompletedSteps,
-            progress 
+            completedSteps: newCompletedSteps
+            // 進捗はsetCurrentStepで管理されるため、ここでは更新不要
           });
         }
       },
       
       updateProgress: () => {
-        const { completedSteps } = get();
-        const progress = calculateStepProgress(completedSteps);
+        const { currentStep } = get();
+        const progress = calculateStepProgress(currentStep);
         set({ progress });
       },
       
@@ -177,6 +218,9 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
           mbti: null,
           taiheki: null,
           fortune: null,
+          chatSession: null,
+          chatSummary: null,
+          hasCompletedCounseling: false,
           currentStep: 'basic_info',
           completedSteps: [],
           progress: 0,
@@ -198,6 +242,9 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         mbti: state.mbti,
         taiheki: state.taiheki,
         fortune: state.fortune,
+        chatSession: state.chatSession,
+        chatSummary: state.chatSummary,
+        hasCompletedCounseling: state.hasCompletedCounseling,
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,
         progress: state.progress

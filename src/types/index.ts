@@ -36,10 +36,11 @@ export interface MBTIResult {
 
 // 体癖関連
 export type TaihekiType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type SecondaryTaihekiType = 0 | TaihekiType; // 副体癖は0（なし）も許可
 
 export interface TaihekiResult {
-  primary: TaihekiType;    // 主体癖
-  secondary: TaihekiType;  // 副体癖
+  primary: TaihekiType;           // 主体癖
+  secondary: SecondaryTaihekiType; // 副体癖（0 = なし）
   scores: Record<TaihekiType, number>; // 各体癖のスコア
   characteristics: string[]; // 特徴一覧
   recommendations: string[]; // 推奨事項
@@ -148,9 +149,33 @@ export interface AdminSubmitResponse {
 
 // OpenAI チャット関連
 export interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+}
+
+// AI Counseling Session Data
+export interface ChatSession {
+  sessionId: string;
+  selectedTopic: string;          // Which consultation topic was chosen
+  messages: ChatMessage[];       // Full conversation history
+  startTime: Date;
+  endTime?: Date;
+  isCompleted: boolean;
+}
+
+export interface ChatSummary {
+  topicId: string;
+  topicTitle: string;
+  qaExchanges: QAExchange[];     // Simple Q&A pairs
+  sessionDuration: number;       // Duration in minutes
+}
+
+export interface QAExchange {
+  question: string;              // OpenAI question summary (max 100 chars)
+  answer: string;                // User response summary (max 150 chars)
+  timestamp: Date;               // When this exchange occurred
 }
 
 export interface ChatRequest {

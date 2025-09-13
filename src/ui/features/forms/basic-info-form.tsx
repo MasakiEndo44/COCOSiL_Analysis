@@ -144,7 +144,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
       
       while (retryCount < maxRetries) {
         try {
-          const fortuneResponse = await fetch('/api/fortune-calc', {
+          const fortuneResponse = await fetch('/api/fortune-calc-v2', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -161,7 +161,11 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
             throw new Error(`APIエラー: ${fortuneResponse.status} - ${errorText}`);
           }
 
-          fortuneData = await fortuneResponse.json();
+          const fortuneApiResponse = await fortuneResponse.json();
+          if (!fortuneApiResponse.success) {
+            throw new Error(`算命学API計算エラー: ${fortuneApiResponse.error || '不明なエラー'}`);
+          }
+          fortuneData = fortuneApiResponse.data;
           break; // 成功したらループを抜ける
         } catch (apiError) {
           retryCount++;
@@ -187,12 +191,17 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
       // 算命学結果も同時に保存
       const { setFortune } = useDiagnosisStore.getState();
       const fortuneResult: FortuneResult = {
-        zodiac: fortuneData.zodiac,
-        animal: fortuneData.animal,
+        zodiac: fortuneData.zodiac, // v2 API uses zodiac
+        animal: fortuneData.animal, // v2 API uses animal
         sixStar: fortuneData.six_star,
-        element: fortuneData.element,
-        fortune: fortuneData.characteristics?.join(' ') || '',
-        characteristics: fortuneData.characteristics || []
+        element: fortuneData.fortune_detail?.personality_traits?.[1]?.replace('カラー：', '') || '不明', // Extract color from personality traits
+        fortune: `${fortuneData.animal}の特徴を持つ方です`,
+        characteristics: [fortuneData.animal?.split('な')?.[0] || fortuneData.animal?.split('の')?.[0] || '特別'] // Safe split with fallback
+      };
+      // Store enhanced data for display (extract from fortune_detail)
+      (fortuneResult as any).animalDetails = {
+        character: fortuneData.animal,
+        color: fortuneData.fortune_detail?.personality_traits?.[1]?.replace('カラー：', '') || '不明'
       };
       
       setFortune(fortuneResult);

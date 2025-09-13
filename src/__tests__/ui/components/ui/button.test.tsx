@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '../../../utils/test-utils'
+import { render, screen, fireEvent } from '@/__tests__/utils/test-utils'
 import { Button } from '@/ui/components/ui/button'
 
 describe('Button Component', () => {

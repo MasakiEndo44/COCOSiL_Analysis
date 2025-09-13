@@ -18,7 +18,7 @@ interface DiagnosisProviderProps {
 }
 
 export function DiagnosisProvider({ children }: DiagnosisProviderProps) {
-  const { initializeSession, clearAll } = useDiagnosisStore();
+  const { initializeSession, clearAll, setCurrentStep } = useDiagnosisStore();
 
   useEffect(() => {
     // Check for expired data on mount
@@ -27,12 +27,17 @@ export function DiagnosisProvider({ children }: DiagnosisProviderProps) {
       clearAll();
     }
 
-    // Initialize session if none exists
+    // Initialize session if none exists or force new session if on main diagnosis page
     const store = useDiagnosisStore.getState();
-    if (!store.sessionId) {
+    const isMainDiagnosisPage = window.location.pathname === '/diagnosis';
+    
+    if (!store.sessionId || (isMainDiagnosisPage && !store.basicInfo)) {
       initializeSession();
+    } else {
+      // Ensure current step progress is correctly calculated based on current step only
+      setCurrentStep(store.currentStep);
     }
-  }, [initializeSession, clearAll]);
+  }, [initializeSession, clearAll, setCurrentStep]);
 
   const contextValue: DiagnosisContextValue = {
     // Add shared diagnosis context values here if needed

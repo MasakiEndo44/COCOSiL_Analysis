@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
 import { Select } from '@/ui/components/ui/select';
@@ -36,6 +36,11 @@ export function MbtiStep() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<(0 | 1)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // MBTI画面表示時に進捗を40%に設定
+  useEffect(() => {
+    setCurrentStep('mbti');
+  }, [setCurrentStep]);
 
   const handleKnownType = async () => {
     if (!selectedType) return;

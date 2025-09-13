@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageTag } from '@/lib/dev-tag';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
+import type { ChatSession } from '@/types';
+import { generateSessionId } from '@/lib/utils';
 import { Button } from '@/ui/components/ui/button';
 import { UserDiagnosisData } from '@/types';
 
@@ -50,13 +52,14 @@ const consultationTopics: ConsultationTopic[] = [
 
 export default function ChatPage() {
   const router = useRouter();
-  const { getUserData, setCurrentStep } = useDiagnosisStore();
+  const { getUserData, setCurrentStep, setChatSession, setChatSummary, markCounselingCompleted } = useDiagnosisStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<'topic_selection' | 'consultation' | 'summary'>('topic_selection');
   const [userData, setUserData] = useState<UserDiagnosisData | null>(null);
+  const [chatSession, setChatSessionLocal] = useState<ChatSession | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const initializedRef = useRef(false);
@@ -112,6 +115,16 @@ export default function ChatPage() {
         content: `「${topic.title}」について相談したいです。`,
         timestamp: new Date()
       };
+      
+      // Initialize chat session
+      const session: ChatSession = {
+        sessionId: generateSessionId(),
+        selectedTopic: topicId,
+        messages: [...messages, topicMessage],
+        startTime: new Date(),
+        isCompleted: false
+      };
+      setChatSessionLocal(session);
       
       setMessages(prev => [...prev, topicMessage]);
       
@@ -183,7 +196,19 @@ export default function ChatPage() {
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, aiMessage];
+        
+        // Update session with AI message
+        if (chatSession) {
+          setChatSessionLocal({
+            ...chatSession,
+            messages: newMessages
+          });
+        }
+        
+        return newMessages;
+      });
 
       // ストリーミング処理
       const decoder = new TextDecoder();
@@ -205,13 +230,23 @@ export default function ChatPage() {
               const content = parsed.choices?.[0]?.delta?.content || '';
               if (content) {
                 aiContent += content;
-                setMessages(prev => 
-                  prev.map(msg => 
+                setMessages(prev => {
+                  const updatedMessages = prev.map(msg => 
                     msg.id === aiMessageId 
                       ? { ...msg, content: aiContent }
                       : msg
-                  )
-                );
+                  );
+                  
+                  // Update session with streaming content
+                  if (chatSession) {
+                    setChatSessionLocal({
+                      ...chatSession,
+                      messages: updatedMessages
+                    });
+                  }
+                  
+                  return updatedMessages;
+                });
               }
             } catch (e) {
               // パースエラーは無視
@@ -249,7 +284,20 @@ export default function ChatPage() {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage];
+      
+      // Update session with new messages
+      if (chatSession) {
+        setChatSessionLocal({
+          ...chatSession,
+          messages: newMessages
+        });
+      }
+      
+      return newMessages;
+    });
+    
     const messageText = currentInput.trim();
     setCurrentInput('');
 
@@ -264,7 +312,31 @@ export default function ChatPage() {
     }
   };
 
-  const handleEndConsultation = () => {
+  const handleEndConsultation = async () => {
+    if (chatSession && messages.length > 2) {
+      // Complete session data
+      const completedSession: ChatSession = {
+        ...chatSession,
+        messages: messages,
+        endTime: new Date(),
+        isCompleted: true
+      };
+      
+      // Save to global store
+      setChatSession(completedSession);
+      markCounselingCompleted(true);
+      
+      // Generate and save summary
+      try {
+        const { generateSessionSummary } = await import('@/lib/counseling/summarizer');
+        const summary = generateSessionSummary(completedSession);
+        setChatSummary(summary);
+      } catch (error) {
+        console.error('Failed to generate summary:', error);
+        // Continue without summary - fallback will be used
+      }
+    }
+    
     setConversationPhase('summary');
     router.push('/diagnosis/results');
   };

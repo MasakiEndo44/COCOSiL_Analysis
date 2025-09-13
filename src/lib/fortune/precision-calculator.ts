@@ -6,12 +6,19 @@
  * 技術: Next.js 14 Edge Runtime + TypeScript
  */
 
+import { getDestinyNumberFromDatabase, hasDestinyNumberInDatabase, getSupportedYearRange } from '@/lib/data/destiny-number-database';
+
 // === 型定義 ===
 interface SimplifiedFortuneResult {
   age: number;                    // 満年齢（JST基準）
   western_zodiac: string;         // 西洋12星座
   animal_character: string;       // 60種動物キャラクター名
   six_star: string;              // 六星占術（星人±）
+  animal_details?: {              // 追加の動物詳細情報（オプショナル）
+    baseAnimal: string;
+    character: string;
+    color: string;
+  };
 }
 
 // === 基本定数 ===
@@ -32,55 +39,135 @@ const WESTERN_ZODIAC_DATA = [
   { name: '射手座', startMonth: 11, startDay: 22, endMonth: 12, endDay: 21 }
 ] as const;
 
-/** 60種動物キャラクター完全マッピング（Excelファイルの正解データに基づく） */
-const ANIMAL_60_CHARACTERS: Record<number, string> = {
+/** 60種動物キャラクター完全マッピング（MD対応表に基づく） */
+interface AnimalCharacter {
+  baseAnimal: string;    // 基本動物タイプ
+  character: string;     // フル動物キャラクター名
+  color: string;        // カラー
+}
+
+const ANIMAL_60_CHARACTERS: Record<number, AnimalCharacter> = {
   // 1-10
-  1: '長距離ランナーのチータ', 2: '社交家のたぬき', 3: '落ち着きのない猿', 4: 'フットワークの軽い子守熊', 5: '面倒見のいい黒ひょう',
-  6: '愛情あふれる虎', 7: '全力疾走するチータ', 8: '磨き上げられたたぬき', 9: '大きな志をもった猿', 10: '母性豊かな子守熊',
+  1: { baseAnimal: 'チーター', character: '長距離ランナーのチータ', color: 'イエロー' },
+  2: { baseAnimal: 'たぬき', character: '社交家のたぬき', color: 'グリーン' },
+  3: { baseAnimal: '猿', character: '落ち着きのない猿', color: 'レッド' },
+  4: { baseAnimal: 'コアラ', character: 'フットワークの軽い子守熊', color: 'オレンジ' },
+  5: { baseAnimal: '黒ひょう', character: '面倒見のいい黒ひょう', color: 'ブラウン' },
+  6: { baseAnimal: '虎', character: '愛情あふれる虎', color: 'ブラック' },
+  7: { baseAnimal: 'チーター', character: '全力疾走するチータ', color: 'ゴールド' },
+  8: { baseAnimal: 'たぬき', character: '磨き上げられたたぬき', color: 'シルバー' },
+  9: { baseAnimal: '猿', character: '大きな志をもった猿', color: 'ブルー' },
+  10: { baseAnimal: 'コアラ', character: '母性豊かな子守熊', color: 'パープル' },
   // 11-20  
-  11: '正直なこじか', 12: '人気者のゾウ', 13: 'ネアカの狼', 14: '協調性のないひつじ', 15: 'どっしりとした猿',
-  16: 'コアラのなかの子守熊', 17: '強い意志をもったこじか', 18: 'デリケートなゾウ', 19: '放浪の狼', 20: '物静かなひつじ',
+  11: { baseAnimal: 'こじか', character: '正直なこじか', color: 'イエロー' },
+  12: { baseAnimal: 'ゾウ', character: '人気者のゾウ', color: 'グリーン' },
+  13: { baseAnimal: '狼', character: 'ネアカの狼', color: 'レッド' },
+  14: { baseAnimal: 'ひつじ', character: '協調性のないひつじ', color: 'オレンジ' },
+  15: { baseAnimal: '猿', character: 'どっしりとした猿', color: 'ブラウン' },
+  16: { baseAnimal: 'コアラ', character: 'コアラのなかの子守熊', color: 'ブラック' },
+  17: { baseAnimal: 'こじか', character: '強い意志をもったこじか', color: 'ゴールド' },
+  18: { baseAnimal: 'ゾウ', character: 'デリケートなゾウ', color: 'シルバー' },
+  19: { baseAnimal: '狼', character: '放浪の狼', color: 'ブルー' },
+  20: { baseAnimal: 'ひつじ', character: '物静かなひつじ', color: 'パープル' },
   // 21-30
-  21: '落ち着きのあるペガサス', 22: '強靭な翼をもつペガサス', 23: '無邪気なひつじ', 24: 'クリエイティブな狼', 25: '穏やかな狼',
-  26: '粘り強いひつじ', 27: '波乱に満ちたペガサス', 28: '優雅なペガサス', 29: 'チャレンジ精神旺盛なひつじ', 30: '順応性のある狼',
+  21: { baseAnimal: 'ペガサス', character: '落ち着きのあるペガサス', color: 'イエロー' },
+  22: { baseAnimal: 'ペガサス', character: '強靭な翼をもつペガサス', color: 'グリーン' },
+  23: { baseAnimal: 'ひつじ', character: '無邪気なひつじ', color: 'レッド' },
+  24: { baseAnimal: '狼', character: 'クリエイティブな狼', color: 'オレンジ' },
+  25: { baseAnimal: '狼', character: '穏やかな狼', color: 'ブラウン' },
+  26: { baseAnimal: 'ひつじ', character: '粘り強いひつじ', color: 'ブラック' },
+  27: { baseAnimal: 'ペガサス', character: '波乱に満ちたペガサス', color: 'ゴールド' },
+  28: { baseAnimal: 'ペガサス', character: '優雅なペガサス', color: 'シルバー' },
+  29: { baseAnimal: 'ひつじ', character: 'チャレンジ精神旺盛なひつじ', color: 'ブルー' },
+  30: { baseAnimal: '狼', character: '順応性のある狼', color: 'パープル' },
   // 31-40
-  31: 'リーダーとなるゾウ', 32: 'しっかり者のこじか', 33: '活動的な子守熊', 34: '気分屋の猿', 35: '頼られると嬉しいひつじ',
-  36: '好感のもたれる狼', 37: 'まっしぐらに突き進むゾウ', 38: '華やかなこじか', 39: '夢とロマンの子守熊', 40: '尽す猿',
+  31: { baseAnimal: 'ゾウ', character: 'リーダーとなるゾウ', color: 'イエロー' },
+  32: { baseAnimal: 'こじか', character: 'しっかり者のこじか', color: 'グリーン' },
+  33: { baseAnimal: 'コアラ', character: '活動的な子守熊', color: 'レッド' },
+  34: { baseAnimal: '猿', character: '気分屋の猿', color: 'オレンジ' },
+  35: { baseAnimal: 'ひつじ', character: '頼られると嬉しいひつじ', color: 'ブラウン' },
+  36: { baseAnimal: '狼', character: '好感のもたれる狼', color: 'ブラック' },
+  37: { baseAnimal: 'ゾウ', character: 'まっしぐらに突き進むゾウ', color: 'ゴールド' },
+  38: { baseAnimal: 'こじか', character: '華やかなこじか', color: 'シルバー' },
+  39: { baseAnimal: 'コアラ', character: '夢とロマンの子守熊', color: 'ブルー' },
+  40: { baseAnimal: '猿', character: '尽す猿', color: 'パープル' },
   // 41-50
-  41: '大器晩成のたぬき', 42: '足腰の強いチータ', 43: '動きまわる虎', 44: '情熱的な黒ひょう', 45: 'サービス精神旺盛な子守熊',
-  46: '守りの猿', 47: '人間味あふれるたぬき', 48: '品格のあるチータ', 49: 'ゆったりとした悠然の虎', 50: '落ち込みの激しい黒ひょう',
+  41: { baseAnimal: 'たぬき', character: '大器晩成のたぬき', color: 'イエロー' },
+  42: { baseAnimal: 'チーター', character: '足腰の強いチータ', color: 'グリーン' },
+  43: { baseAnimal: '虎', character: '動きまわる虎', color: 'レッド' },
+  44: { baseAnimal: '黒ひょう', character: '情熱的な黒ひょう', color: 'オレンジ' },
+  45: { baseAnimal: 'コアラ', character: 'サービス精神旺盛な子守熊', color: 'ブラウン' },
+  46: { baseAnimal: '猿', character: '守りの猿', color: 'ブラック' },
+  47: { baseAnimal: 'たぬき', character: '人間味あふれるたぬき', color: 'ゴールド' },
+  48: { baseAnimal: 'チーター', character: '品格のあるチータ', color: 'シルバー' },
+  49: { baseAnimal: '虎', character: 'ゆったりとした悠然の虎', color: 'ブルー' },
+  50: { baseAnimal: '黒ひょう', character: '落ち込みの激しい黒ひょう', color: 'パープル' },
   // 51-60
-  51: '我が道を行くライオン', 52: '統率力のあるライオン', 53: '感情豊かな黒ひょう', 54: '楽天的な虎', 55: 'パワフルな虎',
-  56: '気どらない黒ひょう', 57: '感情的なライオン', 58: '傷つきやすいライオン', 59: '束縛を嫌う黒ひょう', 60: '慈悲深い虎'
+  51: { baseAnimal: 'ライオン', character: '我が道を行くライオン', color: 'イエロー' },
+  52: { baseAnimal: 'ライオン', character: '統率力のあるライオン', color: 'グリーン' },
+  53: { baseAnimal: '黒ひょう', character: '感情豊かな黒ひょう', color: 'レッド' },
+  54: { baseAnimal: '虎', character: '楽天的な虎', color: 'オレンジ' },
+  55: { baseAnimal: '虎', character: 'パワフルな虎', color: 'ブラウン' },
+  56: { baseAnimal: '黒ひょう', character: '気どらない黒ひょう', color: 'ブラック' },
+  57: { baseAnimal: 'ライオン', character: '感情的なライオン', color: 'ゴールド' },
+  58: { baseAnimal: 'ライオン', character: '傷つきやすいライオン', color: 'シルバー' },
+  59: { baseAnimal: '黒ひょう', character: '束縛を嫌う黒ひょう', color: 'ブルー' },
+  60: { baseAnimal: '虎', character: '慈悲深い虎', color: 'パープル' }
 };
 
-/** 六星占術マスターデータ */
-const SIX_STAR_NAMES = [
-  '土星人+', '金星人+', '火星人+', '天王星人+', '木星人+', '水星人+',
-  '土星人-', '金星人-', '火星人-', '天王星人-', '木星人-', '水星人-'
-] as const;
 
 // === コア計算関数 ===
 
+
 /**
- * Excel シリアル値変換（1900年基準、精度保証版）
- * Excelの1900年うるう年バグを考慮した正確な実装
+ * Excel シリアル値変換（1900年基準、改善版）
+ * より正確な日数計算でExcel準拠のシリアル値を生成
  */
 function dateToExcelSerial(year: number, month: number, day: number): number {
-  // 1900年1月1日からの日数を計算
-  const targetDate = new Date(year, month - 1, day);
-  const baseDate = new Date(1900, 0, 1);
-  const diffInMs = targetDate.getTime() - baseDate.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  // 1900年1月1日を基準日とする
+  const baseYear = 1900;
   
-  // Excelの1900年うるう年バグ（2月29日があると仮定）を考慮
-  // 1900年3月1日以降の日付は+2、それ以前は+1
-  let serial = diffInDays + 1;
-  if (year > 1900 || (year === 1900 && month > 2) || (year === 1900 && month === 2 && day >= 29)) {
-    serial += 1; // うるう年バグによる1日のずれを補正
+  // 年ごとの累積日数を計算
+  let totalDays = 0;
+  
+  // 1900年から対象年の前年まで
+  for (let y = baseYear; y < year; y++) {
+    totalDays += isLeapYear(y) ? 366 : 365;
   }
   
-  return serial;
+  // 対象年の1月から前月まで
+  for (let m = 1; m < month; m++) {
+    totalDays += getDaysInMonth(year, m);
+  }
+  
+  // 対象日まで
+  totalDays += day;
+  
+  // Excelのシリアル値は1900/1/1を1とするため
+  // ただし、Excelの1900年うるう年バグを考慮
+  if (totalDays >= 60) { // 1900/3/1以降
+    totalDays += 1; // うるう年バグ補正
+  }
+  
+  return totalDays;
+}
+
+/**
+ * うるう年判定
+ */
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+}
+
+/**
+ * 指定月の日数を取得
+ */
+function getDaysInMonth(year: number, month: number): number {
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return daysInMonth[month - 1];
 }
 
 
@@ -132,41 +219,101 @@ function calculateAge(year: number, month: number, day: number): number {
   return age;
 }
 
+
 /**
- * 60種動物占い計算（正解データベース準拠）
- * 公式: (Excel Serial + 8) % 60 + 1
+ * シリアル値ベースの動物占い計算（改善版）
+ * 生年月日のシリアル値を基に60種動物キャラクターを決定
+ * 公式: (serial + 8) % 60 + 1
  */
-function calculate60AnimalCharacter(year: number, month: number, day: number): string {
+function calculate60AnimalCharacter(year: number, month: number, day: number): AnimalCharacter {
+  // Excelシリアル値を計算
   const serialValue = dateToExcelSerial(year, month, day);
+  
+  // 動物番号計算: (シリアル値 + 8) % 60 + 1
   const animalNumber = ((serialValue + 8) % 60) + 1;
   
-  // 正解データに基づく60種キャラクター完全マッピング
+  // 60種動物キャラクターマッピング
   const character = ANIMAL_60_CHARACTERS[animalNumber];
   
   if (!character) {
-    throw new Error(`動物番号${animalNumber}が見つかりません`);
+    throw new Error(`動物番号${animalNumber}が見つかりません (serial: ${serialValue})`);
   }
   
   return character;
 }
 
+
+
+
 /**
- * 六星占術計算（正解データ準拠版）
- * 2008/1/5 → 木星人+ (インデックス4) となる計算式
+ * 六星占術計算（改良版 - 運命数テーブルベース）
+ * 参考: https://www.plus-a.net/uranai/unmeisu/
+ * アルゴリズム: 運命数テーブル → 星番号計算 → 6星判定 → ±判定
  */
-function calculateSixStar(year: number, month: number, day: number): string {
-  // 2008/1/5で木星人+（インデックス4）になるよう調整
-  // 複数の計算方式を試した結果、以下の方式を採用
-  const birthSum = year + month + day;
-  let starIndex = birthSum % 12;
-  
-  // 2008+1+5=2014, 2014%12=10 → 木星人- だが、木星人+が正解
-  // よって、調整が必要。一時的に特別ケースとして処理
-  if (year === 2008 && month === 1 && day === 5) {
-    starIndex = 4; // 木星人+
+
+/**
+ * 運命数データベース参照システム（厳密版）
+ * Reference: https://www.plus-a.net/uranai/unmeisu/
+ * CSV data range対応、フォールバック機能なし
+ */
+function getDestinyNumber(year: number, month: number): number {
+  // データベースから検索
+  if (hasDestinyNumberInDatabase(year, month)) {
+    return getDestinyNumberFromDatabase(year, month);
   }
   
-  return SIX_STAR_NAMES[starIndex];
+  // データベースにない場合はエラー
+  const range = getSupportedYearRange();
+  throw new Error(`運命数データベースに${year}年${month}月のデータが存在しません。対応範囲: ${range.min}-${range.max}年`);
+}
+
+/**
+ * 星番号から6星タイプを決定
+ */
+function getSixStarType(starNumber: number): string {
+  if (starNumber >= 1 && starNumber <= 10) return '土星人';
+  if (starNumber >= 11 && starNumber <= 20) return '金星人';
+  if (starNumber >= 21 && starNumber <= 30) return '火星人';
+  if (starNumber >= 31 && starNumber <= 40) return '天王星人';
+  if (starNumber >= 41 && starNumber <= 50) return '木星人';
+  if (starNumber >= 51 && starNumber <= 60) return '水星人';
+  
+  throw new Error(`無効な星番号: ${starNumber}`);
+}
+
+
+/**
+ * 十二支に基づく陰陽（±）判定（標準版）
+ */
+function getYinYang(year: number): '+' | '-' {
+  // 十二支インデックス計算
+  const zodiacIndex = (year - 4) % 12;
+  
+  // 標準の陰陽判定
+  // 陰 (-): 子、寅、辰、午、申、戌 (偶数インデックス: 0,2,4,6,8,10)
+  // 陽 (+): 丑、卯、巳、未、酉、亥 (奇数インデックス: 1,3,5,7,9,11)
+  return zodiacIndex % 2 === 0 ? '-' : '+';
+}
+
+function calculateSixStar(year: number, month: number, day: number): string {
+  // 1. 運命数取得
+  const destinyNumber = getDestinyNumber(year, month);
+  
+  // 2. 星番号計算: (運命数 - 1) + 生日
+  let starNumber = (destinyNumber - 1) + day;
+  
+  // 61以上の場合は60を引く
+  if (starNumber > 60) {
+    starNumber -= 60;
+  }
+  
+  // 3. 6星タイプ決定
+  const starType = getSixStarType(starNumber);
+  
+  // 4. ±判定（十二支の陰陽）
+  const yinYang = getYinYang(year);
+  
+  return `${starType}${yinYang}`;
 }
 
 
@@ -183,8 +330,9 @@ function calculateSixStar(year: number, month: number, day: number): string {
  */
 export function calculateFortuneSimplified(year: number, month: number, day: number): SimplifiedFortuneResult {
   // 入力値検証
-  if (year < 1960 || year > 2025) {
-    throw new Error('対応年度は1960年～2025年です');
+  const range = getSupportedYearRange();
+  if (year < range.min || year > range.max) {
+    throw new Error(`対応年度は${range.min}年～${range.max}年です`);
   }
   if (month < 1 || month > 12) {
     throw new Error('月は1～12の範囲で入力してください');
@@ -204,14 +352,19 @@ export function calculateFortuneSimplified(year: number, month: number, day: num
   // 4つの要素を計算
   const age = calculateAge(year, month, day);
   const western_zodiac = calculateWesternZodiac(month, day);
-  const animal_character = calculate60AnimalCharacter(year, month, day);
+  const animalData = calculate60AnimalCharacter(year, month, day);
   const six_star = calculateSixStar(year, month, day);
   
   return {
     age,
     western_zodiac,
-    animal_character,
-    six_star
+    animal_character: animalData.character, // 互換性のためフルキャラクター名
+    six_star,
+    animal_details: {                       // 追加詳細情報
+      baseAnimal: animalData.baseAnimal,
+      character: animalData.character,
+      color: animalData.color
+    }
   };
 }
 
@@ -227,8 +380,8 @@ export function validatePrecision(): { passed: number; total: number; errors: st
     { input: [1967, 10, 11], expected: { age: 57, western_zodiac: '天秤座', animal_character: 'サービス精神旺盛な子守熊', six_star: '火星人-' } },
     { input: [1964, 1, 12], expected: { age: 60, western_zodiac: '山羊座', animal_character: '感情的なライオン', six_star: '天王星人-' } },
     { input: [2008, 1, 5], expected: { age: 17, western_zodiac: '山羊座', animal_character: '大器晩成のたぬき', six_star: '木星人+' } },
-    // 追加のテストケース（実際の計算結果）
-    { input: [1990, 5, 15], expected: { age: 34, western_zodiac: '牡牛座', animal_character: '強い意志をもったこじか', six_star: '土星人-' } },
+    // 追加のテストケース（データベース基準の正確な結果）
+    { input: [1990, 5, 15], expected: { age: 34, western_zodiac: '牡牛座', animal_character: '強い意志をもったこじか', six_star: '金星人-' } },
     { input: [2000, 12, 31], expected: { age: 24, western_zodiac: '山羊座', animal_character: '慈悲深い虎', six_star: '天王星人+' } },
     { input: [1975, 8, 10], expected: { age: 49, western_zodiac: '獅子座', animal_character: '穏やかな狼', six_star: '金星人+' } },
     { input: [1980, 3, 20], expected: { age: 44, western_zodiac: '魚座', animal_character: 'チャレンジ精神旺盛なひつじ', six_star: '水星人-' } },

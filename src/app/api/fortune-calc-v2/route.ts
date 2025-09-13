@@ -1,17 +1,46 @@
 /**
- * COCOSiL簡素化算命学API v2.0 - Edge Runtime最適化版
- * 
- * 出力要件: [年齢][星座][動物][6星人]
- * パフォーマンス目標: P95 < 100ms, 同時接続50人対応
- * キャッシュ戦略: LRU メモリキャッシュ (7日TTL)
+ * 算命学API v2.0 - 6星占術新バージョン統合
+ * 統一スキーマ、包括的エラーハンドリング、パフォーマンス監視対応
+ * Edge Runtime最適化版
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateFortuneSimplified } from '@/lib/fortune/precision-calculator';
+import { getSupportedYearRange } from '@/lib/data/destiny-number-database';
+import { 
+  createRequestContext,
+  createSuccessResponse,
+  createErrorResponse,
+  createApiError,
+  validateInput,
+  validateDate,
+  checkRateLimit,
+  PerformanceMonitor
+} from '@/lib/api-utils';
+import { 
+  FortuneCalculationRequest, 
+  FortuneCalculationData,
+  ErrorCode,
+  ValidationRule
+} from '@/types/api';
 
 // Edge Runtime設定 (o3推奨)
 export const runtime = 'edge';
 export const preferredRegion = 'auto';
+
+// 入力バリデーションルール
+const validationRules: ValidationRule<FortuneCalculationRequest>[] = [
+  { field: 'year', required: true, type: 'number', min: 1900, max: 2100 },
+  { field: 'month', required: true, type: 'number', min: 1, max: 12 },
+  { field: 'day', required: true, type: 'number', min: 1, max: 31 },
+  { 
+    field: 'timezone', 
+    required: false, 
+    type: 'string',
+    pattern: /^[A-Za-z]+\/[A-Za-z_]+$/,
+    custom: (value) => !value || ['Asia/Tokyo', 'UTC'].includes(value)
+  }
+];
 
 // LRU キャッシュ設定
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7日間
@@ -58,66 +87,170 @@ function cleanupCache() {
 
 /**
  * POST /api/fortune-calc-v2
- * 簡素化算命学計算API (Edge Runtime最適化版)
+ * 算命学計算API v2.0 (統一スキーマ・エラーハンドリング対応)
  */
 export async function POST(request: NextRequest) {
+  const context = createRequestContext('/api/fortune-calc-v2', 'POST');
+  const monitor = new PerformanceMonitor();
+  
   try {
-    // リクエストボディの解析
-    const body = await request.json();
-    const { year, month, day } = body;
-
-    // 入力値検証
-    if (!year || !month || !day) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'year, month, dayが必要です' 
-        },
-        { status: 400 }
+    // レート制限チェック
+    const clientId = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientId)) {
+      return createErrorResponse(
+        createApiError(
+          ErrorCode.RATE_LIMIT_EXCEEDED,
+          'リクエスト制限に達しました。しばらく待ってから再試行してください',
+          { retryAfter: 60 },
+          true
+        ),
+        context
       );
     }
 
-    // 数値変換と範囲チェック
-    const y = Number(year);
-    const m = Number(month);
-    const d = Number(day);
+    // リクエストボディ解析
+    const body = await request.json();
+    
+    // 入力値バリデーション
+    const validationError = validateInput<FortuneCalculationRequest>(body, validationRules);
+    if (validationError) {
+      return createErrorResponse(validationError, context);
+    }
 
-    if (isNaN(y) || isNaN(m) || isNaN(d)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: '年月日は数値で入力してください' 
-        },
-        { status: 400 }
-      );
+    const { year, month, day, timezone = 'Asia/Tokyo' } = body as FortuneCalculationRequest;
+
+    // 日付妥当性検証
+    const dateValidationError = validateDate(year, month, day);
+    if (dateValidationError) {
+      return createErrorResponse(dateValidationError, context);
     }
 
     // キャッシュキーの生成 (最適化: 8バイト文字列)
-    const cacheKey = `${y}-${m}-${d}`;
+    const cacheKey = `${year}-${month}-${day}`;
     const now = Date.now();
 
     // キャッシュヒットチェック
     const cached = fortuneCache.get(cacheKey);
     if (cached && cached.exp > now) {
-      return NextResponse.json({
-        success: true,
-        data: cached.val,
-        cached: true
-      }, {
-        headers: {
-          'Cache-Control': 's-maxage=31536000, stale-while-revalidate=86400',
-          'CDN-Cache-Control': 'max-age=86400'
-        }
-      });
+      monitor.setCacheHit(true);
+      
+      const responseData: FortuneCalculationData = {
+        ...cached.val,
+        calculation_source: 'database',
+        supported_features: [
+          '60種動物キャラクター',
+          'データベース駆動運命数',
+          '西洋12星座',
+          '六星占術（土星人/金星人/火星人/天王星人/木星人/水星人）',
+          '陰陽判定',
+          'Edge Runtime最適化',
+          'LRUキャッシュ最適化'
+        ]
+      };
+      
+      const response = createSuccessResponse(responseData, context);
+      response.headers.set('X-Cache-Hit', 'true');
+      response.headers.set('Cache-Control', 's-maxage=31536000, stale-while-revalidate=86400');
+      response.headers.set('CDN-Cache-Control', 'max-age=86400');
+      
+      return response;
     }
 
-    // 算命学計算実行 (同期処理 - o3推奨)
-    const result = calculateFortuneSimplified(y, m, d);
+    // 6星占術計算実行（パフォーマンス監視付き）
+    monitor.markCalculationStart();
+    let result;
+    let calculationSource: 'database' | 'algorithm' = 'algorithm';
+
+    try {
+      result = calculateFortuneSimplified(year, month, day);
+      calculationSource = 'database'; // 新システムはデフォルトでdatabase
+      monitor.setCacheHit(false);
+      
+    } catch (error) {
+      monitor.markCalculationEnd();
+      
+      if (error instanceof Error) {
+        // 具体的なエラーハンドリング
+        if (error.message.includes('対応年度')) {
+          return createErrorResponse(
+            createApiError(
+              ErrorCode.UNSUPPORTED_DATE,
+              `指定された年度は対応範囲外です（${getSupportedYearRange().min}-${getSupportedYearRange().max}年）`,
+              { year, supportedRange: `${getSupportedYearRange().min}-${getSupportedYearRange().max}` }
+            ),
+            context
+          );
+        }
+        
+        if (error.message.includes('存在しない日付')) {
+          return createErrorResponse(
+            createApiError(
+              ErrorCode.INVALID_DATE_FORMAT,
+              '存在しない日付が指定されました',
+              { year, month, day }
+            ),
+            context
+          );
+        }
+        
+        if (error.message.includes('database')) {
+          return createErrorResponse(
+            createApiError(
+              ErrorCode.DATABASE_LOOKUP_FAILED,
+              'データベース検索中にエラーが発生しました',
+              { error: error.message },
+              true
+            ),
+            context
+          );
+        }
+      }
+      
+      // その他の計算エラー
+      return createErrorResponse(
+        createApiError(
+          ErrorCode.CALCULATION_ERROR,
+          '算命学計算中にエラーが発生しました',
+          { error: error instanceof Error ? error.message : String(error) },
+          true
+        ),
+        context
+      );
+    }
+    
+    monitor.markCalculationEnd();
+
+    // レスポンスデータ構築
+    const responseData: FortuneCalculationData = {
+      age: result.age,
+      zodiac: result.western_zodiac,
+      animal: result.animal_character,
+      six_star: result.six_star,
+      fortune_detail: {
+        birth_date: `${year}年${month}月${day}日`,
+        chinese_zodiac: result.western_zodiac,
+        animal_fortune: `動物占い：${result.animal_character}`,
+        six_star_detail: `六星占術：${result.six_star}`,
+        personality_traits: result.animal_details?.character ? 
+          [result.animal_details.character, `カラー：${result.animal_details.color}`] : 
+          ['動物キャラクター', '特性']
+      },
+      calculation_source: calculationSource,
+      supported_features: [
+        '60種動物キャラクター',
+        'データベース駆動運命数',
+        '西洋12星座',
+        '六星占術（土星人/金星人/火星人/天王星人/木星人/水星人）',
+        '陰陽判定',
+        'Edge Runtime最適化',
+        'LRUキャッシュ最適化'
+      ]
+    };
 
     // キャッシュに保存
     fortuneCache.set(cacheKey, {
       exp: now + CACHE_TTL,
-      val: result
+      val: responseData
     });
 
     // 定期的なキャッシュクリーンアップ (1%確率)
@@ -125,53 +258,104 @@ export async function POST(request: NextRequest) {
       cleanupCache();
     }
 
-    // レスポンス返却
-    return NextResponse.json({
-      success: true,
-      data: result,
-      cached: false
-    }, {
-      headers: {
-        'Cache-Control': 's-maxage=31536000, stale-while-revalidate=86400',
-        'CDN-Cache-Control': 'max-age=86400'
-      }
-    });
+    // パフォーマンスメトリクスをヘッダーに追加
+    const metrics = monitor.getMetrics();
+    const response = createSuccessResponse(responseData, context);
+    
+    // デバッグ用ヘッダー（本番では削除可能）
+    response.headers.set('X-Processing-Time', `${metrics.totalProcessingTime.toFixed(2)}ms`);
+    response.headers.set('X-Calculation-Time', `${metrics.calculationTime.toFixed(2)}ms`);
+    response.headers.set('X-Memory-Usage', `${metrics.memoryUsage.toFixed(2)}MB`);
+    response.headers.set('X-Cache-Hit', String(metrics.cacheHit));
+    response.headers.set('X-Calculation-Source', calculationSource);
+    response.headers.set('Cache-Control', 's-maxage=31536000, stale-while-revalidate=86400');
+    response.headers.set('CDN-Cache-Control', 'max-age=86400');
+
+    return response;
 
   } catch (error) {
-    console.error('Fortune calculation error:', error);
+    // 予期しないエラー
+    console.error(`[${context.id}] Unexpected error:`, error);
     
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : '計算エラーが発生しました' 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      createApiError(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        '内部サーバーエラーが発生しました',
+        { 
+          error: error instanceof Error ? error.message : String(error),
+          requestId: context.id
+        },
+        true
+      ),
+      context
     );
   }
 }
 
 /**
- * GET /api/fortune-calc-v2 (クエリパラメータ版)
- * パフォーマンステスト用
+ * GET /api/fortune-calc-v2 (API情報取得・クエリパラメータ版)
  */
 export async function GET(request: NextRequest) {
+  const context = createRequestContext('/api/fortune-calc-v2', 'GET');
+  
   try {
     const { searchParams } = new URL(request.url);
     const year = searchParams.get('year');
     const month = searchParams.get('month');
     const day = searchParams.get('day');
 
+    // パラメータがない場合はAPI情報を返す
     if (!year || !month || !day) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'year, month, dayパラメータが必要です' 
+      const apiInfo = {
+        name: '算命学API v2.0',
+        description: '6星占術データベース駆動システム統合版',
+        version: '2.0.0',
+        features: [
+          '統一API応答スキーマ',
+          '包括的エラーハンドリング',
+          'リクエスト追跡とメトリクス',
+          'データベース駆動運命数計算',
+          '60種動物キャラクター対応',
+          'パフォーマンス監視',
+          'レート制限',
+          'Edge Runtime最適化',
+          'LRUキャッシュ最適化'
+        ],
+        endpoints: {
+          POST: {
+            description: '生年月日から算命学情報を計算',
+            requestBody: {
+              year: 'number (1900-2100)',
+              month: 'number (1-12)',
+              day: 'number (1-31)',
+              timezone: 'string (optional, default: Asia/Tokyo)'
+            },
+            response: 'FortuneCalculationData with metadata'
+          },
+          GET: {
+            description: 'API情報取得、またはクエリパラメータで計算',
+            queryParams: {
+              year: 'number (optional)',
+              month: 'number (optional)',
+              day: 'number (optional)'
+            }
+          }
         },
-        { status: 400 }
-      );
+        rateLimit: {
+          maxRequests: 100,
+          windowMs: 60000
+        },
+        cache: {
+          strategy: 'LRU',
+          ttl: '7 days',
+          maxSize: 10000
+        }
+      };
+      
+      return createSuccessResponse(apiInfo, context);
     }
 
-    // POST処理を再利用
+    // POST処理を再利用（クエリパラメータ版）
     const body = { 
       year: Number(year), 
       month: Number(month), 
@@ -187,14 +371,19 @@ export async function GET(request: NextRequest) {
     return await POST(mockRequest);
 
   } catch (error) {
-    console.error('Fortune calculation GET error:', error);
+    console.error(`[${context.id}] GET error:`, error);
     
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'GETリクエストエラーが発生しました' 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      createApiError(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        'GETリクエスト処理中にエラーが発生しました',
+        { 
+          error: error instanceof Error ? error.message : String(error),
+          requestId: context.id
+        },
+        true
+      ),
+      context
     );
   }
 }

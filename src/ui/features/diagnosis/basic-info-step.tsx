@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BasicInfoForm } from '@/ui/features/forms/basic-info-form';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
@@ -7,6 +8,11 @@ import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 export function BasicInfoStep() {
   const router = useRouter();
   const { setCurrentStep } = useDiagnosisStore();
+
+  // 基本情報画面表示時に進捗を20%に設定
+  useEffect(() => {
+    setCurrentStep('basic_info');
+  }, [setCurrentStep]);
 
   const handleSuccess = () => {
     setCurrentStep('mbti');

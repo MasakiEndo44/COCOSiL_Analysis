@@ -21,7 +21,7 @@ export function ProgressBar() {
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div 
               className="h-full bg-gradient-brand transition-all duration-500 ease-out"
-              style={{ width: `${Math.max(progress, 5)}%` }}
+              style={{ width: `${progress === 0 ? 0 : Math.max(progress, 5)}%` }}
             >
               <div className="h-full bg-white/20 animate-pulse"></div>
             </div>
