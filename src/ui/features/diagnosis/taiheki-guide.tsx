@@ -210,27 +210,41 @@ export function TaihekiGuide({ onComplete, onBack }: TaihekiGuideProps) {
 
               <div className="space-y-6">
                 <div className="bg-purple-50 p-6 rounded-xl">
-                  <h3 className="font-heading text-purple-900 mb-3">3つの運動系</h3>
+                  <h3 className="font-heading text-purple-900 mb-3">5つの運動系</h3>
                   <div className="space-y-3">
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">1</div>
                       <div>
-                        <div className="font-medium text-purple-900">左右系（1〜4種）</div>
-                        <div className="text-xs text-purple-700">頭脳的・思考系の特徴</div>
+                        <div className="font-medium text-purple-900">上下系（1〜2種）</div>
+                        <div className="text-xs text-purple-700">頭部・首部の緊張パターン</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">2</div>
                       <div>
-                        <div className="font-medium text-purple-900">前後系（5〜6種）</div>
-                        <div className="text-xs text-purple-700">感情的・行動系の特徴</div>
+                        <div className="font-medium text-purple-900">左右系（3〜4種）</div>
+                        <div className="text-xs text-purple-700">側腹部・腰部の左右差</div>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">3</div>
                       <div>
-                        <div className="font-medium text-purple-900">捻れ系・開閉系（7〜10種）</div>
-                        <div className="text-xs text-purple-700">本能的・生理的な特徴</div>
+                        <div className="font-medium text-purple-900">前後系（5〜6種）</div>
+                        <div className="text-xs text-purple-700">腰椎5番・呼吸器系の前後運動</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">4</div>
+                      <div>
+                        <div className="font-medium text-purple-900">捻れ系（7〜8種）</div>
+                        <div className="text-xs text-purple-700">脊柱・骨盤の左右ねじり</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 text-xs font-bold flex-shrink-0">5</div>
+                      <div>
+                        <div className="font-medium text-purple-900">開閉系（9〜10種）</div>
+                        <div className="text-xs text-purple-700">胸郭・腹部の上下拡張収縮</div>
                       </div>
                     </div>
                   </div>

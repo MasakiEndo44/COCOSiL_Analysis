@@ -286,13 +286,9 @@ function getSixStarType(starNumber: number): string {
  * 十二支に基づく陰陽（±）判定（標準版）
  */
 function getYinYang(year: number): '+' | '-' {
-  // 十二支インデックス計算
-  const zodiacIndex = (year - 4) % 12;
-  
-  // 標準の陰陽判定
-  // 陰 (-): 子、寅、辰、午、申、戌 (偶数インデックス: 0,2,4,6,8,10)
-  // 陽 (+): 丑、卯、巳、未、酉、亥 (奇数インデックス: 1,3,5,7,9,11)
-  return zodiacIndex % 2 === 0 ? '-' : '+';
+  // 六星占術の陰陽（±）判定
+  // 判定基準: 奇数年なら-、偶数年なら+
+  return year % 2 === 0 ? '+' : '-';
 }
 
 function calculateSixStar(year: number, month: number, day: number): string {

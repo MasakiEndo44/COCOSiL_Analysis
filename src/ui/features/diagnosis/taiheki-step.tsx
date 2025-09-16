@@ -34,13 +34,59 @@ export function TaihekiStep() {
   const completeDiagnosis = async (finalAnswers: number[]) => {
     setIsLoading(true);
     try {
-      const result = calculateTaiheki(finalAnswers);
+      // 新しい体癖診断 bulk API を使用
+      const diagnosisAnswers = finalAnswers.map((answer, index) => ({
+        questionId: index + 1,
+        selectedOptions: [answer]
+      }));
+
+      const response = await fetch('/api/taiheki/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answers: diagnosisAnswers,
+          userAgent: navigator.userAgent,
+          startTime: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`診断API呼び出し失敗: ${response.status}`);
+      }
+
+      const apiResult = await response.json();
       
-      setTaiheki(result);
+      // 既存の形式に変換（互換性のため）
+      const legacyResult = {
+        primary: parseInt(apiResult.result.primaryType.replace('type', '')),
+        secondary: parseInt(apiResult.result.secondaryType.replace('type', '')),
+        confidence: apiResult.result.confidence,
+        characteristics: [
+          apiResult.result.reliabilityText,
+          `信頼度${apiResult.result.reliabilityStars}`
+        ],
+        recommendations: [],
+        // 新しいデータも保持
+        enhancedResult: apiResult.result
+      };
+      
+      setTaiheki(legacyResult);
       setCurrentStep('integration');
-      router.push('/diagnosis/results');
+      router.push('/diagnosis/taiheki/results');
     } catch (error) {
       console.error('体癖診断エラー:', error);
+      // フォールバック: 従来の計算方式
+      try {
+        const result = calculateTaiheki(finalAnswers);
+        setTaiheki(result);
+        setCurrentStep('integration');
+        router.push('/diagnosis/taiheki/results');
+      } catch (fallbackError) {
+        console.error('フォールバック診断エラー:', fallbackError);
+        alert('診断処理中にエラーが発生しました。もう一度お試しください。');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -7,12 +7,13 @@ import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 
 export function BasicInfoStep() {
   const router = useRouter();
-  const { setCurrentStep } = useDiagnosisStore();
+  const { setCurrentStep, initializeSession } = useDiagnosisStore();
 
-  // 基本情報画面表示時に進捗を20%に設定
+  // 基本情報画面表示時に新しいセッションを初期化（前回のカウンセリングデータもクリア）
   useEffect(() => {
+    initializeSession();
     setCurrentStep('basic_info');
-  }, [setCurrentStep]);
+  }, [initializeSession, setCurrentStep]);
 
   const handleSuccess = () => {
     setCurrentStep('mbti');
