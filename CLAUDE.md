@@ -90,8 +90,8 @@ src/
 │   └── (sites)/             # Route groups for different site sections
 ├── ui/
 │   ├── features/            # Feature-specific components by domain
-│   ├── components/          # Shared UI components + shadcn/ui
-│   └── hooks/               # Custom React hooks
+│   └── components/          # Shared UI components + shadcn/ui
+├── hooks/                   # Custom React hooks (root level)
 ├── lib/
 │   ├── zustand/             # State management stores (diagnosis + learning)
 │   ├── data/                # Static data (questions, algorithms)
@@ -99,20 +99,15 @@ src/
 │   └── ai/                  # OpenAI client configuration
 ├── types/                   # TypeScript type definitions
 ├── content/taiheki/         # MDX content for learning system
-├── domain/                  # Domain logic (MBTI, Taiheki, etc.)
-├── application/             # Application services
-└── infrastructure/          # External integrations
+└── __tests__/               # Unit tests (Jest + Testing Library)
 ```
 
 ### Path Aliases (tsconfig.json)
 - `@/*` → `./src/*`
 - `@/components/*` → `./src/ui/components/*`  
 - `@/features/*` → `./src/ui/features/*`
-- `@/hooks/*` → `./src/ui/hooks/*`
+- `@/hooks/*` → `./src/hooks/*` (Note: hooks are at root src level, not ui/hooks)
 - `@/lib/*` → `./src/lib/*`
-- `@/domain/*` → `./src/domain/*`
-- `@/application/*` → `./src/application/*`
-- `@/infrastructure/*` → `./src/infrastructure/*`
 - `@/types/*` → `./src/types/*`
 - `@/data/*` → `./data/*`
 - `@/scripts/*` → `./scripts/*`
@@ -297,3 +292,59 @@ ADMIN_PASSWORD=1234                      # 4-digit admin PIN
 - **Educational Focus**: Taiheki theory presented as learning content
 - **Data Retention**: 30-day automatic deletion enforced
 - **Statistical Validity**: Diagnosis algorithms based on established theories
+
+## Key Development Patterns
+
+### Component Organization
+- **Feature Components**: Located in `src/ui/features/` organized by domain (diagnosis, forms, learn, admin)
+- **Shared UI Components**: Located in `src/ui/components/` for reusable shadcn/ui components
+- **Custom Hooks**: Located in `src/hooks/` at root level for cross-feature logic
+
+### State Management Patterns
+```typescript
+// Zustand stores follow this pattern
+interface Store {
+  // State
+  data: DataType | null;
+  
+  // Actions
+  setData: (data: DataType) => void;
+  clearData: () => void;
+  
+  // Computed values
+  isLoading: boolean;
+}
+
+// Persistence with localStorage
+const useStore = create<Store>()(
+  persist(
+    (set, get) => ({...}),
+    { name: 'store-name' }
+  )
+);
+```
+
+### API Route Patterns
+- **Edge Runtime**: Use for performance-critical calculations (`src/app/api/fortune-calc-v2/route.ts`)
+- **Streaming**: OpenAI integration uses Server-Sent Events pattern
+- **Error Handling**: Consistent error response format with proper HTTP status codes
+- **Validation**: Use Zod schemas for request/response validation
+
+### Testing Patterns
+- **Unit Tests**: Co-located in `src/__tests__/` directory structure
+- **Mock Strategy**: Use MSW for API mocking, avoid jest.mock() when possible  
+- **Test Utils**: Custom render functions with providers in test setup
+- **Coverage**: Enforce 80% minimum coverage via jest.config.js
+
+### Import Conventions
+```typescript
+// Preferred import order
+import React from 'react';              // External libraries
+import { NextRequest } from 'next/server';
+
+import { Button } from '@/components/ui/button';    // UI components
+import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';  // Lib/utilities
+import { DiagnosisData } from '@/types';           // Types
+
+import './component.css';               // Styles (last)
+```
