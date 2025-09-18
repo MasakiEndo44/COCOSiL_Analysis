@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
-import { requireAdminAuth } from '@/lib/admin-middleware';
+import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
 
 export async function GET(
   request: NextRequest,
@@ -55,7 +55,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAdminAuth(request);
+    await requireAdminRole(request);
 
     const recordId = parseInt(params.id, 10);
     if (isNaN(recordId)) {
@@ -129,7 +129,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAdminAuth(request);
+    await requireAdminRole(request);
 
     const recordId = parseInt(params.id, 10);
     if (isNaN(recordId)) {

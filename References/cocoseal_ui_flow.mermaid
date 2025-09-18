@@ -1,82 +1,150 @@
 flowchart TD
-    A[ランディングページ] --> B[基本情報入力開始]
-    B --> C{入力形式選択}
-    
-    C --> D[名前入力]
-    D --> E[生年月日入力]
-    E --> F[算命学・動物占い<br/>自動算出処理]
-    F --> G[MBTI入力<br/>不明の場合は簡易診断]
-    G --> H[体癖理解促進ページ]
-    H --> I[体癖診断システム<br/>リンク誘導]
-    I --> J[体癖理論解説<br/>リンク誘導]
-    J --> K[体癖番号入力<br/>不明の場合はスキップ]
-    K --> L[基本情報確認画面]
-    
-    
-    L --> M{基本情報OK?}
-    M -->|No| D
-    M -->|Yes| N[AIチャット開始]
-    
-    N --> O[導入メッセージ表示]
-    O --> P[相談目的選択]
-    P --> Q{悩み相談 or 性格診断のみ?}
-    
-    Q -->|悩み相談| R[現在の悩み・関心事<br/>ヒアリング開始]
-    Q -->|性格診断のみ| S[性格・価値観<br/>深掘り質問開始]
-    
-    R --> T[Claude API<br/>悩み関連質問生成]
-    S --> U[Claude API<br/>性格分析質問生成]
-    
-    T --> V[ユーザー回答入力]
+    %% Updated COCOSiL User Flow - Current Implementation (2024)
+    %% Unified Next.js 14 Application with AI Integration
+
+    subgraph "Entry & Basic Info"
+        A[ランディングページ<br/>src/app/page.tsx]
+        B[基本情報入力開始<br/>src/app/diagnosis/page.tsx]
+        C[名前・生年月日・性別入力<br/>src/ui/features/forms/basic-info-form.tsx]
+        D[入力検証<br/>Zod validation]
+    end
+
+    subgraph "Fortune Calculation (Background)"
+        E[算命学・動物占い自動算出<br/>src/app/api/fortune-calc-v2/route.ts]
+        E1[Edge Runtime TypeScript計算<br/>src/lib/fortune/precision-calculator.ts]
+        E2[LRUキャッシュ（7日TTL）]
+    end
+
+    subgraph "MBTI Collection"
+        F[MBTI収集開始<br/>src/app/diagnosis/mbti/page.tsx]
+        G{MBTI既知?}
+        H[MBTI入力<br/>ドロップダウン選択]
+        I[簡易診断（12問）<br/>src/lib/data/mbti-questions.ts]
+        J[MBTI結果確定<br/>信頼度スコア付き]
+    end
+
+    subgraph "Taiheki Learning (Optional)"
+        K[体癖学習システム<br/>src/app/learn/taiheki/page.tsx]
+        L[MDXコンテンツ表示<br/>src/content/taiheki/]
+        M[チャプター進行管理<br/>Zustand learning-store]
+        N[クイズシステム<br/>src/app/learn/taiheki/quiz/]
+    end
+
+    subgraph "Taiheki Diagnosis"
+        O[体癖診断開始<br/>src/app/diagnosis/taiheki/page.tsx]
+        P[20問診断アルゴリズム<br/>src/lib/data/taiheki-questions.ts]
+        Q[動的スコアリング<br/>src/app/api/taiheki/bulk/route.ts]
+        R[主体癖・副体癖決定]
+    end
+
+    subgraph "AI Counseling (Optional)"
+        S[AIカウンセリング選択<br/>src/app/diagnosis/chat/page.tsx]
+        T[相談トピック選択<br/>人間関係・キャリア・性格・将来]
+        U[OpenAI GPT-4 ストリーミングチャット<br/>src/app/api/ai/chat/route.ts]
+        V[チャット要約生成<br/>src/app/api/ai/summary/route.ts]
+    end
+
+    subgraph "Integrated Results"
+        W[統合診断結果<br/>src/ui/features/diagnosis/results.tsx]
+        X[ワードベース文章生成<br/>3:2重み付けシステム]
+        Y{AIカウンセリング完了?}
+        Z[チャットサマリー表示<br/>SummarizedQAList]
+        AA[空のQ&A状態<br/>EmptyQAState]
+        BB[結果出力・コピー機能]
+    end
+
+    subgraph "Data Management"
+        CC[Zustand状態管理<br/>src/lib/zustand/diagnosis-store.ts]
+        DD[localStorage永続化<br/>30日自動削除]
+        EE[セッション管理<br/>UUID生成]
+    end
+
+    subgraph "Admin System"
+        FF[管理者ログイン<br/>src/app/admin/page.tsx]
+        GG[JWT認証<br/>src/lib/jwt-session.ts]
+        HH[ダッシュボード<br/>診断統計・分析]
+        II[Claude AIプロンプト生成<br/>src/app/api/admin/claude-prompt/]
+    end
+
+    %% Main Flow
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> E1
+    E1 --> E2
+    E --> F
+
+    F --> G
+    G -->|既知| H
+    G -->|不明| I
+    H --> J
+    I --> J
+
+    J --> K
+    K -->|学習する| L
+    L --> M
+    M --> N
+    N --> O
+    K -->|スキップ| O
+
+    O --> P
+    P --> Q
+    Q --> R
+
+    R --> S
+    S -->|カウンセリング実施| T
+    T --> U
     U --> V
-    V --> W[回答内容分析]
-    W --> X{深掘り必要?}
-    
-    X -->|Yes| Y[追加質問生成]
-    Y --> V
-    X -->|No| Z[次のテーマへ]
-    
-    Z --> AA{全テーマ完了?}
-    AA -->|No| R
-    AA -->|Yes| BB[データ収集完了]
-    
-    BB --> CC[.mdドキュメント生成]
-    CC --> DD[ダウンロード・共有オプション]
-    DD --> EE[完了画面]
-    
-    %% 管理者フロー（別システム）
-    CC --> FF[管理者：mdファイル取得]
-    FF --> GG[AI占い師プロジェクト<br/>に投入]
-    GG --> HH[本格診断結果生成]
-    
-    %% サブプロセス
-    F --> F1[CSVルックアップ<br/>動物占い特定]
-    F --> F2[Pythonスクリプト実行<br/>算命学計算]
-    
-    G --> G1[MBTI簡易診断<br/>12問程度]
-    
-    I --> I1[体癖診断システムページ<br/>（20問診断）]
-    J --> J1[体癖理論解説サイト<br/>（基本知識学習）]
-    
-    T --> T1[体癖論参照]
-    T --> T2[動物占い特性参照]
-    T --> T3[悩み解決質問パターン]
-    
-    U --> U1[体癖論参照]
-    U --> U2[動物占い特性参照]  
-    U --> U3[性格分析質問パターン]
-    
-    %% スタイリング
-    classDef userAction fill:#e1f5fe
-    classDef systemProcess fill:#f3e5f5
-    classDef decision fill:#fff3e0
-    classDef output fill:#e8f5e8
-    classDef external fill:#ffebee
-    classDef guidance fill:#e8f5e8
-    
-    class A,B,D,E,G,H,K,L,P,V,DD userAction
-    class F,O,T,U,W,Y,Z,CC systemProcess
-    class C,M,Q,X,AA decision
-    class BB,EE,HH output
-    class FF,GG external
-    class I,J guidance
+    V --> W
+    S -->|スキップ| W
+
+    W --> X
+    X --> Y
+    Y -->|完了| Z
+    Y -->|未完了| AA
+    Z --> BB
+    AA --> BB
+
+    %% Data Flow
+    C --> CC
+    J --> CC
+    R --> CC
+    V --> CC
+    CC --> DD
+    CC --> EE
+
+    %% Admin Flow
+    FF --> GG
+    GG --> HH
+    BB --> II
+
+    %% Background Processes
+    CC -.-> E
+    DD -.-> CC
+
+    %% Styling
+    classDef entry fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef diagnosis fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef ai fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef results fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef system fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef admin fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class A,B,C,D entry
+    class F,G,H,I,J,O,P,Q,R diagnosis
+    class S,T,U,V ai
+    class W,X,Y,Z,AA,BB results
+    class CC,DD,EE system
+    class FF,GG,HH,II admin
+
+    %% Subgraph Styling
+    style "Entry & Basic Info" fill:#e1f5fe
+    style "Fortune Calculation (Background)" fill:#f9fbe7
+    style "MBTI Collection" fill:#f3e5f5
+    style "Taiheki Learning (Optional)" fill:#e8f5e8
+    style "Taiheki Diagnosis" fill:#fff3e0
+    style "AI Counseling (Optional)" fill:#e0f2f1
+    style "Integrated Results" fill:#fce4ec
+    style "Data Management" fill:#f1f8e9
+    style "Admin System" fill:#e8eaf6

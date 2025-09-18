@@ -23,6 +23,7 @@ export interface DiagnosisRecord {
   reportUrl?: string;
   interviewScheduled?: string;
   interviewDone?: string;
+  interviewNotes?: string;
   memo?: string;
   createdAt: Date;
   updatedAt: Date;

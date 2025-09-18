@@ -1,15 +1,29 @@
 'use client';
 
 import { DiagnosisRecord } from '@/types/admin';
-import { Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, FileText, Download, Calendar, MessageSquare, StickyNote } from 'lucide-react';
 
 interface DiagnosisTableProps {
   records: DiagnosisRecord[];
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onGenerateReport?: (id: number) => void;
+  onDownloadReport?: (id: number) => void;
+  onManageInterview?: (record: DiagnosisRecord) => void;
+  onManageMemo?: (record: DiagnosisRecord) => void;
+  userRole?: 'admin' | 'viewer';
 }
 
-export default function DiagnosisTable({ records, onEdit, onDelete }: DiagnosisTableProps) {
+export default function DiagnosisTable({ 
+  records, 
+  onEdit, 
+  onDelete, 
+  onGenerateReport, 
+  onDownloadReport,
+  onManageInterview,
+  onManageMemo,
+  userRole = 'admin'
+}: DiagnosisTableProps) {
   if (records.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -43,6 +57,42 @@ export default function DiagnosisTable({ records, onEdit, onDelete }: DiagnosisT
     return '★'.repeat(satisfaction) + '☆'.repeat(5 - satisfaction);
   };
 
+  const getInterviewStatus = (record: DiagnosisRecord) => {
+    if (record.interviewDone) {
+      return { 
+        status: 'completed', 
+        label: '実施済み', 
+        color: 'bg-green-100 text-green-800',
+        icon: MessageSquare
+      };
+    } else if (record.interviewScheduled) {
+      const scheduledDate = new Date(record.interviewScheduled);
+      const now = new Date();
+      if (scheduledDate < now) {
+        return { 
+          status: 'overdue', 
+          label: '予定超過', 
+          color: 'bg-red-100 text-red-800',
+          icon: Calendar
+        };
+      } else {
+        return { 
+          status: 'scheduled', 
+          label: '予定済み', 
+          color: 'bg-blue-100 text-blue-800',
+          icon: Calendar
+        };
+      }
+    } else {
+      return { 
+        status: 'none', 
+        label: '未予定', 
+        color: 'bg-gray-100 text-gray-800',
+        icon: Calendar
+      };
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
@@ -69,6 +119,9 @@ export default function DiagnosisTable({ records, onEdit, onDelete }: DiagnosisT
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 満足度
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                インタビュー
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 操作
@@ -123,33 +176,93 @@ export default function DiagnosisTable({ records, onEdit, onDelete }: DiagnosisT
                     {record.duration}
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {(() => {
+                    const status = getInterviewStatus(record);
+                    const Icon = status.icon;
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
+                          <Icon className="mr-1 h-3 w-3" />
+                          {status.label}
+                        </span>
+                        {onManageInterview && (
+                          <button
+                            onClick={() => onManageInterview(record)}
+                            className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50"
+                            title="インタビュー管理"
+                          >
+                            <Calendar size={14} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-2">
+                    {/* Report generation/download buttons */}
+                    {record.reportUrl ? (
+                      <button
+                        onClick={() => onDownloadReport?.(record.id)}
+                        className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                        title="レポートをダウンロード"
+                      >
+                        <Download size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onGenerateReport?.(record.id)}
+                        className="text-brand-600 hover:text-brand-900 p-1 rounded hover:bg-brand-50"
+                        title="レポート生成"
+                      >
+                        <FileText size={16} />
+                      </button>
+                    )}
+                    
+                    {/* External link to view report if exists */}
                     {record.reportUrl && (
                       <a
                         href={record.reportUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-brand-600 hover:text-brand-900 p-1 rounded hover:bg-brand-50"
+                        className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50"
                         title="レポートを表示"
                       >
                         <ExternalLink size={16} />
                       </a>
                     )}
-                    <button
-                      onClick={() => onEdit(record.id)}
-                      className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                      title="編集"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(record.id)}
-                      className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                      title="削除"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    
+                    {/* Memo management button */}
+                    {onManageMemo && (
+                      <button
+                        onClick={() => onManageMemo(record)}
+                        className="text-purple-600 hover:text-purple-900 p-1 rounded hover:bg-purple-50"
+                        title="メモ管理"
+                      >
+                        <StickyNote size={16} />
+                      </button>
+                    )}
+                    
+                    {/* Edit and Delete buttons - only for admin role */}
+                    {userRole === 'admin' && onEdit && (
+                      <button
+                        onClick={() => onEdit(record.id)}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        title="編集"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    {userRole === 'admin' && onDelete && (
+                      <button
+                        onClick={() => onDelete(record.id)}
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        title="削除"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

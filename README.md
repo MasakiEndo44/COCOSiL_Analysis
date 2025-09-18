@@ -87,14 +87,16 @@ pip install -r requirements.txt
 - **shadcn/ui** - 再利用可能なUIコンポーネント
 
 ### バックエンド・API
-- **Next.js API Routes** - サーバーサイド処理
-- **Python 3.8+** - 算命学計算エンジン
-- **OpenAI API** (GPT-4) - AI対話・プロンプト最適化
+- **Next.js API Routes** - サーバーサイド処理（Edge Runtime対応）
+- **TypeScript算命学エンジン** - Edge Runtime最適化済み計算システム
+- **OpenAI API** (GPT-4) - ストリーミングAI対話・プロンプト最適化
+- **LRU Cache** - 算命学計算結果の効率的キャッシュ（7日TTL）
 
 ### データ管理
-- **localStorage/sessionStorage** - クライアントサイドデータ保持
-- **CSV** - 算命学・動物占いマスターデータ
-- **JSON** - 診断結果・設定データ
+- **Zustand + localStorage** - 状態管理・永続化（30日自動削除）
+- **TypeScript定数** - 算命学・動物占い計算ロジック（CSVからマイグレーション完了）
+- **JSON** - 診断結果・設定データ・MDXメタデータ
+- **Session UUID** - ユーザー識別・データ整合性管理
 
 ### 開発・運用
 - **ESLint + Prettier** - コード品質・フォーマット統一
@@ -104,39 +106,198 @@ pip install -r requirements.txt
 
 ---
 
-## システム構成
+## システム構成・ユーザーフロー
+
+### 📊 **統合ユーザーフロー（現在の実装）**
+
+```mermaid
+flowchart TD
+    %% Updated COCOSiL User Flow - Current Implementation (2024)
+    %% Unified Next.js 14 Application with AI Integration
+
+    subgraph "Entry & Basic Info"
+        A[ランディングページ<br/>src/app/page.tsx]
+        B[基本情報入力開始<br/>src/app/diagnosis/page.tsx]
+        C[名前・生年月日・性別入力<br/>src/ui/features/forms/basic-info-form.tsx]
+        D[入力検証<br/>Zod validation]
+    end
+
+    subgraph "Fortune Calculation (Background)"
+        E[算命学・動物占い自動算出<br/>src/app/api/fortune-calc-v2/route.ts]
+        E1[Edge Runtime TypeScript計算<br/>src/lib/fortune/precision-calculator.ts]
+        E2[LRUキャッシュ（7日TTL）]
+    end
+
+    subgraph "MBTI Collection"
+        F[MBTI収集開始<br/>src/app/diagnosis/mbti/page.tsx]
+        G{MBTI既知?}
+        H[MBTI入力<br/>ドロップダウン選択]
+        I[簡易診断（12問）<br/>src/lib/data/mbti-questions.ts]
+        J[MBTI結果確定<br/>信頼度スコア付き]
+    end
+
+    subgraph "Taiheki Learning (Optional)"
+        K[体癖学習システム<br/>src/app/learn/taiheki/page.tsx]
+        L[MDXコンテンツ表示<br/>src/content/taiheki/]
+        M[チャプター進行管理<br/>Zustand learning-store]
+        N[クイズシステム<br/>src/app/learn/taiheki/quiz/]
+    end
+
+    subgraph "Taiheki Diagnosis"
+        O[体癖診断開始<br/>src/app/diagnosis/taiheki/page.tsx]
+        P[20問診断アルゴリズム<br/>src/lib/data/taiheki-questions.ts]
+        Q[動的スコアリング<br/>src/app/api/taiheki/bulk/route.ts]
+        R[主体癖・副体癖決定]
+    end
+
+    subgraph "AI Counseling (Optional)"
+        S[AIカウンセリング選択<br/>src/app/diagnosis/chat/page.tsx]
+        T[相談トピック選択<br/>人間関係・キャリア・性格・将来]
+        U[OpenAI GPT-4 ストリーミングチャット<br/>src/app/api/ai/chat/route.ts]
+        V[チャット要約生成<br/>src/app/api/ai/summary/route.ts]
+    end
+
+    subgraph "Integrated Results"
+        W[統合診断結果<br/>src/ui/features/diagnosis/results.tsx]
+        X[ワードベース文章生成<br/>3:2重み付けシステム]
+        Y{AIカウンセリング完了?}
+        Z[チャットサマリー表示<br/>SummarizedQAList]
+        AA[空のQ&A状態<br/>EmptyQAState]
+        BB[結果出力・コピー機能]
+    end
+
+    subgraph "Data Management"
+        CC[Zustand状態管理<br/>src/lib/zustand/diagnosis-store.ts]
+        DD[localStorage永続化<br/>30日自動削除]
+        EE[セッション管理<br/>UUID生成]
+    end
+
+    subgraph "Admin System"
+        FF[管理者ログイン<br/>src/app/admin/page.tsx]
+        GG[JWT認証<br/>src/lib/jwt-session.ts]
+        HH[ダッシュボード<br/>診断統計・分析]
+        II[Claude AIプロンプト生成<br/>src/app/api/admin/claude-prompt/]
+    end
+
+    %% Main Flow
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> E1
+    E1 --> E2
+    E --> F
+
+    F --> G
+    G -->|既知| H
+    G -->|不明| I
+    H --> J
+    I --> J
+
+    J --> K
+    K -->|学習する| L
+    L --> M
+    M --> N
+    N --> O
+    K -->|スキップ| O
+
+    O --> P
+    P --> Q
+    Q --> R
+
+    R --> S
+    S -->|カウンセリング実施| T
+    T --> U
+    U --> V
+    V --> W
+    S -->|スキップ| W
+
+    W --> X
+    X --> Y
+    Y -->|完了| Z
+    Y -->|未完了| AA
+    Z --> BB
+    AA --> BB
+
+    %% Data Flow
+    C --> CC
+    J --> CC
+    R --> CC
+    V --> CC
+    CC --> DD
+    CC --> EE
+
+    %% Admin Flow
+    FF --> GG
+    GG --> HH
+    BB --> II
+
+    %% Background Processes
+    CC -.-> E
+    DD -.-> CC
+
+    %% Styling
+    classDef entry fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef diagnosis fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef ai fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef results fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef system fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef admin fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class A,B,C,D entry
+    class F,G,H,I,J,O,P,Q,R diagnosis
+    class S,T,U,V ai
+    class W,X,Y,Z,AA,BB results
+    class CC,DD,EE system
+    class FF,GG,HH,II admin
+```
+
+### 🏗️ **システムアーキテクチャ概要**
 
 ```mermaid
 graph TB
-    A[ユーザー] --> B[ココシル入口サイト<br/>Next.js]
-    B --> C[体癖診断システム<br/>Next.js]
-    B --> D[体癖理論学習サイト<br/>Next.js]
-    
-    B --> E[API Routes<br/>Next.js Server]
-    E --> F[Python算命学エンジン<br/>fortune_calculator.py]
-    E --> G[OpenAI API<br/>GPT-4]
-    
-    C --> H[管理者データベース<br/>Admin Only]
-    D --> H
-    
-    I[管理者] --> H
-    H --> J[Claude AI<br/>プロンプト活用]
-    
-    classDef userSite fill:#e1f5fe,stroke:#01579b
-    classDef adminSite fill:#f3e5f5,stroke:#4a148c  
+    A[ユーザー] --> B[統合Next.js 14アプリケーション<br/>App Router + TypeScript]
+
+    B --> C[診断フロー<br/>Zustand状態管理]
+    B --> D[学習システム<br/>MDX + 進捗管理]
+    B --> E[AIカウンセリング<br/>OpenAI GPT-4]
+
+    B --> F[API Layer<br/>Edge Runtime]
+    F --> G[TypeScript算命学エンジン<br/>LRUキャッシュ付き]
+    F --> H[OpenAI API<br/>ストリーミングチャット]
+
+    C --> I[管理者システム<br/>JWT認証]
+    D --> I
+    E --> I
+
+    J[管理者] --> I
+    I --> K[Claude AIプロンプト<br/>統合データ活用]
+
+    classDef userApp fill:#e1f5fe,stroke:#01579b
+    classDef adminApp fill:#f3e5f5,stroke:#4a148c
     classDef api fill:#e8f5e8,stroke:#1b5e20
-    
-    class B,C,D userSite
-    class H adminSite
-    class E,F,G api
+    classDef ai fill:#fff3e0,stroke:#e65100
+
+    class B,C,D,E userApp
+    class I adminApp
+    class F,G,H api
+    class K ai
 ```
 
-### データフロー
-1. **基本情報入力** → Python API → **算命学・動物占い結果**
-2. **MBTI情報収集** → 既知選択 or 12問診断
-3. **体癖診断実施** → 20問診断 → **主体癖・副体癖算出**  
-4. **統合結果表示** → **.mdファイル生成** → **管理者向け送信**
-5. **管理者分析** → **Claude AIプロンプト活用**
+### 🔄 **データフロー（現在の実装）**
+
+1. **基本情報収集** → Edge Runtime TypeScript API → **算命学・動物占い結果**（バックグラウンド処理）
+2. **MBTI診断** → 既知入力 or 12問簡易診断 → **信頼度スコア付き結果**
+3. **体癖学習** → MDXコンテンツ + 進捗管理 → **理解度向上**（オプション）
+4. **体癖診断** → 20問動的スコアリング → **主体癖・副体癖決定**
+5. **AIカウンセリング** → OpenAI GPT-4ストリーミング → **チャット要約生成**（オプション）
+6. **統合結果** → ワードベース文章生成（3:2重み付け） → **結果出力・コピー機能**
+7. **管理者システム** → Claude AIプロンプト生成 → **分析・改善活用**
+
+### 💾 **状態管理・永続化**
+- **Zustand Store**: 診断データの集中管理・セッション状態保持
+- **localStorage**: 30日自動削除付きデータ永続化
+- **UUID セッション**: ユーザー識別・データ整合性確保
 
 ---
 

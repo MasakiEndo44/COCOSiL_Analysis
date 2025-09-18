@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminSession } from '@/lib/admin-middleware';
 import { DiagnosisRecord, DiagnosisStats } from '@/types/admin';
-import AdminHeader from './admin-header';
+import { AdminHeader } from './admin-header';
 import DiagnosisTable from './diagnosis-table';
 import StatsOverview from './stats-overview';
+import { RecordFormModal } from './record-form-modal';
+import { InterviewModal } from './interview-modal';
+import { ExportForm } from './export-form';
+import MemoModal from './memo-modal';
+import MemoList from './memo-list';
+import { Button } from '@/ui/components/ui/button';
+import { ExportOptions } from '@/types/admin';
 
 interface AdminDashboardProps {
   session: AdminSession;
@@ -19,6 +26,16 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
   const [stats, setStats] = useState<DiagnosisStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<DiagnosisRecord | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [interviewRecord, setInterviewRecord] = useState<DiagnosisRecord | null>(null);
+  const [isInterviewSubmitting, setIsInterviewSubmitting] = useState(false);
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [isMemoListOpen, setIsMemoListOpen] = useState(false);
+  const [memoRecord, setMemoRecord] = useState<DiagnosisRecord | null>(null);
 
   useEffect(() => {
     loadData();
@@ -63,6 +80,261 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
       // エラーが発生してもリダイレクトする
       router.push('/admin/login');
     }
+  };
+
+  const handleEdit = (id: number) => {
+    const record = records.find(r => r.id === id);
+    if (record) {
+      setEditingRecord(record);
+      setIsFormModalOpen(true);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('この診断記録を削除してもよろしいですか？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/records/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('削除に失敗しました');
+      }
+
+      // レコード一覧から削除
+      setRecords(prevRecords => prevRecords.filter(r => r.id !== id));
+      
+      // 統計データを再読み込み
+      loadData();
+    } catch (err) {
+      console.error('削除エラー:', err);
+      alert('削除に失敗しました');
+    }
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    setIsSubmitting(true);
+    
+    try {
+      const url = editingRecord 
+        ? `/api/admin/records/${editingRecord.id}`
+        : '/api/admin/records';
+      
+      const method = editingRecord ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('保存に失敗しました');
+      }
+
+      // データを再読み込み
+      await loadData();
+      
+      // モーダルを閉じる
+      setIsFormModalOpen(false);
+      setEditingRecord(null);
+    } catch (err) {
+      console.error('保存エラー:', err);
+      alert('保存に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsFormModalOpen(false);
+    setEditingRecord(null);
+  };
+
+  const handleAddNew = () => {
+    setEditingRecord(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleExport = async (options: ExportOptions) => {
+    setIsExporting(true);
+    
+    try {
+      const response = await fetch('/api/admin/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(options),
+      });
+
+      if (!response.ok) {
+        throw new Error('エクスポートに失敗しました');
+      }
+
+      // ファイルをダウンロード
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // ファイル名をレスポンスヘッダーから取得
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `診断記録_${new Date().toISOString().split('T')[0]}.${options.format}`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename\*?=['"]?([^'";]*)['"]?/);
+        if (filenameMatch) {
+          filename = decodeURIComponent(filenameMatch[1]);
+        }
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (err) {
+      console.error('エクスポートエラー:', err);
+      alert('エクスポートに失敗しました');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleGenerateReport = async (id: number) => {
+    try {
+      const response = await fetch(`/api/admin/reports/${id}`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('レポート生成に失敗しました');
+      }
+
+      const data = await response.json();
+      
+      // レコードリストを更新して新しいレポートURLを反映
+      setRecords(prev => prev.map(record => 
+        record.id === id 
+          ? { ...record, reportUrl: data.reportUrl }
+          : record
+      ));
+
+      alert('レポートが生成されました');
+    } catch (err) {
+      console.error('レポート生成エラー:', err);
+      alert('レポート生成に失敗しました');
+    }
+  };
+
+  const handleDownloadReport = async (id: number) => {
+    try {
+      // 該当記録のレポートURLを取得
+      const record = records.find(r => r.id === id);
+      if (!record?.reportUrl) {
+        alert('レポートが見つかりません');
+        return;
+      }
+
+      // レポートをダウンロード
+      const response = await fetch(record.reportUrl);
+      if (!response.ok) {
+        throw new Error('レポートダウンロードに失敗しました');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `診断レポート_${record.name}_${record.date}.html`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('レポートダウンロードエラー:', err);
+      alert('レポートダウンロードに失敗しました');
+    }
+  };
+
+  const handleManageInterview = (record: DiagnosisRecord) => {
+    setInterviewRecord(record);
+    setIsInterviewModalOpen(true);
+  };
+
+  const handleInterviewSave = async (id: number, data: any) => {
+    setIsInterviewSubmitting(true);
+    
+    try {
+      const response = await fetch(`/api/admin/interviews/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('インタビュー情報の保存に失敗しました');
+      }
+
+      // レコードリストを更新
+      setRecords(prev => prev.map(record => 
+        record.id === id 
+          ? { 
+              ...record, 
+              interviewScheduled: data.interviewScheduled || null,
+              interviewDone: data.interviewDone || null,
+              interviewNotes: data.interviewNotes || null
+            }
+          : record
+      ));
+
+      setIsInterviewModalOpen(false);
+      setInterviewRecord(null);
+      
+    } catch (err) {
+      console.error('インタビュー情報保存エラー:', err);
+      alert('インタビュー情報の保存に失敗しました');
+      throw err; // Re-throw to prevent modal from closing
+    } finally {
+      setIsInterviewSubmitting(false);
+    }
+  };
+
+  const handleManageMemo = (record: DiagnosisRecord) => {
+    setMemoRecord(record);
+    setIsMemoListOpen(true);
+  };
+
+  const handleAddMemo = () => {
+    setIsMemoListOpen(false);
+    setIsMemoModalOpen(true);
+  };
+
+  const handleMemoSaved = () => {
+    // メモが保存された後、必要に応じて何か処理を行う
+    setIsMemoModalOpen(false);
+    // メモリストを再表示
+    setIsMemoListOpen(true);
+  };
+
+  const handleCloseMemoModals = () => {
+    setIsMemoModalOpen(false);
+    setIsMemoListOpen(false);
+    setMemoRecord(null);
+  };
+
+  const handleCloseInterviewModal = () => {
+    setIsInterviewModalOpen(false);
+    setInterviewRecord(null);
   };
 
   if (loading) {
@@ -113,8 +385,13 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">最近の診断記録（最新10件）</h2>
               <DiagnosisTable 
                 records={records.slice(0, 10)} 
-                onEdit={(id) => console.log('Edit record:', id)}
-                onDelete={(id) => console.log('Delete record:', id)}
+                onEdit={session.role === 'admin' ? handleEdit : undefined}
+                onDelete={session.role === 'admin' ? handleDelete : undefined}
+                onGenerateReport={handleGenerateReport}
+                onDownloadReport={handleDownloadReport}
+                onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
+                onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
+                userRole={session.role}
               />
             </div>
           </div>
@@ -122,11 +399,23 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
 
         {currentView === 'records' && (
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">診断記録管理</h1>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">診断記録管理</h1>
+              {session.role === 'admin' && (
+                <Button onClick={handleAddNew}>
+                  新しい記録を追加
+                </Button>
+              )}
+            </div>
             <DiagnosisTable 
               records={records} 
-              onEdit={(id) => console.log('Edit record:', id)}
-              onDelete={(id) => console.log('Delete record:', id)}
+              onEdit={session.role === 'admin' ? handleEdit : undefined}
+              onDelete={session.role === 'admin' ? handleDelete : undefined}
+              onGenerateReport={handleGenerateReport}
+              onDownloadReport={handleDownloadReport}
+              onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
+              onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
+              userRole={session.role}
             />
           </div>
         )}
@@ -141,12 +430,50 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
         {currentView === 'export' && (
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-6">データ出力</h1>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600">Excel出力機能は開発中です。</p>
-            </div>
+            {session.role === 'admin' ? (
+              <ExportForm 
+                onExport={handleExport}
+                isLoading={isExporting}
+              />
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <h3 className="text-lg font-medium text-yellow-800 mb-2">管理者権限が必要です</h3>
+                <p className="text-yellow-600">データエクスポート機能は管理者のみ利用できます。</p>
+              </div>
+            )}
           </div>
         )}
       </main>
+      
+      <RecordFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseModal}
+        record={editingRecord}
+        onSubmit={handleFormSubmit}
+        isLoading={isSubmitting}
+      />
+      
+      <InterviewModal
+        isOpen={isInterviewModalOpen}
+        onClose={handleCloseInterviewModal}
+        record={interviewRecord}
+        onSave={handleInterviewSave}
+        isLoading={isInterviewSubmitting}
+      />
+
+      <MemoList
+        isOpen={isMemoListOpen}
+        onClose={handleCloseMemoModals}
+        record={memoRecord}
+        onAddMemo={handleAddMemo}
+      />
+
+      <MemoModal
+        isOpen={isMemoModalOpen}
+        onClose={handleCloseMemoModals}
+        record={memoRecord}
+        onMemoSaved={handleMemoSaved}
+      />
     </div>
   );
 }

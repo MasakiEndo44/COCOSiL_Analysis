@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
-import { requireAdminAuth } from '@/lib/admin-middleware';
+import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth(request);
+    await requireAdminRole(request);
 
     const data = await request.json();
 

@@ -47,6 +47,7 @@ model DiagnosisRecord {
   interviewScheduled  String?  // インタビュー予定日
   interviewDone       String?  // インタビュー実施日
   memo                String?  // 備考
+  memos               Memo[]   // 関連メモ
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -117,6 +118,21 @@ model SixStarMaster {
 
   @@unique([star, plusminus])
   @@map("six_star_master")
+}
+
+// メモ・フィードバック管理
+model Memo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  category  String   // general | follow_up | improvement | concern
+  priority  String   // low | medium | high
+  recordId  Int
+  record    DiagnosisRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("memos")
 }
 
 // システム設定

@@ -58,6 +58,76 @@ class OpenAIClient {
     return response.json();
   }
 
+  // 性格キーワードから自然な日本語文章を生成
+  async generatePersonalityText(
+    type: 'catchphrase' | 'interpersonal' | 'behavioral',
+    keywords: string[],
+    context?: {
+      name?: string;
+      mbtiType?: string;
+      taihekiType?: string;
+    }
+  ): Promise<string> {
+    const typePrompts = {
+      catchphrase: {
+        instruction: 'キャッチフレーズとして、その人の核となる特徴を一言で表現',
+        format: '「〇〇な人」という形式で、15-25文字程度',
+        example: '「創造性と集中力で道を切り開く人」'
+      },
+      interpersonal: {
+        instruction: '対人関係における特徴や振る舞いを自然に表現',
+        format: '30-50文字程度の自然な文章',
+        example: '深い関係性を重視し、誠実なコミュニケーションで信頼を築きます'
+      },
+      behavioral: {
+        instruction: '思考パターンや行動特性を具体的に表現',
+        format: '30-50文字程度の自然な文章',
+        example: '論理的に分析してから、計画的に効率よく行動に移します'
+      }
+    };
+
+    const prompt = typePrompts[type];
+    const keywordList = keywords.filter(k => k).join('、');
+    
+    const messages: OpenAIMessage[] = [
+      {
+        role: 'system',
+        content: `あなたは、与えられたキーワードを元に、自然で流暢な日本語の文章を作成するアシスタントです。
+
+【重要な指示】
+- キーワードを適切に組み合わせて、${prompt.instruction}してください
+- ${prompt.format}で作成してください
+- 医療的な診断や断定的な表現は避け、「〜する傾向があります」「〜な面があります」などの表現を使用
+- キーワード同士の関連性を考慮し、自然な接続詞や語順で文章を構成
+- 日本語として自然で読みやすい文章にしてください
+
+【出力例】
+${prompt.example}`
+      },
+      {
+        role: 'user',
+        content: `以下のキーワードを使用して文章を生成してください：
+
+キーワード: ${keywordList}
+
+${context ? `
+参考情報:
+- MBTI: ${context.mbtiType || '不明'}
+- 体癖: ${context.taihekiType || '不明'}種
+` : ''}
+
+上記のキーワードを自然に組み合わせた${type === 'catchphrase' ? 'キャッチフレーズ' : '特徴文'}を生成してください。`
+      }
+    ];
+
+    const response = await this.makeRequest('gpt-4o-mini', messages, {
+      temperature: 0.4,
+      max_tokens: 150
+    });
+
+    return response.choices[0].message.content.trim();
+  }
+
   // 高速・低コストな診断分析用（gpt-4o-mini）
   async generateQuickAnalysis(prompt: string): Promise<string> {
     const messages: OpenAIMessage[] = [

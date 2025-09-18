@@ -10,6 +10,7 @@ import { generateFallbackSummary } from '@/lib/counseling/summarizer';
 import { mbtiDescriptions } from '@/lib/data/mbti-questions';
 import Link from 'next/link';
 import type { FortuneResult } from '@/types';
+import { getOpenAIClient } from '@/lib/ai/openai-client';
 
 // Utility functions for age and zodiac calculation
 const calculateAge = (year: number, month: number, day: number): number => {
@@ -59,6 +60,32 @@ const getWesternZodiac = (month: number, day: number): string => {
   }
   
   return '山羊座'; // Fallback
+};
+
+// Helper functions for keyword extraction
+const extractMeaningfulWords = (text: string): string => {
+  if (!text) return '';
+  
+  // Remove common particles and connectors, extract meaningful content
+  const cleaned = text
+    .replace(/[をにはがで].*/, '') // Remove particles and everything after
+    .replace(/的$/, '') // Remove -teki suffix
+    .replace(/性$/, '') // Remove -sei suffix
+    .replace(/[、。]/g, '') // Remove punctuation
+    .trim();
+  
+  // Extract the main descriptive word (usually 2-4 characters)
+  const words = cleaned.split(/\s+/);
+  return words[0] || cleaned.substring(0, 4);
+};
+
+const selectTopWords = (words: string[], limit: number): string[] => {
+  const validWords = words
+    .filter(word => word && word.length > 0)
+    .map(word => word.trim())
+    .filter((word, index, array) => array.indexOf(word) === index); // Remove duplicates
+  
+  return validWords.slice(0, limit);
 };
 
 export function DiagnosisResults() {
@@ -127,6 +154,66 @@ export function DiagnosisResults() {
     // integration ステップを完了
     completeStep('integration');
   }, [basicInfo, fortuneResult, setFortune, completeStep]);
+
+  // 診断結果を管理者データベースに自動保存
+  const saveDiagnosisToAdmin = async () => {
+    if (!basicInfo || !mbti || !taiheki || !fortuneResult) {
+      return; // 必要なデータが不足している場合はスキップ
+    }
+
+    try {
+      const diagnosisData = {
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD形式
+        name: basicInfo.name,
+        birthDate: `${basicInfo.birthdate.year}/${String(basicInfo.birthdate.month).padStart(2, '0')}/${String(basicInfo.birthdate.day).padStart(2, '0')}`,
+        age: calculateAge(basicInfo.birthdate.year, basicInfo.birthdate.month, basicInfo.birthdate.day),
+        gender: basicInfo.gender,
+        zodiac: getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day),
+        animal: fortuneResult.animal,
+        orientation: (fortuneResult as any).animalDetails?.character?.includes('人間') ? 'people_oriented' :
+                     (fortuneResult as any).animalDetails?.character?.includes('城') ? 'castle_oriented' : 'big_vision_oriented',
+        color: (fortuneResult as any).animalDetails?.color || '不明',
+        mbti: mbti.type,
+        mainTaiheki: taiheki.primary,
+        subTaiheki: taiheki.secondary === 0 ? null : taiheki.secondary,
+        sixStar: fortuneResult.sixStar,
+        theme: hasCompletedCounseling && chatSession ? chatSession.selectedTopic : '診断のみ',
+        advice: 'Auto-saved diagnosis result', // Simplified for automatic save
+        satisfaction: 5, // デフォルト値
+        duration: '15分', // デフォルト値
+        feedback: hasCompletedCounseling && chatSummary ? `AIカウンセリング実施: ${chatSummary.topicTitle}` : '診断完了',
+        reportUrl: null,
+        interviewScheduled: null,
+        interviewDone: null,
+        memo: null
+      };
+
+      const response = await fetch('/api/admin/diagnosis-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(diagnosisData),
+      });
+
+      if (response.ok) {
+        console.log('診断結果を管理者データベースに保存しました');
+      } else {
+        console.warn('診断結果の保存に失敗しました:', response.status);
+      }
+    } catch (error) {
+      console.warn('診断結果の保存でエラーが発生しました:', error);
+      // エラーが発生してもユーザー体験を阻害しないように警告のみ
+    }
+  };
+
+  // 診断結果の自動保存
+  useEffect(() => {
+    // 全ての診断が完了している場合、管理者データベースに自動保存
+    if (basicInfo && mbti && taiheki && fortuneResult) {
+      saveDiagnosisToAdmin();
+    }
+  }, [basicInfo, mbti, taiheki, fortuneResult, hasCompletedCounseling, chatSummary]);
 
   // 最終結果を表示
   const showFinalResults = () => {
@@ -376,81 +463,97 @@ export function DiagnosisResults() {
 
   // キーワード抽出関数
   const extractKeywords = (mbti: any, taiheki: any, fortune: FortuneResult) => {
-    const keywords = {
-      mbtiSocial: '',
-      mbtiThinking: '',
-      mbtiAction: '',
-      taihekiSocial: '',
-      taihekiAction: '',
-      animalPersonality: '',
-      animalSocial: ''
+    // Extract personality aspect words with 3:2 weighting (acquired:innate)
+    const aspectWords = {
+      catchphrase: [] as string[],
+      interpersonal: [] as string[],
+      behavioral: [] as string[]
     };
 
+    // Acquired traits (60% weight) - MBTI + Taiheki
     if (mbti?.type) {
       const type = mbti.type;
-      keywords.mbtiSocial = wordBank.mbti[type[0] as keyof typeof wordBank.mbti]?.social || '';
-      keywords.mbtiThinking = wordBank.mbti[type[1] as keyof typeof wordBank.mbti]?.thinking || '';
-      keywords.mbtiAction = wordBank.mbti[type[3] as keyof typeof wordBank.mbti]?.action || '';
+      // MBTI contributions
+      const mbtiWords = {
+        social: wordBank.mbti[type[0] as keyof typeof wordBank.mbti]?.social || '',
+        thinking: wordBank.mbti[type[1] as keyof typeof wordBank.mbti]?.thinking || '',
+        action: wordBank.mbti[type[3] as keyof typeof wordBank.mbti]?.action || ''
+      };
+      
+      // Extract meaningful words from MBTI descriptions
+      aspectWords.catchphrase.push(extractMeaningfulWords(mbtiWords.thinking));
+      aspectWords.interpersonal.push(extractMeaningfulWords(mbtiWords.social));
+      aspectWords.behavioral.push(extractMeaningfulWords(mbtiWords.action));
     }
 
     if (taiheki?.primary) {
       const type = taiheki.primary;
-      keywords.taihekiSocial = wordBank.taiheki[type as keyof typeof wordBank.taiheki]?.social || '';
-      keywords.taihekiAction = wordBank.taiheki[type as keyof typeof wordBank.taiheki]?.action || '';
-    }
-
-    if (fortune?.animal) {
-      const animal = fortune.animal;
-      const animalKey = Object.keys(wordBank.animals).find(key => 
-        animal.includes(key) || key.includes(animal.replace(/[のな]/g, ''))
-      );
-      if (animalKey) {
-        keywords.animalPersonality = wordBank.animals[animalKey as keyof typeof wordBank.animals]?.personality || '';
-        keywords.animalSocial = wordBank.animals[animalKey as keyof typeof wordBank.animals]?.social || '';
+      const taihekiWords = wordBank.taiheki[type as keyof typeof wordBank.taiheki];
+      if (taihekiWords) {
+        // Extract meaningful words from Taiheki descriptions
+        aspectWords.catchphrase.push(extractMeaningfulWords(taihekiWords.social));
+        aspectWords.interpersonal.push(extractMeaningfulWords(taihekiWords.social));
+        aspectWords.behavioral.push(extractMeaningfulWords(taihekiWords.action));
       }
     }
 
-    return keywords;
+    // Innate traits (40% weight) - Fortune API results
+    if (fortune) {
+      // Extract from animal personality
+      if (fortune.animal) {
+        const animal = fortune.animal;
+        const animalKey = Object.keys(wordBank.animals).find(key => 
+          animal.includes(key) || key.includes(animal.replace(/[のな]/g, ''))
+        );
+        if (animalKey) {
+          const animalWords = wordBank.animals[animalKey as keyof typeof wordBank.animals];
+          aspectWords.catchphrase.push(extractMeaningfulWords(animalWords?.personality || ''));
+          aspectWords.interpersonal.push(extractMeaningfulWords(animalWords?.social || ''));
+        }
+      }
+
+      // Extract from characteristics array
+      if (fortune.characteristics && fortune.characteristics.length > 0) {
+        fortune.characteristics.slice(0, 2).forEach(characteristic => {
+          const meaningfulWord = extractMeaningfulWords(characteristic);
+          aspectWords.catchphrase.push(meaningfulWord);
+          aspectWords.behavioral.push(meaningfulWord);
+        });
+      }
+
+      // Extract from sixStar and element for additional behavioral traits
+      if (fortune.sixStar) {
+        aspectWords.behavioral.push(extractMeaningfulWords(fortune.sixStar));
+      }
+    }
+
+    // Filter and limit to 3 words per aspect, removing duplicates
+    const finalAspects = {
+      catchphrase: selectTopWords(aspectWords.catchphrase, 3),
+      interpersonal: selectTopWords(aspectWords.interpersonal, 3),
+      behavioral: selectTopWords(aspectWords.behavioral, 3)
+    };
+
+    return finalAspects;
   };
+
 
   // キャッチフレーズ生成（15-20文字で完結）
   const generateCatchphrase = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
     const keywords = extractKeywords(mbti, taiheki, fortune);
-    
-    const candidateWords = [
-      keywords.animalPersonality,
-      keywords.mbtiThinking?.replace(/[をに].*/, ''), // 「論理的に」→「論理的」
-      keywords.taihekiAction?.replace(/[でを].*/, ''), // 「フットワーク軽く」→「フットワーク軽」
-      '人'
-    ].filter(Boolean);
-
-    return fitText(candidateWords, 20);
+    return fitText(keywords.catchphrase, 20);
   };
 
   // 対人的特徴生成（40-60文字で完結）
   const generateInterpersonalTraits = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
     const keywords = extractKeywords(mbti, taiheki, fortune);
-    
-    const parts = [
-      keywords.mbtiSocial,
-      keywords.taihekiSocial,
-      keywords.animalSocial + '特徴があります'
-    ].filter(Boolean);
-
-    return fitText(parts, 60);
+    return fitText(keywords.interpersonal, 60);
   };
 
   // 思考と行動の特徴生成（40-60文字で完結）
   const generateBehavioralTraits = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
     const keywords = extractKeywords(mbti, taiheki, fortune);
-    
-    const parts = [
-      keywords.mbtiThinking,
-      keywords.taihekiAction,
-      keywords.mbtiAction + '傾向があります'
-    ].filter(Boolean);
-
-    return fitText(parts, 60);
+    return fitText(keywords.behavioral, 60);
   };
 
   // 基本情報と算命学結果は必須、MBTI・体癖は任意
@@ -710,19 +813,7 @@ export function DiagnosisResults() {
               </div>
             </div>
 
-            {taiheki && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h5 className="font-medium text-light-fg mb-3">📋 推奨事項</h5>
-                <ul className="text-sm text-light-fg-muted space-y-1">
-                  {taiheki.recommendations?.slice(0, 3).map((rec, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="text-blue-500 mt-1">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
