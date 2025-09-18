@@ -11,6 +11,7 @@ import { Root as Select, SelectContent, SelectItem, SelectTrigger, SelectValue }
 import { Textarea } from '@/ui/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/ui/components/ui/dialog';
 import { DiagnosisRecord } from '@/types/admin';
+import { FULL_ANIMAL_OPTIONS, getOrientationByCharacter } from '@/lib/data/animal-fortune-mapping';
 
 const recordSchema = z.object({
   name: z.string().min(1, '名前は必須です'),
@@ -53,14 +54,7 @@ const mbtiTypes = [
   'ISTP', 'ISFP', 'ESTP', 'ESFP'
 ];
 
-const animals = [
-  'ライオン', '猿', 'チーター', 'こじか', '虎', 'たぬき',
-  'コアラ', 'ゾウ', 'ひつじ', 'ペガサス', 'オオカミ', 'こじか'
-];
-
-const orientations = [
-  'people_oriented', 'castle_oriented', 'big_vision_oriented'
-];
+// 60 animal characters are imported from FULL_ANIMAL_OPTIONS
 
 const colors = ['金', '銀', '赤', '青', '黄', '緑', '茶', '紫', '黒', '白'];
 
@@ -268,14 +262,23 @@ export function RecordFormModal({ isOpen, onClose, record, onSubmit, isLoading =
           {/* 占い結果 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="animal">動物占い *</Label>
-              <Select onValueChange={(value) => form.setValue('animal', value)}>
+              <Label htmlFor="animal">動物占い（60キャラクター）*</Label>
+              <Select onValueChange={(value) => {
+                form.setValue('animal', value);
+                // Auto-populate orientation based on selected animal character
+                const orientation = getOrientationByCharacter(value);
+                if (orientation) {
+                  form.setValue('orientation', orientation);
+                }
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="動物を選択" />
+                  <SelectValue placeholder="動物キャラクターを選択" />
                 </SelectTrigger>
-                <SelectContent>
-                  {animals.map((animal) => (
-                    <SelectItem key={animal} value={animal}>{animal}</SelectItem>
+                <SelectContent className="max-h-60">
+                  {FULL_ANIMAL_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -302,17 +305,21 @@ export function RecordFormModal({ isOpen, onClose, record, onSubmit, isLoading =
             </div>
 
             <div>
-              <Label htmlFor="orientation">志向 *</Label>
-              <Select onValueChange={(value) => form.setValue('orientation', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="志向を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="people_oriented">人間指向</SelectItem>
-                  <SelectItem value="castle_oriented">城指向</SelectItem>
-                  <SelectItem value="big_vision_oriented">大局指向</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="orientation">志向（自動入力）*</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="orientation"
+                  {...form.register('orientation')}
+                  readOnly
+                  className="bg-gray-50 cursor-not-allowed"
+                  placeholder="動物選択で自動入力されます"
+                />
+                <span className="text-sm text-gray-500">
+                  {form.watch('orientation') === 'people_oriented' && '人間指向'}
+                  {form.watch('orientation') === 'castle_oriented' && '城指向'}
+                  {form.watch('orientation') === 'big_vision_oriented' && '大局指向'}
+                </span>
+              </div>
               {form.formState.errors.orientation && (
                 <p className="text-sm text-red-600 mt-1">{form.formState.errors.orientation.message}</p>
               )}

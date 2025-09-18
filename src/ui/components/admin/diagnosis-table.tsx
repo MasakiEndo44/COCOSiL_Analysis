@@ -2,6 +2,7 @@
 
 import { DiagnosisRecord } from '@/types/admin';
 import { Edit, Trash2, ExternalLink, FileText, Download, Calendar, MessageSquare, StickyNote } from 'lucide-react';
+import { ORIENTATION_LABELS } from '@/lib/data/animal-fortune-mapping';
 
 interface DiagnosisTableProps {
   records: DiagnosisRecord[];
@@ -45,12 +46,7 @@ export default function DiagnosisTable({
   };
 
   const getOrientationLabel = (orientation: string) => {
-    switch (orientation) {
-      case 'people_oriented': return '人間指向';
-      case 'castle_oriented': return '城指向';
-      case 'big_vision_oriented': return '大局指向';
-      default: return orientation;
-    }
+    return ORIENTATION_LABELS[orientation as keyof typeof ORIENTATION_LABELS] || orientation;
   };
 
   const getSatisfactionStars = (satisfaction: number) => {
