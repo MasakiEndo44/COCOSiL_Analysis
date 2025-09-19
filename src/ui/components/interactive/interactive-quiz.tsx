@@ -125,7 +125,7 @@ export function InteractiveQuiz({
             </div>
           )}
           
-          <Button onClick={handleRestart} variant="outline">
+          <Button onClick={handleRestart} variant="secondary">
             もう一度挑戦する
           </Button>
         </div>
@@ -205,7 +205,7 @@ export function InteractiveQuiz({
         {/* Actions */}
         <div className="flex items-center justify-between">
           {isAnswered && currentQ.explanation && !showExplanation ? (
-            <Button variant="outline" onClick={handleShowExplanation}>
+            <Button variant="secondary" onClick={handleShowExplanation}>
               <Lightbulb className="w-4 h-4 mr-2" />
               解説を見る
             </Button>

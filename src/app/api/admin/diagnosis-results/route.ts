@@ -13,7 +13,7 @@ const diagnosisResultSchema = z.object({
   color: z.string(),
   mbti: z.string(),
   mainTaiheki: z.number(),
-  subTaiheki: z.number().optional(),
+  subTaiheki: z.number().nullable(),
   sixStar: z.string(),
   theme: z.string().default(''), // Topics joined by comma
   advice: z.string().default(''),

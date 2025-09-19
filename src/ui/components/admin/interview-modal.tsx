@@ -215,7 +215,7 @@ export function InterviewModal({
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
               disabled={isLoading}
             >

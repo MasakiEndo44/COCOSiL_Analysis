@@ -218,28 +218,7 @@ function getClientIP(request: NextRequest): string {
 }
 
 // ============================================================
-// レート制限（簡易実装）
-// ============================================================
 
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const limit = rateLimitMap.get(ip);
-  
-  if (!limit || now > limit.resetTime) {
-    // 新規 or リセット（1分間に10回まで）
-    rateLimitMap.set(ip, { count: 1, resetTime: now + 60000 });
-    return true;
-  }
-  
-  if (limit.count >= 10) {
-    return false; // レート制限に引っかかった
-  }
-  
-  limit.count++;
-  return true;
-}
 
 // OPTIONS プリフライトリクエスト対応
 export async function OPTIONS() {

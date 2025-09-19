@@ -1,5 +1,5 @@
 import { PageTag } from '@/lib/dev-tag';
-import { DiagnosisResults } from '@/ui/features/diagnosis/results';
+import DiagnosisResults from '@/ui/features/diagnosis/results';
 
 export default function ResultsPage() {
   return (

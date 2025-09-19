@@ -441,7 +441,7 @@ export function PrivacyPolicyContent() {
       {/* 同意確認・戻るボタン */}
       <div className="flex flex-col sm:flex-row gap-4 pt-8">
         <Button
-          variant="outline"
+          variant="secondary"
           className="flex-1"
           onClick={() => window.history.back()}
         >

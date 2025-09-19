@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateFortuneSimplified } from '@/lib/fortune/precision-calculator';
 import { getSupportedYearRange } from '@/lib/data/destiny-number-database';
-import { 
+import {
   createRequestContext,
   createSuccessResponse,
   createErrorResponse,
@@ -15,13 +15,13 @@ import {
   validateInput,
   validateDate,
   checkRateLimit,
-  PerformanceMonitor
-} from '@/lib/api-utils';
-import { 
-  FortuneCalculationRequest, 
-  FortuneCalculationData,
-  ErrorCode,
+  PerformanceMonitor,
   ValidationRule
+} from '@/lib/api-utils';
+import {
+  FortuneCalculationRequest,
+  FortuneCalculationData,
+  ErrorCode
 } from '@/types/api';
 
 // Edge Runtime設定 (o3推奨)
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(validationError, context);
     }
 
-    const { year, month, day, timezone = 'Asia/Tokyo' } = body as FortuneCalculationRequest;
+    const { year, month, day, timezone: _timezone = 'Asia/Tokyo' } = body as FortuneCalculationRequest;
 
     // 日付妥当性検証
     const dateValidationError = validateDate(year, month, day);

@@ -290,6 +290,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   // 全体統合質問
   {
     id: 23,
+    category: '上下',
+    discriminationTarget: [1, 2, 3, 4],
     question: "自分の重心がある感覚の場所は？",
     choices: [
       { text: "頭部・首の辺り", taihekiType: 1, weight: 2 },
@@ -300,6 +302,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 24,
+    category: '捻れ',
+    discriminationTarget: [7, 8, 9, 10],
     question: "物事を説明するときの枕詞は？",
     choices: [
       { text: "「つまり」「要するに」", taihekiType: 7, weight: 2 },
@@ -310,6 +314,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 25,
+    category: '開閉',
+    discriminationTarget: [1, 2, 9, 10],
     question: "座っているときの自然な姿勢は？",
     choices: [
       { text: "背筋を伸ばし、きちんとした姿勢", taihekiType: 1, weight: 2 },
@@ -322,6 +328,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   // 境界ケース判別質問
   {
     id: 26,
+    category: '前後',
+    discriminationTarget: [1, 5, 6, 8],
     question: "疲労回復について最も効果的なのは？",
     choices: [
       { text: "しっかりと睡眠を取り、規則正しい生活", taihekiType: 1, weight: 2 },
@@ -332,6 +340,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 27,
+    category: '開閉',
+    discriminationTarget: [1, 2, 9, 10],
     question: "創造性を発揮するとき、どのような特徴がありますか？",
     choices: [
       { text: "独創的で他人には思いつかないアイデア", taihekiType: 1, weight: 2 },
@@ -342,6 +352,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 28,
+    category: '前後',
+    discriminationTarget: [1, 3, 4, 5],
     question: "リーダーシップスタイルについて最も当てはまるのは？",
     choices: [
       { text: "理念を掲げて率先垂範で導く", taihekiType: 1, weight: 2 },
@@ -352,6 +364,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 29,
+    category: '左右',
+    discriminationTarget: [3, 4, 6, 8],
     question: "変化に対する反応はどのような傾向がありますか？",
     choices: [
       { text: "慎重に検討してから対応する", taihekiType: 6, weight: 2 },
@@ -362,6 +376,8 @@ export const extendedTaihekiQuestions: ExtendedTaihekiQuestion[] = [
   },
   {
     id: 30,
+    category: '前後',
+    discriminationTarget: [1, 5, 6, 7],
     question: "達成感を最も感じるのはどのような瞬間ですか？",
     choices: [
       { text: "自分の信念を貫き通したとき", taihekiType: 1, weight: 2 },
@@ -447,8 +463,8 @@ export function calculateExtendedTaiheki(answers: number[]): {
   // 軸別一貫性チェック
   let axisConsistency = 0;
   const primaryAxis = getPrimaryAxis(primary);
-  if (primaryAxis && axisMaxScores[primaryAxis] > 0) {
-    axisConsistency = scores[primary] / axisMaxScores[primaryAxis];
+  if (primaryAxis && (axisMaxScores as any)[primaryAxis] > 0) {
+    axisConsistency = scores[primary] / (axisMaxScores as any)[primaryAxis];
   }
   
   const confidence = Math.min((scoreDiff * 0.7 + axisConsistency * 0.3) * 100, 100);

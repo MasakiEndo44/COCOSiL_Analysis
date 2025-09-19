@@ -194,7 +194,7 @@ export default function MemoList({
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => deleteMemo(memo.id)}
                         className="text-red-600 hover:text-red-700"
                       >

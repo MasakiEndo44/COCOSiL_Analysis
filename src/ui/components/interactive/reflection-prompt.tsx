@@ -250,7 +250,7 @@ export function ReflectionPrompt({
                 <Button
                   key={prompt.id}
                   size="sm"
-                  variant={activePrompt === prompt.id ? "default" : "outline"}
+                  variant={activePrompt === prompt.id ? "primary" : "secondary"}
                   onClick={() => setActivePrompt(prompt.id)}
                   className={cn(
                     "relative",
@@ -291,7 +291,7 @@ export function ReflectionPrompt({
                   <p className="text-xs font-medium text-muted-foreground">考えるヒント：</p>
                   <div className="flex flex-wrap gap-1">
                     {currentPrompt.suggestions.map(suggestion => (
-                      <Badge key={suggestion} variant="outline" className="text-xs">
+                      <Badge key={suggestion} variant="secondary" className="text-xs">
                         {suggestion}
                       </Badge>
                     ))}
@@ -338,7 +338,7 @@ export function ReflectionPrompt({
               <div className="flex items-center space-x-2">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => handleClear(activePrompt)}
                   disabled={!currentContent}
                 >

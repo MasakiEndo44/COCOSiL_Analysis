@@ -203,7 +203,7 @@ export function PrivacyConsentDialog({
               より詳しい内容については、下記リンクよりご確認ください。
             </p>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => window.open('/privacy', '_blank')}
               className="text-brand-600 border-brand-600 hover:bg-brand-50"
@@ -220,7 +220,7 @@ export function PrivacyConsentDialog({
         <div className="sticky bottom-0 bg-white border-t p-6 rounded-b-2xl">
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
-              variant="outline"
+              variant="secondary"
               className="flex-1"
               onClick={onDecline}
             >

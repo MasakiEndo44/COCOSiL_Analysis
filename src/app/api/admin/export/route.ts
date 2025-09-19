@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         });
         
         // スタイル設定
-        const titleStyle = { font: { bold: true, size: 12 } };
+        const titleStyle = { bold: true, size: 12 };
         statsSheet.getRow(1).font = titleStyle;
         statsSheet.getRow(6).font = titleStyle;
         statsSheet.getRow(6 + Object.keys(stats.genderDistribution).length + 2).font = titleStyle;
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       if (includeMasterData) {
         const masterSheet = workbook.addWorksheet('マスターデータ');
         
-        const [animalMaster, mbtiMaster, taihekiMaster] = await Promise.all([
+        const [animalMaster, mbtiMaster, _taihekiMaster] = await Promise.all([
           adminDb.animalMaster.findMany(),
           adminDb.mbtiMaster.findMany(),
           adminDb.taihekiMaster.findMany(),
@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
         });
         
         // スタイル設定
+        const titleStyle = { bold: true, size: 12 };
         masterSheet.getRow(1).font = titleStyle;
         masterSheet.getRow(mbtiStartRow + 1).font = titleStyle;
       }

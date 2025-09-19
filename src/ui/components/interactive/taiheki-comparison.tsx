@@ -242,7 +242,7 @@ export function TaihekiComparison({
                 {selectedTypes.length > 2 && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => removeComparison(index)}
                     className="text-red-600 hover:text-red-700"
                   >
@@ -255,7 +255,7 @@ export function TaihekiComparison({
             {selectedTypes.length < 3 && (
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 onClick={addComparison}
               >
                 + 追加
@@ -282,7 +282,7 @@ export function TaihekiComparison({
                         <span>{type1Name} × {type2Name}</span>
                         <Badge 
                           className={cn('text-xs', compatibilityColors[compatibility])}
-                          variant="outline"
+                          variant="secondary"
                         >
                           {compatibilityLabels[compatibility]}
                         </Badge>
@@ -305,7 +305,7 @@ export function TaihekiComparison({
               <Button
                 key={aspect.key}
                 size="sm"
-                variant={comparisonAspect === aspect.key ? "default" : "outline"}
+                variant={comparisonAspect === aspect.key ? "primary" : "secondary"}
                 onClick={() => setComparisonAspect(aspect.key as any)}
               >
                 {aspect.label}

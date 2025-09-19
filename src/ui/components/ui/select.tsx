@@ -1,6 +1,5 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
 
 export interface SelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -62,7 +61,7 @@ const SelectContext = React.createContext<{
 }>({});
 
 // Modern Select root component
-const Root = ({ children, value, onValueChange, ...props }: {
+const Root = ({ children, value, onValueChange, ..._props }: {
   children: React.ReactNode;
   value?: string;
   onValueChange?: (value: string) => void;
@@ -103,7 +102,7 @@ const SelectTrigger = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
 SelectTrigger.displayName = "SelectTrigger";
 
 const SelectValue = React.forwardRef<HTMLDivElement, { placeholder?: string; className?: string }>(
-  ({ placeholder, className }, ref) => (
+  ({ placeholder, className: _className }, _ref) => (
     <option value="" disabled>
       {placeholder}
     </option>
@@ -112,7 +111,7 @@ const SelectValue = React.forwardRef<HTMLDivElement, { placeholder?: string; cla
 SelectValue.displayName = "SelectValue";
 
 const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => (
+  ({ className: _className, children, ..._props }, _ref) => (
     <>{children}</>
   )
 );

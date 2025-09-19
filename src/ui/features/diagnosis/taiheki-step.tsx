@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { taihekiQuestions, calculateTaiheki } from '@/lib/data/taiheki-questions';
+import type { TaihekiType, SecondaryTaihekiType } from '@/types';
 
 export function TaihekiStep() {
   const router = useRouter();
@@ -60,14 +61,15 @@ export function TaihekiStep() {
       
       // 既存の形式に変換（互換性のため）
       const legacyResult = {
-        primary: parseInt(apiResult.result.primaryType.replace('type', '')),
-        secondary: parseInt(apiResult.result.secondaryType.replace('type', '')),
+        primary: parseInt(apiResult.result.primaryType.replace('type', '')) as TaihekiType,
+        secondary: parseInt(apiResult.result.secondaryType.replace('type', '')) as SecondaryTaihekiType,
         confidence: apiResult.result.confidence,
         characteristics: [
           apiResult.result.reliabilityText,
           `信頼度${apiResult.result.reliabilityStars}`
         ],
         recommendations: [],
+        scores: apiResult.result.typeScores || {},
         // 新しいデータも保持
         enhancedResult: apiResult.result
       };

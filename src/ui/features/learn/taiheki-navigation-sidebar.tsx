@@ -21,7 +21,7 @@ export function TaihekiNavigationSidebar() {
   };
 
   return (
-    <ComponentTag name="TaihekiNavigationSidebar" type="navigation">
+    <ComponentTag name="TaihekiNavigationSidebar" type="ui">
       <div className="bg-white border-r border-border h-full">
         <div className="p-6 space-y-6">
           {/* Header */}
@@ -163,7 +163,7 @@ export function TaihekiNavigationSidebar() {
               </Link>
             ) : (
               <Link href="/learn/taiheki">
-                <Button variant="outline" className="w-full">
+                <Button variant="secondary" className="w-full">
                   学習概要に戻る
                 </Button>
               </Link>

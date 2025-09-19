@@ -32,7 +32,7 @@ export function TaihekiBreadcrumbs() {
       breadcrumbs.push({
         name: `第${chapterInfo.order}章: ${chapterInfo.title}`,
         href: `/learn/taiheki/${chapterId}`,
-        icon: null,
+        icon: BookOpen,
       });
     }
   }

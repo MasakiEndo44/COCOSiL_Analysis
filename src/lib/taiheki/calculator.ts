@@ -88,7 +88,7 @@ export class TaihekiCalculator {
       throw new TaihekiDiagnosisError(
         'Diagnosis calculation failed',
         ERROR_CODES.CALCULATION_ERROR,
-        { error: error.message, answers }
+        { error: error instanceof Error ? error.message : String(error), answers }
       );
     }
   }

@@ -219,7 +219,7 @@ export function BodyTypeSelector({
             {categories.map(category => (
               <Button
                 key={category}
-                variant={activeTab === category ? "default" : "outline"}
+                variant={activeTab === category ? "primary" : "secondary"}
                 size="sm"
                 onClick={() => setActiveTab(category)}
               >
@@ -268,7 +268,7 @@ export function BodyTypeSelector({
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {type.characteristics.slice(0, 2).map(char => (
-                            <Badge key={char} variant="outline" className="text-xs">
+                            <Badge key={char} variant="secondary" className="text-xs">
                               {char}
                             </Badge>
                           ))}
@@ -278,7 +278,7 @@ export function BodyTypeSelector({
                   </Card>
 
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => handleShowDetails(type.id)}
                     className="w-full text-xs"

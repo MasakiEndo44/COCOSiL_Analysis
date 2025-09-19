@@ -73,7 +73,7 @@ export function ErrorDisplay({
         </div>
         {onRetry && errorObj.retryable && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onRetry}
             className="border-red-300 text-red-700 hover:bg-red-100"
@@ -121,7 +121,7 @@ export function ErrorDisplay({
           <div className="flex items-center space-x-3">
             {onRetry && errorObj.retryable && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={onRetry}
                 className="border-red-300 text-red-700 hover:bg-red-100"
               >
@@ -132,7 +132,7 @@ export function ErrorDisplay({
             
             {onDismiss && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 onClick={onDismiss}
                 className="text-red-600 hover:text-red-800 hover:bg-red-100"
               >

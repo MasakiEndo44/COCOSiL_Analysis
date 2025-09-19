@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
 import { Label } from '@/ui/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
+import { Root, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
 import { Checkbox } from '@/ui/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/components/ui/card';
 import { ExportOptions } from '@/types/admin';
@@ -53,7 +52,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
             {/* 出力形式 */}
             <div className="space-y-2">
               <Label>出力形式</Label>
-              <Select value={format} onValueChange={(value: 'excel' | 'csv') => setFormat(value)}>
+              <Root value={format} onValueChange={(value) => setFormat(value as 'excel' | 'csv')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -61,7 +60,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
                   <SelectItem value="excel">Excel (.xlsx)</SelectItem>
                   <SelectItem value="csv">CSV (.csv)</SelectItem>
                 </SelectContent>
-              </Select>
+              </Root>
             </div>
 
             {/* 含めるデータ */}
@@ -72,7 +71,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
                 <Checkbox
                   id="includeStats"
                   checked={includeStats}
-                  onCheckedChange={(checked) => setIncludeStats(checked as boolean)}
+                  onChange={(e) => setIncludeStats(e.target.checked)}
                 />
                 <Label htmlFor="includeStats" className="text-sm font-normal">
                   統計データを含める
@@ -83,7 +82,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
                 <Checkbox
                   id="includeMasterData"
                   checked={includeMasterData}
-                  onCheckedChange={(checked) => setIncludeMasterData(checked as boolean)}
+                  onChange={(e) => setIncludeMasterData(e.target.checked)}
                 />
                 <Label htmlFor="includeMasterData" className="text-sm font-normal">
                   マスターデータを含める
@@ -97,7 +96,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
                 <Checkbox
                   id="useDateRange"
                   checked={useDateRange}
-                  onCheckedChange={(checked) => setUseDateRange(checked as boolean)}
+                  onChange={(e) => setUseDateRange(e.target.checked)}
                 />
                 <Label htmlFor="useDateRange" className="text-sm font-normal">
                   日付範囲を指定する

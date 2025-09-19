@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
 import { ComponentTag } from '@/lib/dev-tag';
 import { Button } from '@/ui/components/ui/button';
@@ -403,7 +403,7 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
   const sectionProgress = ((currentSection + 1) / sections.length) * 100;
 
   return (
-    <ComponentTag name="TaihekiChapterContent" type="content">
+    <ComponentTag name="TaihekiChapterContent" type="feature">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-4">
@@ -466,7 +466,7 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
             {/* Navigation */}
             <div className="flex items-center justify-between">
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
                 disabled={currentSection === 0}
               >
@@ -573,14 +573,14 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
           <div>
             {prevChapter ? (
               <Link href={`/learn/taiheki/${prevChapter[0]}`}>
-                <Button variant="outline">
+                <Button variant="secondary">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   第{prevChapter[1].order}章
                 </Button>
               </Link>
             ) : (
               <Link href="/learn/taiheki">
-                <Button variant="outline">
+                <Button variant="secondary">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   学習概要
                 </Button>

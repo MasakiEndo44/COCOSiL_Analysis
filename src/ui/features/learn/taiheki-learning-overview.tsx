@@ -133,7 +133,7 @@ export function TaihekiLearningOverview() {
                     <div className="flex flex-col space-y-2">
                       <Link href={`/learn/taiheki/${chapterId}`}>
                         <Button
-                          variant={isCompleted ? "secondary" : "default"}
+                          variant={isCompleted ? "secondary" : "primary"}
                           size="sm"
                           onClick={() => handleChapterStart(chapterId)}
                           className="w-28"

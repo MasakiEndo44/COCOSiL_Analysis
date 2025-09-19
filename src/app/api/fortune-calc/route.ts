@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateFortuneSimplified } from '@/lib/fortune/precision-calculator';
 
-interface FortuneRequest {
-  year: number;
-  month: number;
-  day: number;
-}
+
 
 interface FortuneResponse {
   age: number;

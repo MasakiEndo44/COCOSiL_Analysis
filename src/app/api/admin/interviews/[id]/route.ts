@@ -17,7 +17,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { interviewScheduled, interviewDone, interviewNotes } = body;
+    const { interviewScheduled, interviewDone, interviewNotes: _interviewNotes } = body;
 
     // 日付フォーマットのバリデーション
     if (interviewScheduled && isNaN(Date.parse(interviewScheduled))) {
@@ -54,7 +54,7 @@ export async function PUT(
       data: {
         interviewScheduled: interviewScheduled || null,
         interviewDone: interviewDone || null,
-        interviewNotes: interviewNotes || null,
+
         updatedAt: new Date(),
       }
     });
@@ -65,7 +65,6 @@ export async function PUT(
         id: updatedRecord.id,
         interviewScheduled: updatedRecord.interviewScheduled,
         interviewDone: updatedRecord.interviewDone,
-        interviewNotes: updatedRecord.interviewNotes,
       }
     });
 
@@ -101,7 +100,6 @@ export async function GET(
         date: true,
         interviewScheduled: true,
         interviewDone: true,
-        interviewNotes: true,
         // 診断結果の参考情報
         mbti: true,
         mainTaiheki: true,

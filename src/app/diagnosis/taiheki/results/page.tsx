@@ -18,7 +18,7 @@ export default function TaihekiResultsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    setCurrentStep('taiheki');
+    setCurrentStep('taiheki_test');
   }, [setCurrentStep]);
 
   // 体癖診断結果が存在しない場合は診断ページにリダイレクト

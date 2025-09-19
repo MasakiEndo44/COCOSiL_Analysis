@@ -3,9 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
-import { EmptyQAState } from '@/ui/components/counseling/empty-qa-state';
-import { SummarizedQAList } from '@/ui/components/counseling/summarized-qa-list';
-import { generateFallbackSummary } from '@/lib/counseling/summarizer';
 
 import { mbtiDescriptions } from '@/lib/data/mbti-questions';
 import Link from 'next/link';
@@ -18,11 +15,11 @@ const calculateAge = (year: number, month: number, day: number): number => {
   const birthDate = new Date(year, month - 1, day);
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-  
+
   return age;
 };
 
@@ -50,7 +47,7 @@ const getWesternZodiac = (month: number, day: number): string => {
         return zodiac.name;
       }
     } else {
-      // Regular zodiac
+      // Same-year zodiac
       if ((month === zodiac.startMonth && day >= zodiac.startDay) ||
           (month === zodiac.endMonth && day <= zodiac.endDay) ||
           (month > zodiac.startMonth && month < zodiac.endMonth)) {
@@ -58,505 +55,473 @@ const getWesternZodiac = (month: number, day: number): string => {
       }
     }
   }
-  
-  return '山羊座'; // Fallback
+
+  return '不明';
 };
 
-// Helper functions for keyword extraction
-const extractMeaningfulWords = (text: string): string => {
-  if (!text) return '';
-  
-  // Remove common particles and connectors, extract meaningful content
-  const cleaned = text
-    .replace(/[をにはがで].*/, '') // Remove particles and everything after
-    .replace(/的$/, '') // Remove -teki suffix
-    .replace(/性$/, '') // Remove -sei suffix
-    .replace(/[、。]/g, '') // Remove punctuation
-    .trim();
-  
-  // Extract the main descriptive word (usually 2-4 characters)
-  const words = cleaned.split(/\s+/);
-  return words[0] || cleaned.substring(0, 4);
+// Simplified word bank for demonstration
+const getSimpleWordBank = () => {
+  return {
+    mbti: {
+      'ENFP': {
+        catchphrase: '情熱的創造者',
+        trait1: '自由奔放',
+        trait2: '直感的',
+        trait3: '社交的'
+      },
+      'INFP': {
+        catchphrase: '理想追求者',
+        trait1: '内向的',
+        trait2: '感情豊か',
+        trait3: '創造的'
+      },
+      'ENFJ': {
+        catchphrase: 'カリスマ指導者',
+        trait1: '外向的',
+        trait2: '思いやり深い',
+        trait3: '計画的'
+      },
+      'INFJ': {
+        catchphrase: '洞察力の賢者',
+        trait1: '内向的',
+        trait2: '直感的',
+        trait3: '計画的'
+      },
+      'ENTP': {
+        catchphrase: 'アイデア起業家',
+        trait1: '外向的',
+        trait2: '論理的',
+        trait3: '柔軟'
+      },
+      'INTP': {
+        catchphrase: '論理的思考家',
+        trait1: '内向的',
+        trait2: '論理的',
+        trait3: '独立的'
+      },
+      'ENTJ': {
+        catchphrase: '戦略的指揮官',
+        trait1: '外向的',
+        trait2: '論理的',
+        trait3: '計画的'
+      },
+      'INTJ': {
+        catchphrase: '戦略的建築家',
+        trait1: '内向的',
+        trait2: '論理的',
+        trait3: '計画的'
+      },
+      'ESFP': {
+        catchphrase: '自由な表現者',
+        trait1: '外向的',
+        trait2: '現実的',
+        trait3: '感情的'
+      },
+      'ISFP': {
+        catchphrase: '芸術家の魂',
+        trait1: '内向的',
+        trait2: '現実的',
+        trait3: '感情的'
+      },
+      'ESFJ': {
+        catchphrase: '思いやりの社交家',
+        trait1: '外向的',
+        trait2: '現実的',
+        trait3: '計画的'
+      },
+      'ISFJ': {
+        catchphrase: '献身的な守護者',
+        trait1: '内向的',
+        trait2: '現実的',
+        trait3: '計画的'
+      },
+      'ESTP': {
+        catchphrase: '行動派の実行者',
+        trait1: '外向的',
+        trait2: '現実的',
+        trait3: '柔軟'
+      },
+      'ISTP': {
+        catchphrase: '職人の技術者',
+        trait1: '内向的',
+        trait2: '現実的',
+        trait3: '論理的'
+      },
+      'ESTJ': {
+        catchphrase: '実務的管理者',
+        trait1: '外向的',
+        trait2: '現実的',
+        trait3: '計画的'
+      },
+      'ISTJ': {
+        catchphrase: '堅実な管理者',
+        trait1: '内向的',
+        trait2: '現実的',
+        trait3: '計画的'
+      }
+    },
+    taiheki: {
+      1: {
+        catchphrase: '上下型の人',
+        trait1: '頭で考える',
+        trait2: '理性的',
+        trait3: '集中力'
+      },
+      2: {
+        catchphrase: '上下型の人',
+        trait1: '感情豊か',
+        trait2: '消化重視',
+        trait3: '好き嫌い'
+      },
+      3: {
+        catchphrase: '左右型の人',
+        trait1: '呼吸重視',
+        trait2: '感受性',
+        trait3: '美意識'
+      },
+      4: {
+        catchphrase: '左右型の人',
+        trait1: '肝臓型',
+        trait2: '行動力',
+        trait3: '感情表現'
+      },
+      5: {
+        catchphrase: '前後型の人',
+        trait1: '骨盤型',
+        trait2: '持続力',
+        trait3: '愛情深い'
+      },
+      6: {
+        catchphrase: '前後型の人',
+        trait1: '腎臓型',
+        trait2: '意志力',
+        trait3: '頑固'
+      },
+      7: {
+        catchphrase: '回転型の人',
+        trait1: '泌尿器型',
+        trait2: '瞬発力',
+        trait3: '切り替え上手'
+      },
+      8: {
+        catchphrase: '回転型の人',
+        trait1: '生殖器型',
+        trait2: '持久力',
+        trait3: '粘り強い'
+      },
+      9: {
+        catchphrase: '開閉型の人',
+        trait1: '緊張弛緩',
+        trait2: '変化対応',
+        trait3: '極端'
+      },
+      10: {
+        catchphrase: '開閉型の人',
+        trait1: '過敏型',
+        trait2: '細やか',
+        trait3: '神経質'
+      }
+    },
+    animals60: {
+      'チーター': {
+        catchphrase: '俊敏な挑戦者',
+        trait1: 'スピード重視',
+        trait2: '瞬発力',
+        trait3: '集中型'
+      },
+      'ライオン': {
+        catchphrase: '堂々とした王者',
+        trait1: 'リーダー気質',
+        trait2: 'プライド高い',
+        trait3: '責任感'
+      },
+      'ペガサス': {
+        catchphrase: '自由な創造者',
+        trait1: '独立心',
+        trait2: '創造的',
+        trait3: '理想主義'
+      },
+      'サル': {
+        catchphrase: '器用な演技者',
+        trait1: '適応力',
+        trait2: '社交的',
+        trait3: '機転利く'
+      },
+      'コアラ': {
+        catchphrase: 'のんびり平和主義',
+        trait1: 'マイペース',
+        trait2: '癒し系',
+        trait3: '穏やか'
+      },
+      'トラ': {
+        catchphrase: '情熱の行動派',
+        trait1: '情熱的',
+        trait2: '勇敢',
+        trait3: '一直線'
+      }
+    },
+    zodiac: {
+      '牡羊座': {
+        element: '火',
+        catchphrase: '情熱の開拓者',
+        trait1: '積極的',
+        trait2: '率直',
+        trait3: '行動力'
+      },
+      '牡牛座': {
+        element: '土',
+        catchphrase: '安定の実務家',
+        trait1: 'マイペース',
+        trait2: '堅実',
+        trait3: '継続力'
+      },
+      '双子座': {
+        element: '風',
+        catchphrase: '知的な情報通',
+        trait1: '好奇心',
+        trait2: '機転利く',
+        trait3: '多才'
+      },
+      '蟹座': {
+        element: '水',
+        catchphrase: '愛情深い家族思い',
+        trait1: '共感力',
+        trait2: '面倒見良い',
+        trait3: '情に厚い'
+      },
+      '獅子座': {
+        element: '火',
+        catchphrase: '華やかなスター',
+        trait1: '存在感',
+        trait2: '創造的',
+        trait3: '寛大'
+      },
+      '乙女座': {
+        element: '土',
+        catchphrase: '完璧主義の分析家',
+        trait1: '几帳面',
+        trait2: '実務的',
+        trait3: '献身的'
+      },
+      '天秤座': {
+        element: '風',
+        catchphrase: '調和の美学者',
+        trait1: 'バランス感覚',
+        trait2: '社交的',
+        trait3: '公正'
+      },
+      '蠍座': {
+        element: '水',
+        catchphrase: '神秘的な洞察者',
+        trait1: '集中力',
+        trait2: '深い愛情',
+        trait3: '洞察力'
+      },
+      '射手座': {
+        element: '火',
+        catchphrase: '自由な冒険家',
+        trait1: '楽観的',
+        trait2: '向学心',
+        trait3: '自由愛好'
+      },
+      '山羊座': {
+        element: '土',
+        catchphrase: '責任感の登山家',
+        trait1: '計画的',
+        trait2: '忍耐力',
+        trait3: '責任感'
+      },
+      '水瓶座': {
+        element: '風',
+        catchphrase: '革新的な理想家',
+        trait1: '独創的',
+        trait2: '客観的',
+        trait3: '未来志向'
+      },
+      '魚座': {
+        element: '水',
+        catchphrase: '感受性の芸術家',
+        trait1: '感受性',
+        trait2: '想像力',
+        trait3: '献身的'
+      }
+    },
+    sixStar: {
+      '土星人': {
+        catchphrase: '堅実な実務家',
+        trait1: '計画的',
+        trait2: '継続力',
+        trait3: '責任感'
+      },
+      '金星人': {
+        catchphrase: '美の追求者',
+        trait1: '美意識',
+        trait2: '調和重視',
+        trait3: '社交的'
+      },
+      '火星人': {
+        catchphrase: '情熱の戦士',
+        trait1: 'エネルギッシュ',
+        trait2: '競争心',
+        trait3: 'リーダー気質'
+      },
+      '天王星人': {
+        catchphrase: '革新の発明家',
+        trait1: '独創的',
+        trait2: '革新的',
+        trait3: '自由主義'
+      },
+      '木星人': {
+        catchphrase: '包容力の指導者',
+        trait1: '包容力',
+        trait2: '指導力',
+        trait3: '成長志向'
+      },
+      '水星人': {
+        catchphrase: '知的な伝達者',
+        trait1: '機敏',
+        trait2: '分析力',
+        trait3: 'コミュニケーション'
+      }
+    }
+  };
 };
 
-const selectTopWords = (words: string[], limit: number): string[] => {
-  const validWords = words
-    .filter(word => word && word.length > 0)
-    .map(word => word.trim())
-    .filter((word, index, array) => array.indexOf(word) === index); // Remove duplicates
-  
-  return validWords.slice(0, limit);
+// Keyword extraction function for 5-system integration
+const extractIntegratedKeywords = (
+  mbti: any,
+  taiheki: any,
+  fortuneResult: FortuneResult,
+  zodiacSign: string
+) => {
+  const wordBank = getSimpleWordBank();
+  const keywords: string[] = [];
+
+  // 60% 後天的特性 (MBTI + 体癖)
+  if (mbti && wordBank.mbti[mbti.type as keyof typeof wordBank.mbti]) {
+    const mbtiData = wordBank.mbti[mbti.type as keyof typeof wordBank.mbti];
+    keywords.push(mbtiData.catchphrase, mbtiData.trait1, mbtiData.trait2);
+  }
+
+  if (taiheki && wordBank.taiheki[taiheki.primary as keyof typeof wordBank.taiheki]) {
+    const taihekiData = wordBank.taiheki[taiheki.primary as keyof typeof wordBank.taiheki];
+    keywords.push(taihekiData.catchphrase, taihekiData.trait1);
+  }
+
+  // 40% 先天的特性 (動物占い + 星座 + 六星占術)
+  const animalKey = (fortuneResult as any).animalDetails?.character || fortuneResult.animal;
+  if (animalKey && wordBank.animals60[animalKey as keyof typeof wordBank.animals60]) {
+    const animalData = wordBank.animals60[animalKey as keyof typeof wordBank.animals60];
+    keywords.push(animalData.trait1, animalData.trait2);
+  }
+
+  if (zodiacSign && wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac]) {
+    const zodiacData = wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac];
+    keywords.push(zodiacData.trait1);
+  }
+
+  if (fortuneResult.sixStar && wordBank.sixStar[fortuneResult.sixStar as keyof typeof wordBank.sixStar]) {
+    const sixStarData = wordBank.sixStar[fortuneResult.sixStar as keyof typeof wordBank.sixStar];
+    keywords.push(sixStarData.trait1);
+  }
+
+  return keywords.filter(Boolean).slice(0, 6); // Top 6 keywords
 };
 
-export function DiagnosisResults() {
-  const { basicInfo, mbti, taiheki, setFortune, completeStep, setCurrentStep, chatSession, chatSummary, hasCompletedCounseling, setChatSummary } = useDiagnosisStore();
-  const [fortuneResult, setFortuneResult] = useState<FortuneResult | null>(null);
-  const [showFinalResultsOverlay, setShowFinalResultsOverlay] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+export default function DiagnosisResults() {
+  const { basicInfo, mbti, taiheki, fortune: fortuneResult } = useDiagnosisStore();
+  const [summary, setSummary] = useState<string>('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
-  // 結果画面表示時に進捗を100%に設定
+  const zodiacSign = basicInfo ? getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day) : '';
+  const integratedKeywords = (basicInfo && fortuneResult)
+    ? extractIntegratedKeywords(mbti, taiheki, fortuneResult, zodiacSign)
+    : [];
+
+  // Save diagnosis result to admin database
   useEffect(() => {
-    setCurrentStep('integration');
-  }, [setCurrentStep]);
-
-  useEffect(() => {
-    // 算命学・動物占い結果を計算（新しいAPIを使用）
-    if (basicInfo && !fortuneResult) {
-      const fetchFortuneData = async () => {
+    const saveDiagnosisResult = async () => {
+      if (basicInfo && fortuneResult) {
         try {
-          const { year, month, day } = basicInfo.birthdate;
-          const response = await fetch('/api/fortune-calc-v2', {
+          const payload = {
+            name: basicInfo.name,
+            gender: basicInfo.gender,
+            age: calculateAge(
+              basicInfo.birthdate.year,
+              basicInfo.birthdate.month,
+              basicInfo.birthdate.day
+            ),
+            primaryTaiheki: taiheki?.primary || null,
+            subTaiheki: taiheki?.secondary || null,
+            mbtiType: mbti?.type || null,
+            animal: fortuneResult.animal,
+            sixStar: fortuneResult.sixStar,
+            zodiac: zodiacSign,
+            keywords: integratedKeywords.join(', ')
+          };
+
+          const response = await fetch('/api/admin/diagnosis-results', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ year, month, day }),
+            body: JSON.stringify(payload),
           });
-          
+
           if (!response.ok) {
-            throw new Error('Fortune calculation failed');
-          }
-          
-          const data = await response.json();
-          if (data.success && data.data) {
-            // Map v2 API response to FortuneResult format
-            const mappedResult: FortuneResult = {
-              zodiac: data.data.zodiac,
-              animal: data.data.animal,
-              sixStar: data.data.six_star,
-              element: data.data.fortune_detail?.personality_traits?.[1]?.replace('カラー：', '') || '不明',
-              fortune: `${data.data.animal}の特徴を持つ方です`,
-              characteristics: [data.data.animal?.split('な')?.[0] || data.data.animal?.split('の')?.[0] || '特別']
-            };
-            // Store enhanced data for display (extract from fortune_detail)
-            (mappedResult as any).animalDetails = {
-              character: data.data.animal,
-              color: data.data.fortune_detail?.personality_traits?.[1]?.replace('カラー：', '') || '不明'
-            };
-            setFortuneResult(mappedResult);
-            setFortune(mappedResult);
-          } else {
-            // API呼び出し失敗時のエラーハンドリング
-            console.error('Fortune API returned no data');
-            setFortuneResult(null);
+            console.error('Failed to save diagnosis result');
           }
         } catch (error) {
-          console.error('Fortune calculation error:', error);
-          // API呼び出し失敗
-          setFortuneResult(null);
+          console.error('Error saving diagnosis result:', error);
         }
-      };
-      
-      fetchFortuneData();
-    }
+      }
+    };
 
-    // integration ステップを完了
-    completeStep('integration');
-  }, [basicInfo, fortuneResult, setFortune, completeStep]);
+    saveDiagnosisResult();
+  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedKeywords]);
 
-  // 診断結果を管理者データベースに自動保存
-  const saveDiagnosisToAdmin = async () => {
-    if (!basicInfo || !mbti || !taiheki || !fortuneResult) {
-      return; // 必要なデータが不足している場合はスキップ
-    }
+  // Generate AI summary
+  const generateAISummary = async () => {
+    if (!basicInfo || !fortuneResult) return;
+
+    setIsGeneratingSummary(true);
+    const openai = getOpenAIClient();
+
+    const prompt = `以下の診断結果から、${basicInfo.name}さんの性格や特徴を120文字以内で分かりやすく要約してください。
+
+診断結果:
+- MBTI: ${mbti?.type || '未診断'}
+- 体癖: ${taiheki ? `${taiheki.primary}種` : '未診断'}
+- 動物占い: ${fortuneResult.animal}
+- 六星占術: ${fortuneResult.sixStar}
+- 星座: ${zodiacSign}
+- 統合キーワード: ${integratedKeywords.join('、')}
+
+要約は親しみやすく、ポジティブな表現で書いてください。`;
 
     try {
-      const diagnosisData = {
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD形式
-        name: basicInfo.name,
-        birthDate: `${basicInfo.birthdate.year}/${String(basicInfo.birthdate.month).padStart(2, '0')}/${String(basicInfo.birthdate.day).padStart(2, '0')}`,
-        age: calculateAge(basicInfo.birthdate.year, basicInfo.birthdate.month, basicInfo.birthdate.day),
-        gender: basicInfo.gender,
-        zodiac: getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day),
-        animal: fortuneResult.animal,
-        orientation: (fortuneResult as any).animalDetails?.character?.includes('人間') ? 'people_oriented' :
-                     (fortuneResult as any).animalDetails?.character?.includes('城') ? 'castle_oriented' : 'big_vision_oriented',
-        color: (fortuneResult as any).animalDetails?.color || '不明',
-        mbti: mbti.type,
-        mainTaiheki: taiheki.primary,
-        subTaiheki: taiheki.secondary === 0 ? null : taiheki.secondary,
-        sixStar: fortuneResult.sixStar,
-        theme: hasCompletedCounseling && chatSession ? chatSession.selectedTopic : '診断のみ',
-        advice: 'Auto-saved diagnosis result', // Simplified for automatic save
-        satisfaction: 5, // デフォルト値
-        duration: '15分', // デフォルト値
-        feedback: hasCompletedCounseling && chatSummary ? `AIカウンセリング実施: ${chatSummary.topicTitle}` : '診断完了',
-        reportUrl: null,
-        interviewScheduled: null,
-        interviewDone: null,
-        memo: null
-      };
-
-      const response = await fetch('/api/admin/diagnosis-results', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(diagnosisData),
-      });
-
-      if (response.ok) {
-        console.log('診断結果を管理者データベースに保存しました');
+      const content = await openai.generateQuickAnalysis(prompt);
+      if (content) {
+        setSummary(content);
       } else {
-        console.warn('診断結果の保存に失敗しました:', response.status);
+        setSummary(`${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`);
       }
     } catch (error) {
-      console.warn('診断結果の保存でエラーが発生しました:', error);
-      // エラーが発生してもユーザー体験を阻害しないように警告のみ
-    }
-  };
-
-  // 診断結果の自動保存
-  useEffect(() => {
-    // 全ての診断が完了している場合、管理者データベースに自動保存
-    if (basicInfo && mbti && taiheki && fortuneResult) {
-      saveDiagnosisToAdmin();
-    }
-  }, [basicInfo, mbti, taiheki, fortuneResult, hasCompletedCounseling, chatSummary]);
-
-  // 最終結果を表示
-  const showFinalResults = () => {
-    setShowFinalResultsOverlay(true);
-  };
-
-  // オーバーレイを閉じる
-  const closeFinalResults = () => {
-    setShowFinalResultsOverlay(false);
-  };
-
-  // 質問と回答のリストを生成
-  const generateQAList = () => {
-    // 相談トピック一覧（chat/page.tsxから取得）
-    const consultationTopics = [
-      {
-        id: 'relationship',
-        title: '人間関係の悩み',
-        description: '職場、友人、恋愛などの人間関係について',
-        icon: '👥'
-      },
-      {
-        id: 'career',
-        title: 'キャリア・仕事の悩み',
-        description: '転職、昇進、働き方などについて',
-        icon: '💼'
-      },
-      {
-        id: 'personality',
-        title: '自分の性格・特性理解',
-        description: 'あなたの特性を深く理解したい',
-        icon: '🧠'
-      },
-      {
-        id: 'future',
-        title: '将来・目標設定',
-        description: '人生設計や目標達成について',
-        icon: '🎯'
-      }
-    ];
-
-    return consultationTopics;
-  };
-
-  // Q&A セクションの条件分岐レンダリング
-  const renderQASection = () => {
-    if (!hasCompletedCounseling) {
-      return <EmptyQAState />;
-    }
-    
-    if (chatSummary) {
-      return <SummarizedQAList summary={chatSummary} />;
-    }
-    
-    // フォールバック: サマリーが存在しない場合は生成を試行
-    if (chatSession && chatSession.messages.length > 2) {
-      const fallbackSummary = generateFallbackSummary(
-        chatSession.selectedTopic,
-        chatSession.messages.length
-      );
-      
-      // 生成したサマリーを保存
-      setChatSummary(fallbackSummary);
-      
-      return <SummarizedQAList summary={fallbackSummary} />;
-    }
-    
-    // 既存の静的Q&Aリストを表示（完全フォールバック）
-    return (
-      <div className="bg-white rounded-lg border border-border">
-        <div className="p-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">💬 質問＆回答リスト</h3>
-        </div>
-        <div className="space-y-4 p-4">
-          {generateQAList().map((topic, index) => (
-            <div key={topic.id} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="text-lg mr-2">{topic.icon}</span>
-                <h4 className="font-semibold text-foreground">{topic.title}</h4>
-              </div>
-              <div className="text-sm text-muted-foreground mb-2">
-                <strong>質問内容:</strong> {topic.description}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <strong>診断結果に基づく回答:</strong> 
-                {topic.id === 'relationship' && mbti && taiheki ? (
-                  `${mbtiDescriptions[mbti.type]?.name}で体癖${taiheki.primary}種の特性を活かした人間関係づくりをお勧めします。`
-                ) : topic.id === 'career' && mbti ? (
-                  `MBTI ${mbti.type}の特性を活かしたキャリア選択が適しています。`
-                ) : (
-                  'あなたの診断結果に基づいた個別的なアドバイスです。'
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // クリップボードにコピーするテキストを生成
-  const generateClipboardText = (): string => {
-    const qa = generateQAList();
-    const date = new Date().toLocaleDateString('ja-JP');
-    
-    let text = `# COCOSiL 診断結果レポート\n`;
-    text += `生成日時: ${date}\n\n`;
-    
-    // 基本情報
-    text += `## 基本情報\n`;
-    text += `- 氏名: ${basicInfo.name}\n`;
-    text += `- 生年月日: ${basicInfo.birthdate.year}年${basicInfo.birthdate.month}月${basicInfo.birthdate.day}日\n`;
-    text += `- 年齢・性別: ${calculateAge(basicInfo.birthdate.year, basicInfo.birthdate.month, basicInfo.birthdate.day)}歳・${basicInfo.gender === 'male' ? '男性' : basicInfo.gender === 'female' ? '女性' : '回答なし'}\n`;
-    text += `- 動物占い: ${fortuneResult.animal}\n`;
-    text += `- MBTI: ${mbti?.type || '診断未実施'}\n`;
-    text += `- 体癖: ${taiheki ? `主体癖${taiheki.primary}種・副体癖${taiheki.secondary === 0 ? 'なし' : `${taiheki.secondary}種`}` : '診断未実施'}\n`;
-    text += `- 六星占術: ${fortuneResult.sixStar}\n\n`;
-    
-    // 統合分析
-    text += `## 統合分析結果\n`;
-    text += `### あなたの特徴\n`;
-    text += `あなたの特徴を一言で表すと「${generateCatchphrase(mbti, taiheki, fortuneResult)}」です。\n\n`;
-    text += `### 対人的特徴\n`;
-    text += `${generateInterpersonalTraits(mbti, taiheki, fortuneResult)}\n\n`;
-    text += `### 思考と行動の特徴\n`;
-    text += `${generateBehavioralTraits(mbti, taiheki, fortuneResult)}\n\n`;
-    
-    // 質問&回答リスト (条件分岐)
-    if (hasCompletedCounseling && chatSummary) {
-      text += `## AIカウンセリング記録\n`;
-      text += `**相談カテゴリ**: ${chatSummary.topicTitle}\n`;
-      text += `**セッション時間**: ${chatSummary.sessionDuration}分\n\n`;
-      
-      chatSummary.qaExchanges.forEach((exchange, index) => {
-        text += `**Q${index + 1}**: ${exchange.question}\n`;
-        text += `**A${index + 1}**: ${exchange.answer}\n\n`;
-      });
-    } else if (!hasCompletedCounseling) {
-      text += `## 質問＆回答リスト\n`;
-      text += `AIカウンセリングを利用すると、個別化されたアドバイスがここに表示されます。\n\n`;
-    } else {
-      // フォールバック: 既存の静的Q&A
-      text += `## 相談カテゴリ別アドバイス\n`;
-      qa.forEach((topic, index) => {
-        text += `### ${index + 1}. ${topic.title}\n`;
-        text += `**質問内容**: ${topic.description}\n`;
-        text += `**診断結果に基づく回答**: `;
-        
-        if (topic.id === 'relationship' && mbti && taiheki) {
-          text += `${mbtiDescriptions[mbti.type]?.name}で体癖${taiheki.primary}種の特性を活かし、${fortuneResult.animal}のように周囲との調和を大切にした人間関係を築くことをお勧めします。`;
-        } else if (topic.id === 'career' && mbti) {
-          text += `MBTI ${mbti.type}の特性を活かし、${mbti.type.includes('T') ? '論理的思考力' : '感情や価値観'}を重視したキャリア選択が適しています。`;
-        } else if (topic.id === 'personality') {
-          text += `あなたは${generateCatchphrase(mbti, taiheki, fortuneResult)}という特徴があり、${generateInterpersonalTraits(mbti, taiheki, fortuneResult)}`;
-        } else if (topic.id === 'future') {
-          text += `${fortuneResult.sixStar}の特性と${mbti?.type || taiheki ? `体癖${taiheki?.primary}種` : '動物占い'}の特徴を活かした将来設計を立てることで、充実した人生を送ることができるでしょう。`;
-        } else {
-          text += 'AIカウンセリングを利用して、より詳細なアドバイスを受けることができます。';
-        }
-        text += `\n\n`;
-      });
-    }
-    
-    // フッター
-    text += `---\n`;
-    text += `※この診断結果は自己理解を深めるための参考情報です。\n`;
-    text += `※医療・心理学的診断や治療の代替にはなりません。\n`;
-    text += `※生成元: COCOSiL（ココシル）統合診断システム\n`;
-    
-    return text;
-  };
-
-  // クリップボードにコピー
-  const copyToClipboard = async () => {
-    setIsCopying(true);
-    setCopySuccess(false);
-    
-    try {
-      const text = generateClipboardText();
-      await navigator.clipboard.writeText(text);
-      setCopySuccess(true);
-      
-      // 3秒後にフィードバックを非表示
-      setTimeout(() => {
-        setCopySuccess(false);
-      }, 3000);
-    } catch (error) {
-      console.error('クリップボードへのコピーに失敗しました:', error);
-      alert('クリップボードへのコピーに失敗しました。ブラウザがクリップボード機能をサポートしていない可能性があります。');
+      console.error('Error generating AI summary:', error);
+      setSummary(`${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`);
     } finally {
-      setIsCopying(false);
+      setIsGeneratingSummary(false);
     }
   };
 
-  // ワードバンクの定義
-  const wordBank = {
-    mbti: {
-      // 外向・内向
-      'E': { social: '積極的にコミュニケーションを取り', thinking: 'エネルギッシュに行動し' },
-      'I': { social: '深い関係性を重視し', thinking: '内省的に考えを深め' },
-      // 感覚・直感
-      'S': { thinking: '現実的な視点で', action: '堅実に進める' },
-      'N': { thinking: '直感的にアイデアを描き', action: '可能性を追求する' },
-      // 思考・感情
-      'T': { thinking: '論理的に分析し', action: '効率重視で行動' },
-      'F': { thinking: '価値観を大切にし', action: '調和を保ちながら進む' },
-      // 計画・柔軟
-      'J': { action: '計画的に', behavior: '組織的な進め方を好む' },
-      'P': { action: '臨機応変に', behavior: '柔軟性を活かす' }
-    },
-    taiheki: {
-      1: { social: '集中力で周囲を惹きつけ', action: '一点突破の力強さで' },
-      2: { social: '包容力で人を安心させ', action: '受け入れる姿勢で' },
-      3: { social: '軽快な動きで場を活性化し', action: 'フットワーク軽く' },
-      4: { social: '慎重な距離感で信頼を築き', action: '着実なペースで' },
-      5: { social: '独自の視点で影響を与え', action: '創造的な発想で' },
-      6: { social: '情熱的な表現で人を動かし', action: '熱意を持って' },
-      7: { social: '調整力で人と人を繋ぎ', action: 'バランス感覚で' },
-      8: { social: '責任感で周囲を支え', action: '粘り強く継続し' },
-      9: { social: '寛容さで場を和ませ', action: 'おおらかに構え' },
-      10: { social: '集中力で深く関わり', action: '徹底的に取り組む' }
-    },
-    animals: {
-      'チータ': { personality: 'スピード感のある', social: '颯爽と駆け抜ける' },
-      '黒ひょう': { personality: 'カリスマ性のある', social: '自由に動き回る' },
-      'ライオン': { personality: 'リーダーシップのある', social: '堂々と振る舞う' },
-      'トラ': { personality: '情熱的な', social: '力強く前進する' },
-      '子守熊': { personality: 'マイペースな', social: 'のんびりと過ごす' },
-      'たぬき': { personality: '愛嬌のある', social: '親しみやすく接する' },
-      'こじか': { personality: '繊細で美しい', social: '上品に立ち回る' },
-      'ひつじ': { personality: '穏やかな', social: '協調性を大切にする' },
-      'ペガサス': { personality: '自由奔放な', social: '束縛を嫌い飛び回る' },
-      'ウォッカ': { personality: 'クールな', social: '洗練された魅力で' }
+  // Load initial summary
+  useEffect(() => {
+    if (basicInfo && fortuneResult && !summary && !isGeneratingSummary) {
+      generateAISummary();
     }
-  };
+  }, [basicInfo, fortuneResult, summary, isGeneratingSummary]);
 
-  // 文字数制限内で語を組み合わせる関数
-  const fitText = (words: string[], limit: number): string => {
-    let result = '';
-    for (const word of words) {
-      const testText = result + word;
-      if (Array.from(testText).length > limit) break;
-      result = testText;
-    }
-    return result || words[0]?.substring(0, limit) || '';
-  };
-
-  // キーワード抽出関数
-  const extractKeywords = (mbti: any, taiheki: any, fortune: FortuneResult) => {
-    // Extract personality aspect words with 3:2 weighting (acquired:innate)
-    const aspectWords = {
-      catchphrase: [] as string[],
-      interpersonal: [] as string[],
-      behavioral: [] as string[]
-    };
-
-    // Acquired traits (60% weight) - MBTI + Taiheki
-    if (mbti?.type) {
-      const type = mbti.type;
-      // MBTI contributions
-      const mbtiWords = {
-        social: wordBank.mbti[type[0] as keyof typeof wordBank.mbti]?.social || '',
-        thinking: wordBank.mbti[type[1] as keyof typeof wordBank.mbti]?.thinking || '',
-        action: wordBank.mbti[type[3] as keyof typeof wordBank.mbti]?.action || ''
-      };
-      
-      // Extract meaningful words from MBTI descriptions
-      aspectWords.catchphrase.push(extractMeaningfulWords(mbtiWords.thinking));
-      aspectWords.interpersonal.push(extractMeaningfulWords(mbtiWords.social));
-      aspectWords.behavioral.push(extractMeaningfulWords(mbtiWords.action));
-    }
-
-    if (taiheki?.primary) {
-      const type = taiheki.primary;
-      const taihekiWords = wordBank.taiheki[type as keyof typeof wordBank.taiheki];
-      if (taihekiWords) {
-        // Extract meaningful words from Taiheki descriptions
-        aspectWords.catchphrase.push(extractMeaningfulWords(taihekiWords.social));
-        aspectWords.interpersonal.push(extractMeaningfulWords(taihekiWords.social));
-        aspectWords.behavioral.push(extractMeaningfulWords(taihekiWords.action));
-      }
-    }
-
-    // Innate traits (40% weight) - Fortune API results
-    if (fortune) {
-      // Extract from animal personality
-      if (fortune.animal) {
-        const animal = fortune.animal;
-        const animalKey = Object.keys(wordBank.animals).find(key => 
-          animal.includes(key) || key.includes(animal.replace(/[のな]/g, ''))
-        );
-        if (animalKey) {
-          const animalWords = wordBank.animals[animalKey as keyof typeof wordBank.animals];
-          aspectWords.catchphrase.push(extractMeaningfulWords(animalWords?.personality || ''));
-          aspectWords.interpersonal.push(extractMeaningfulWords(animalWords?.social || ''));
-        }
-      }
-
-      // Extract from characteristics array
-      if (fortune.characteristics && fortune.characteristics.length > 0) {
-        fortune.characteristics.slice(0, 2).forEach(characteristic => {
-          const meaningfulWord = extractMeaningfulWords(characteristic);
-          aspectWords.catchphrase.push(meaningfulWord);
-          aspectWords.behavioral.push(meaningfulWord);
-        });
-      }
-
-      // Extract from sixStar and element for additional behavioral traits
-      if (fortune.sixStar) {
-        aspectWords.behavioral.push(extractMeaningfulWords(fortune.sixStar));
-      }
-    }
-
-    // Filter and limit to 3 words per aspect, removing duplicates
-    const finalAspects = {
-      catchphrase: selectTopWords(aspectWords.catchphrase, 3),
-      interpersonal: selectTopWords(aspectWords.interpersonal, 3),
-      behavioral: selectTopWords(aspectWords.behavioral, 3)
-    };
-
-    return finalAspects;
-  };
-
-
-  // キャッチフレーズ生成（15-20文字で完結）
-  const generateCatchphrase = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
-    const keywords = extractKeywords(mbti, taiheki, fortune);
-    return fitText(keywords.catchphrase, 20);
-  };
-
-  // 対人的特徴生成（40-60文字で完結）
-  const generateInterpersonalTraits = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
-    const keywords = extractKeywords(mbti, taiheki, fortune);
-    return fitText(keywords.interpersonal, 60);
-  };
-
-  // 思考と行動の特徴生成（40-60文字で完結）
-  const generateBehavioralTraits = (mbti: any, taiheki: any, fortune: FortuneResult): string => {
-    const keywords = extractKeywords(mbti, taiheki, fortune);
-    return fitText(keywords.behavioral, 60);
-  };
-
-  // 基本情報と算命学結果は必須、MBTI・体癖は任意
+  // Basic info and fortune result are required, MBTI and taiheki are optional
   if (!basicInfo || !fortuneResult) {
     return (
       <div className="text-center py-12">
@@ -611,7 +576,7 @@ export function DiagnosisResults() {
                 <p className="text-sm text-light-fg-muted">{mbti.source === 'known' ? '既知' : '12問診断'}</p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div className="bg-purple-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -629,7 +594,7 @@ export function DiagnosisResults() {
                   {mbtiDescriptions[mbti.type]?.description}
                 </p>
               </div>
-              
+
               {mbtiDescriptions[mbti.type]?.traits && (
                 <div>
                   <p className="text-sm font-medium text-light-fg mb-2">主な特徴</p>
@@ -680,7 +645,7 @@ export function DiagnosisResults() {
                 <p className="text-sm text-light-fg-muted">野口整体理論</p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div className="bg-green-50 rounded-lg p-4">
                 <div className="flex items-center space-x-4 mb-3">
@@ -690,7 +655,7 @@ export function DiagnosisResults() {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <p className="text-sm font-medium text-light-fg mb-2">主な特徴</p>
                 <div className="flex flex-wrap gap-2">
@@ -738,30 +703,30 @@ export function DiagnosisResults() {
               <p className="text-sm text-light-fg-muted">算命学APIの結果に基づく</p>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               {/* 動物 */}
               <div className="bg-yellow-50 rounded-lg p-4">
                 <p className="text-xs text-yellow-700 mb-1">動物</p>
                 <p className="text-lg font-bold text-yellow-900">
-                  {(fortuneResult as any).animalDetails 
+                  {(fortuneResult as any).animalDetails
                     ? `${(fortuneResult as any).animalDetails.character} - ${(fortuneResult as any).animalDetails.color}`
                     : fortuneResult.animal
                   }
                 </p>
               </div>
-              
+
               {/* 6星占術 */}
               <div className="bg-yellow-50 rounded-lg p-4">
                 <p className="text-xs text-yellow-700 mb-1">6星占術</p>
                 <p className="text-lg font-bold text-yellow-900">{fortuneResult.sixStar}</p>
               </div>
-              
+
               {/* 星座 */}
               <div className="bg-yellow-50 rounded-lg p-4">
                 <p className="text-xs text-yellow-700 mb-1">星座</p>
-                <p className="text-lg font-bold text-yellow-900">{getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day)}</p>
+                <p className="text-lg font-bold text-yellow-900">{zodiacSign}</p>
               </div>
             </div>
           </div>
@@ -780,179 +745,60 @@ export function DiagnosisResults() {
               <p className="text-sm text-light-fg-muted">総合的な人物像</p>
             </div>
           </div>
-          
+
           <div className="space-y-4">
+            {/* AI要約 */}
             <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-3">あなたの総合的な特徴</h4>
-              <div className="space-y-3">
-                <div className="text-center">
-                  <p className="text-base font-medium text-blue-900 mb-2">
-                    あなたの特徴を一言で表すと「
-                    <span className="bg-blue-100 px-2 py-1 rounded text-blue-800">
-                      {generateCatchphrase(mbti, taiheki, fortuneResult)}
-                    </span>
-                    」です。
-                  </p>
+              <p className="text-xs text-blue-700 mb-2">AIによる性格分析</p>
+              {isGeneratingSummary ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <p className="text-sm text-blue-700">分析中...</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="bg-white rounded p-3">
-                    <h5 className="text-sm font-semibold text-blue-700 mb-1">💫 対人的特徴</h5>
-                    <p className="text-sm text-blue-800 leading-relaxed">
-                      {generateInterpersonalTraits(mbti, taiheki, fortuneResult)}
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded p-3">
-                    <h5 className="text-sm font-semibold text-blue-700 mb-1">🧠 思考と行動の特徴</h5>
-                    <p className="text-sm text-blue-800 leading-relaxed">
-                      {generateBehavioralTraits(mbti, taiheki, fortuneResult)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <p className="text-sm text-blue-900 leading-relaxed">{summary}</p>
+              )}
             </div>
 
-
+            {/* 統合キーワード */}
+            {integratedKeywords.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-light-fg mb-2">統合キーワード</p>
+                <div className="flex flex-wrap gap-2">
+                  {integratedKeywords.map((keyword, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="text-center space-y-6">
-        <div className="space-y-6">
-          <Link href="/diagnosis/chat">
-            <Button
-              className="bg-gradient-brand hover:shadow-lg text-lg px-8 py-4"
-              size="lg"
-            >
-              AIカウンセリングを開始
-            </Button>
-          </Link>
-          
-          <div className="space-y-4">
-            <Button
-              onClick={showFinalResults}
-              variant="secondary"
-              className="w-full max-w-md mx-auto"
-            >
-              最終結果を出力
-            </Button>
-            
-            <Link href="/" className="block">
-              <Button variant="secondary" className="w-full max-w-md mx-auto">
-                ホームに戻る
-              </Button>
-            </Link>
-          </div>
-        </div>
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+        <Button
+          onClick={() => window.print()}
+          variant="secondary"
+          className="flex-1"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          結果を印刷
+        </Button>
 
-        <div className="text-xs text-light-fg-muted">
-          診断データは30日後に自動削除されます
-        </div>
+        <Link href="/diagnosis" className="flex-1">
+          <Button className="w-full">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            新しい診断を受ける
+          </Button>
+        </Link>
       </div>
-
-      {/* 最終結果オーバーレイ */}
-      {showFinalResultsOverlay && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              {/* オーバーレイヘッダー */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-light-fg">最終診断結果</h2>
-                <button
-                  onClick={closeFinalResults}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* 基本情報セクション */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-light-fg mb-4">📋 基本情報</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium">氏名:</span>
-                    <span>{basicInfo.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">生年月日:</span>
-                    <span>{basicInfo.birthdate.year}年{basicInfo.birthdate.month}月{basicInfo.birthdate.day}日</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">年齢・性別:</span>
-                    <span>
-                      {calculateAge(basicInfo.birthdate.year, basicInfo.birthdate.month, basicInfo.birthdate.day)}歳・
-                      {basicInfo.gender === 'male' ? '男性' : basicInfo.gender === 'female' ? '女性' : '回答なし'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">動物占い:</span>
-                    <span>{fortuneResult.animal}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">MBTI:</span>
-                    <span>{mbti?.type || '診断未実施'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">体癖:</span>
-                    <span>{taiheki ? `主体癖${taiheki.primary}種・副体癖${taiheki.secondary === 0 ? 'なし' : `${taiheki.secondary}種`}` : '診断未実施'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">六星占術:</span>
-                    <span>{fortuneResult.sixStar}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 質問＆回答リストセクション */}
-              <div className="mb-6">
-                {renderQASection()}
-              </div>
-
-              {/* アクションボタン */}
-              <div className="flex justify-center space-x-4">
-                <Button
-                  onClick={copyToClipboard}
-                  disabled={isCopying}
-                  variant="secondary"
-                  className="px-6 py-2 flex items-center space-x-2"
-                >
-                  {isCopying ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                      <span>コピー中...</span>
-                    </>
-                  ) : copySuccess ? (
-                    <>
-                      <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>コピー完了!</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                      <span>テキストをコピー</span>
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={closeFinalResults}
-                  className="bg-gradient-brand hover:shadow-lg px-8 py-2"
-                >
-                  閉じる
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
