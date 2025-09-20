@@ -5,9 +5,10 @@ import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 
 import { mbtiDescriptions } from '@/lib/data/mbti-questions';
+import { animals60WordBank } from '@/lib/data/animals60';
+import { ANIMAL_FORTUNE_MAPPING } from '@/lib/data/animal-fortune-mapping';
 import Link from 'next/link';
 import type { FortuneResult } from '@/types';
-import { getOpenAIClient } from '@/lib/ai/openai-client';
 
 // Utility functions for age and zodiac calculation
 const calculateAge = (year: number, month: number, day: number): number => {
@@ -162,104 +163,69 @@ const getSimpleWordBank = () => {
     },
     taiheki: {
       1: {
-        catchphrase: '上下型の人',
-        trait1: '頭で考える',
+        catchphrase: '冷静沈着な分析家',
+        trait1: '論理的',
         trait2: '理性的',
         trait3: '集中力'
       },
       2: {
-        catchphrase: '上下型の人',
-        trait1: '感情豊か',
-        trait2: '消化重視',
-        trait3: '好き嫌い'
+        catchphrase: '協調性のある調整役',
+        trait1: '思考力',
+        trait2: '共感力',
+        trait3: '調和'
       },
       3: {
-        catchphrase: '左右型の人',
-        trait1: '呼吸重視',
-        trait2: '感受性',
-        trait3: '美意識'
+        catchphrase: '明るく社交的なムードメーカー',
+        trait1: '感情豊か',
+        trait2: '楽しさ重視',
+        trait3: '愛され'
       },
       4: {
-        catchphrase: '左右型の人',
-        trait1: '肝臓型',
-        trait2: '行動力',
-        trait3: '感情表現'
+        catchphrase: '感情豊かな芸術家',
+        trait1: '感情豊か',
+        trait2: '内面世界',
+        trait3: '美的感覚'
       },
       5: {
-        catchphrase: '前後型の人',
-        trait1: '骨盤型',
-        trait2: '持続力',
-        trait3: '愛情深い'
+        catchphrase: '行動的な実業家',
+        trait1: 'リーダーシップ',
+        trait2: '実用重視',
+        trait3: '常に動く'
       },
       6: {
-        catchphrase: '前後型の人',
-        trait1: '腎臓型',
-        trait2: '意志力',
-        trait3: '頑固'
+        catchphrase: 'ロマンチックな夢想家',
+        trait1: 'ロマンチスト',
+        trait2: '想像力',
+        trait3: 'ひねくれ'
       },
       7: {
-        catchphrase: '回転型の人',
-        trait1: '泌尿器型',
-        trait2: '瞬発力',
-        trait3: '切り替え上手'
+        catchphrase: '闘争心旺盛な戦士',
+        trait1: '闘争心',
+        trait2: '経験重視',
+        trait3: '勝ち負け'
       },
       8: {
-        catchphrase: '回転型の人',
-        trait1: '生殖器型',
-        trait2: '持久力',
-        trait3: '粘り強い'
+        catchphrase: '忍耐強い支援者',
+        trait1: '正義感',
+        trait2: '我慢強い',
+        trait3: '安定感'
       },
       9: {
-        catchphrase: '開閉型の人',
-        trait1: '緊張弛緩',
-        trait2: '変化対応',
-        trait3: '極端'
+        catchphrase: '完璧主義の専門家',
+        trait1: '職人気質',
+        trait2: '完璧主義',
+        trait3: '集中力'
       },
       10: {
-        catchphrase: '開閉型の人',
-        trait1: '過敏型',
-        trait2: '細やか',
-        trait3: '神経質'
+        catchphrase: '包容力のある母性型',
+        trait1: '安定感',
+        trait2: '包容力',
+        trait3: '母性'
       }
     },
-    animals60: {
-      'チーター': {
-        catchphrase: '俊敏な挑戦者',
-        trait1: 'スピード重視',
-        trait2: '瞬発力',
-        trait3: '集中型'
-      },
-      'ライオン': {
-        catchphrase: '堂々とした王者',
-        trait1: 'リーダー気質',
-        trait2: 'プライド高い',
-        trait3: '責任感'
-      },
-      'ペガサス': {
-        catchphrase: '自由な創造者',
-        trait1: '独立心',
-        trait2: '創造的',
-        trait3: '理想主義'
-      },
-      'サル': {
-        catchphrase: '器用な演技者',
-        trait1: '適応力',
-        trait2: '社交的',
-        trait3: '機転利く'
-      },
-      'コアラ': {
-        catchphrase: 'のんびり平和主義',
-        trait1: 'マイペース',
-        trait2: '癒し系',
-        trait3: '穏やか'
-      },
-      'トラ': {
-        catchphrase: '情熱の行動派',
-        trait1: '情熱的',
-        trait2: '勇敢',
-        trait3: '一直線'
-      }
-    },
+    
+    animals60: animals60WordBank,
+
     zodiac: {
       '牡羊座': {
         element: '火',
@@ -294,7 +260,7 @@ const getSimpleWordBank = () => {
         catchphrase: '華やかなスター',
         trait1: '存在感',
         trait2: '創造的',
-        trait3: '寛大'
+        trait3: '負けず嫌い'
       },
       '乙女座': {
         element: '土',
@@ -412,7 +378,8 @@ const extractIntegratedKeywords = (
   const animalKey = (fortuneResult as any).animalDetails?.character || fortuneResult.animal;
   if (animalKey && wordBank.animals60[animalKey as keyof typeof wordBank.animals60]) {
     const animalData = wordBank.animals60[animalKey as keyof typeof wordBank.animals60];
-    keywords.push(animalData.trait1, animalData.trait2);
+    // 新しいデータ構造: keywordsから2つのキーワードを取得
+    keywords.push(...animalData.keywords.slice(0, 2));
   }
 
   if (zodiacSign && wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac]) {
@@ -428,6 +395,14 @@ const extractIntegratedKeywords = (
   return keywords.filter(Boolean).slice(0, 6); // Top 6 keywords
 };
 
+// Helper function to get orientation from animal character name
+const getAnimalOrientation = (animalCharacter: string): string => {
+  const mapping = Object.values(ANIMAL_FORTUNE_MAPPING).find(
+    item => item.character === animalCharacter
+  );
+  return mapping?.orientation || 'people_oriented';
+};
+
 export default function DiagnosisResults() {
   const { basicInfo, mbti, taiheki, fortune: fortuneResult } = useDiagnosisStore();
   const [summary, setSummary] = useState<string>('');
@@ -438,27 +413,38 @@ export default function DiagnosisResults() {
     ? extractIntegratedKeywords(mbti, taiheki, fortuneResult, zodiacSign)
     : [];
 
-  // Save diagnosis result to admin database
+  // Save diagnosis result to admin database - AUTO SAVE ENABLED
   useEffect(() => {
     const saveDiagnosisResult = async () => {
-      if (basicInfo && fortuneResult) {
+      if (basicInfo && fortuneResult && zodiacSign && integratedKeywords.length > 0) {
         try {
+          console.log('💾 自動保存開始: 診断結果をデータベースに保存中...');
+
           const payload = {
-            name: basicInfo.name,
-            gender: basicInfo.gender,
+            name: basicInfo.name || 'Unknown',
+            birthDate: `${basicInfo.birthdate.year}/${String(basicInfo.birthdate.month).padStart(2, '0')}/${String(basicInfo.birthdate.day).padStart(2, '0')}`,
+            gender: basicInfo.gender || 'no_answer',
             age: calculateAge(
               basicInfo.birthdate.year,
               basicInfo.birthdate.month,
               basicInfo.birthdate.day
             ),
-            primaryTaiheki: taiheki?.primary || null,
+            zodiac: zodiacSign || 'Unknown',
+            animal: fortuneResult.animal || 'Unknown',
+            orientation: getAnimalOrientation(fortuneResult.animal || ''),
+            color: integratedKeywords.join(', '), // キーワードを色として使用
+            mbti: mbti?.type || 'UNKNOWN',
+            mainTaiheki: taiheki?.primary || 1,
             subTaiheki: taiheki?.secondary || null,
-            mbtiType: mbti?.type || null,
-            animal: fortuneResult.animal,
-            sixStar: fortuneResult.sixStar,
-            zodiac: zodiacSign,
-            keywords: integratedKeywords.join(', ')
+            sixStar: fortuneResult.sixStar || 'Unknown',
+            theme: integratedKeywords.length > 0 ? integratedKeywords.join(', ') : 'No themes',
+            advice: '',
+            satisfaction: 5,
+            duration: '自動記録',
+            feedback: '診断完了時に自動保存されました'
           };
+
+          console.log('📋 保存データ:', payload);
 
           const response = await fetch('/api/admin/diagnosis-results', {
             method: 'POST',
@@ -468,26 +454,28 @@ export default function DiagnosisResults() {
             body: JSON.stringify(payload),
           });
 
-          if (!response.ok) {
-            console.error('Failed to save diagnosis result');
+          if (response.ok) {
+            console.log('✅ 診断結果が正常に保存されました');
+          } else {
+            console.error('❌ 診断結果の保存に失敗しました:', response.status);
           }
         } catch (error) {
-          console.error('Error saving diagnosis result:', error);
+          console.error('❌ 診断結果保存エラー:', error);
         }
       }
     };
 
+    // データが揃った時点で一度だけ保存実行
     saveDiagnosisResult();
   }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedKeywords]);
 
-  // Generate AI summary
+  // Generate AI summary using server-side API
   const generateAISummary = async () => {
     if (!basicInfo || !fortuneResult) return;
 
     setIsGeneratingSummary(true);
-    const openai = getOpenAIClient();
 
-    const prompt = `以下の診断結果から、${basicInfo.name}さんの性格や特徴を120文字以内で分かりやすく要約してください。
+    const prompt = `以下の診断結果から、${basicInfo.name}さんの性格や特徴を分かりやすく要約してください。
 
 診断結果:
 - MBTI: ${mbti?.type || '未診断'}
@@ -499,16 +487,43 @@ export default function DiagnosisResults() {
 
 要約は親しみやすく、ポジティブな表現で書いてください。`;
 
+    // フォールバック用の静的サマリー
+    const fallbackSummary = `${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`;
+
     try {
-      const content = await openai.generateQuickAnalysis(prompt);
-      if (content) {
-        setSummary(content);
-      } else {
-        setSummary(`${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`);
+      const response = await fetch('/api/diagnosis/summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          keywords: integratedKeywords
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('AI summary API error:', errorData);
+
+        // サーバーエラーの場合はフォールバックを使用
+        setSummary(fallbackSummary);
+        return;
       }
+
+      const data = await response.json();
+
+      if (data.success && data.summary) {
+        setSummary(data.summary);
+      } else {
+        console.warn('AI summary generation failed, using fallback');
+        setSummary(fallbackSummary);
+      }
+
     } catch (error) {
-      console.error('Error generating AI summary:', error);
-      setSummary(`${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`);
+      console.error('Error calling AI summary API:', error);
+      // ネットワークエラーの場合もフォールバックを使用
+      setSummary(fallbackSummary);
     } finally {
       setIsGeneratingSummary(false);
     }

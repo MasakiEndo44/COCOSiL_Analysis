@@ -13,17 +13,19 @@ interface DiagnosisTableProps {
   onManageInterview?: (record: DiagnosisRecord) => void;
   onManageMemo?: (record: DiagnosisRecord) => void;
   userRole?: 'admin' | 'viewer';
+  rowOffset?: number;
 }
 
-export default function DiagnosisTable({ 
-  records, 
-  onEdit, 
-  onDelete, 
-  onGenerateReport, 
+export default function DiagnosisTable({
+  records,
+  onEdit,
+  onDelete,
+  onGenerateReport,
   onDownloadReport,
   onManageInterview,
   onManageMemo,
-  userRole = 'admin'
+  userRole = 'admin',
+  rowOffset = 0
 }: DiagnosisTableProps) {
   if (records.length === 0) {
     return (
@@ -95,6 +97,9 @@ export default function DiagnosisTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="w-16 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                No.
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 診断日
               </th>
@@ -125,8 +130,11 @@ export default function DiagnosisTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {records.map((record) => (
+            {records.map((record, index) => (
               <tr key={record.id} className="hover:bg-gray-50">
+                <td className="w-16 px-4 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                  {rowOffset + index + 1}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatDate(record.date)}
                 </td>
@@ -241,14 +249,14 @@ export default function DiagnosisTable({
                     )}
                     
                     {/* Edit and Delete buttons - only for admin role */}
-                    {userRole === 'admin' && onEdit && (
-                      <button
-                        onClick={() => onEdit(record.id)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                    {userRole === 'admin' && (
+                      <a
+                        href={`/admin/records/${record.id}/edit`}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 inline-block"
                         title="編集"
                       >
                         <Edit size={16} />
-                      </button>
+                      </a>
                     )}
                     {userRole === 'admin' && onDelete && (
                       <button

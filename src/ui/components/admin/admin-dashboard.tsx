@@ -378,15 +378,15 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
             <StatsOverview stats={stats} />
             <div className="mt-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">最近の診断記録（最新10件）</h2>
-              <DiagnosisTable 
-                records={records.slice(0, 10)} 
-                onEdit={session.role === 'admin' ? handleEdit : undefined}
+              <DiagnosisTable
+                records={records.slice(0, 10)}
                 onDelete={session.role === 'admin' ? handleDelete : undefined}
                 onGenerateReport={handleGenerateReport}
                 onDownloadReport={handleDownloadReport}
                 onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
                 onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
                 userRole={session.role}
+                rowOffset={0}
               />
             </div>
           </div>
@@ -402,8 +402,8 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
                 </Button>
               )}
             </div>
-            <DiagnosisTable 
-              records={records} 
+            <DiagnosisTable
+              records={records}
               onEdit={session.role === 'admin' ? handleEdit : undefined}
               onDelete={session.role === 'admin' ? handleDelete : undefined}
               onGenerateReport={handleGenerateReport}
@@ -411,6 +411,7 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
               onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
               onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
               userRole={session.role}
+              rowOffset={0}
             />
           </div>
         )}
