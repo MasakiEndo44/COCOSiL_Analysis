@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { EmptyQAState } from '@/ui/components/counseling/empty-qa-state';
@@ -62,102 +62,145 @@ const getWesternZodiac = (month: number, day: number): string => {
   return '不明';
 };
 
-// Simplified word bank for demonstration
+// Enhanced word bank for natural Japanese catchphrase generation
 const getSimpleWordBank = () => {
   return {
     mbti: {
       'ENFP': {
-        catchphrase: '情熱的創造者',
+        base: '情熱',
+        attributive: '情熱的な',
+        connective: '情熱的で',
+        noun: '創造者',
+        shortNoun: '創造者',
         trait1: '自由奔放',
         trait2: '直感的',
         trait3: '社交的'
       },
       'INFP': {
-        catchphrase: '理想追求者',
+        base: '理想',
+        attributive: '理想的な',
+        connective: '理想的で',
+        noun: '探求者',
+        shortNoun: '探求者',
         trait1: '内向的',
         trait2: '感情豊か',
         trait3: '創造的'
       },
       'ENFJ': {
-        catchphrase: 'カリスマ指導者',
+        base: 'カリスマ',
+        attributive: 'カリスマ的な',
+        connective: 'カリスマ的で',
+        noun: '指導者',
+        shortNoun: '指導者',
         trait1: '外向的',
         trait2: '思いやり深い',
         trait3: '計画的'
       },
       'INFJ': {
-        catchphrase: '洞察力の賢者',
+        base: '洞察',
+        attributive: '洞察力のある',
+        connective: '洞察力があり',
+        noun: '賢者',
+        shortNoun: '賢者',
         trait1: '内向的',
         trait2: '直感的',
         trait3: '計画的'
       },
       'ENTP': {
-        catchphrase: 'アイデア起業家',
+        base: '革新',
+        attributive: '革新的な',
+        connective: '革新的で',
+        noun: '起業家',
+        shortNoun: '起業家',
         trait1: '外向的',
         trait2: '論理的',
         trait3: '柔軟'
       },
       'INTP': {
-        catchphrase: '論理的思考家',
+        base: '論理',
+        attributive: '論理的な',
+        connective: '論理的で',
+        noun: '思考家',
+        shortNoun: '思考家',
         trait1: '内向的',
         trait2: '論理的',
         trait3: '独立的'
       },
       'ENTJ': {
-        catchphrase: '戦略的指揮官',
+        base: '戦略',
+        attributive: '戦略的な',
+        connective: '戦略的で',
+        noun: '指揮官',
+        shortNoun: '指揮官',
         trait1: '外向的',
         trait2: '論理的',
         trait3: '計画的'
       },
       'INTJ': {
-        catchphrase: '戦略的建築家',
+        base: '独創',
+        attributive: '独創的な',
+        connective: '独創的で',
+        noun: '建築家',
+        shortNoun: '建築家',
         trait1: '内向的',
         trait2: '論理的',
         trait3: '計画的'
       },
       'ESFP': {
-        catchphrase: '自由な表現者',
+        base: '自由',
+        attributive: '自由奔放な',
+        connective: '自由奔放で',
+        noun: '表現者',
+        shortNoun: '表現者',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '感情的'
       },
       'ISFP': {
-        catchphrase: '芸術家の魂',
+        adjective: '芸術的な',
+        noun: '魂の人',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '感情的'
       },
       'ESFJ': {
-        catchphrase: '思いやりの社交家',
+        adjective: '思いやり深い',
+        noun: '社交家',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ISFJ': {
-        catchphrase: '献身的な守護者',
+        adjective: '献身的な',
+        noun: '守護者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ESTP': {
-        catchphrase: '行動派の実行者',
+        adjective: '行動的な',
+        noun: '実行者',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '柔軟'
       },
       'ISTP': {
-        catchphrase: '職人の技術者',
+        adjective: '職人気質の',
+        noun: '技術者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '論理的'
       },
       'ESTJ': {
-        catchphrase: '実務的管理者',
+        adjective: '実務的な',
+        noun: '管理者',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ISTJ': {
-        catchphrase: '堅実な管理者',
+        adjective: '堅実な',
+        noun: '管理者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '計画的'
@@ -165,61 +208,74 @@ const getSimpleWordBank = () => {
     },
     taiheki: {
       1: {
-        catchphrase: '冷静沈着な分析家',
+        base: '冷静',
+        attributive: '冷静な',
+        connective: '冷静で',
+        noun: '分析家',
+        shortNoun: '分析家',
         trait1: '論理的',
         trait2: '理性的',
         trait3: '集中力'
       },
       2: {
-        catchphrase: '協調性のある調整役',
+        adjective: '協調性のある',
+        noun: '調整役',
         trait1: '思考力',
         trait2: '共感力',
         trait3: '調和'
       },
       3: {
-        catchphrase: '明るく社交的なムードメーカー',
+        adjective: '明るく',
+        noun: 'ムードメーカー',
         trait1: '感情豊か',
         trait2: '楽しさ重視',
         trait3: '愛され'
       },
       4: {
-        catchphrase: '感情豊かな芸術家',
+        adjective: '感性豊かな',
+        noun: '芸術家',
         trait1: '感情豊か',
         trait2: '内面世界',
         trait3: '美的感覚'
       },
       5: {
-        catchphrase: '行動的な実業家',
+        adjective: '行動的な',
+        noun: '実業家',
         trait1: 'リーダーシップ',
         trait2: '実用重視',
         trait3: '常に動く'
       },
       6: {
-        catchphrase: 'ロマンチックな夢想家',
+        adjective: 'ロマンチックな',
+        noun: '夢想家',
         trait1: 'ロマンチスト',
         trait2: '想像力',
         trait3: 'ひねくれ'
       },
       7: {
-        catchphrase: '闘争心旺盛な戦士',
+        adjective: '闘争心のある',
+        noun: '戦士',
         trait1: '闘争心',
         trait2: '経験重視',
         trait3: '勝ち負け'
       },
       8: {
-        catchphrase: '忍耐強い支援者',
+        adjective: '忍耐強い',
+        noun: '支援者',
         trait1: '正義感',
         trait2: '我慢強い',
         trait3: '安定感'
       },
       9: {
-        catchphrase: '完璧主義の専門家',
+        adjective: '完璧主義の',
+        noun: '専門家',
         trait1: '職人気質',
         trait2: '完璧主義',
         trait3: '集中力'
       },
       10: {
-        catchphrase: '包容力のある母性型',
+        adjective: '包容力のある',
+        noun: '母性型',
         trait1: '安定感',
         trait2: '包容力',
         trait3: '母性'
@@ -231,84 +287,96 @@ const getSimpleWordBank = () => {
     zodiac: {
       '牡羊座': {
         element: '火',
-        catchphrase: '情熱の開拓者',
+        adjective: '情熱的な',
+        noun: '開拓者',
         trait1: '積極的',
         trait2: '率直',
         trait3: '行動力'
       },
       '牡牛座': {
         element: '土',
-        catchphrase: '安定の実務家',
+        adjective: '安定した',
+        noun: '実務家',
         trait1: 'マイペース',
         trait2: '堅実',
         trait3: '継続力'
       },
       '双子座': {
         element: '風',
-        catchphrase: '知的な情報通',
+        adjective: '知的な',
+        noun: '情報通',
         trait1: '好奇心',
         trait2: '機転利く',
         trait3: '多才'
       },
       '蟹座': {
         element: '水',
-        catchphrase: '愛情深い家族思い',
+        adjective: '愛情深い',
+        noun: '家族思い',
         trait1: '共感力',
         trait2: '面倒見良い',
         trait3: '情に厚い'
       },
       '獅子座': {
         element: '火',
-        catchphrase: '華やかなスター',
+        adjective: '華やかな',
+        noun: 'スター',
         trait1: '存在感',
         trait2: '創造的',
         trait3: '負けず嫌い'
       },
       '乙女座': {
         element: '土',
-        catchphrase: '完璧主義の分析家',
+        adjective: '完璧主義の',
+        noun: '分析家',
         trait1: '几帳面',
         trait2: '実務的',
         trait3: '献身的'
       },
       '天秤座': {
         element: '風',
-        catchphrase: '調和の美学者',
+        adjective: '調和を重んじる',
+        noun: '美学者',
         trait1: 'バランス感覚',
         trait2: '社交的',
         trait3: '公正'
       },
       '蠍座': {
         element: '水',
-        catchphrase: '神秘的な洞察者',
+        adjective: '神秘的な',
+        noun: '洞察者',
         trait1: '集中力',
         trait2: '深い愛情',
         trait3: '洞察力'
       },
       '射手座': {
         element: '火',
-        catchphrase: '自由な冒険家',
+        adjective: '自由な',
+        noun: '冒険家',
         trait1: '楽観的',
         trait2: '向学心',
         trait3: '自由愛好'
       },
       '山羊座': {
         element: '土',
-        catchphrase: '責任感の登山家',
+        adjective: '責任感のある',
+        noun: '登山家',
         trait1: '計画的',
         trait2: '忍耐力',
         trait3: '責任感'
       },
       '水瓶座': {
         element: '風',
-        catchphrase: '革新的な理想家',
+        adjective: '革新的な',
+        noun: '理想家',
         trait1: '独創的',
         trait2: '客観的',
         trait3: '未来志向'
       },
       '魚座': {
         element: '水',
-        catchphrase: '感受性の芸術家',
+        adjective: '感受性豊かな',
+        noun: '芸術家',
         trait1: '感受性',
         trait2: '想像力',
         trait3: '献身的'
@@ -355,46 +423,124 @@ const getSimpleWordBank = () => {
   };
 };
 
-// Keyword extraction function for 5-system integration
-const extractIntegratedKeywords = (
+
+// Helper function to generate natural Japanese catchphrase
+const generateNaturalCatchphrase = (
+  mbtiData: any,
+  taihekiData: any,
+  zodiacData: any
+): string => {
+
+  // Helper function to ensure length is appropriate (15-20 characters)
+  const adjustLength = (phrase: string, maxLength: number = 20): string => {
+    if (phrase.length <= maxLength) return phrase;
+
+    // If too long, try to shorten by removing connectors or simplifying
+    const simplified = phrase
+      .replace(/タイプの/g, '')
+      .replace(/かつ/g, '')
+      .replace(/である/g, '')
+      .replace(/のある/g, '');
+
+    return simplified.length <= maxLength ? simplified : phrase.substring(0, maxLength);
+  };
+
+  // Pattern generation strategies with length consideration
+  const generatePattern = (adj: string, noun: string, connector?: string): string => {
+    if (connector) {
+      const withConnector = `${adj}${connector}${noun}`;
+      if (withConnector.length <= 20) return withConnector;
+      // If too long, remove connector
+      return `${adj}${noun}`;
+    }
+    return `${adj}${noun}`;
+  };
+
+  // Priority: MBTI + Taiheki > MBTI + Zodiac > Single source
+  if (mbtiData && taihekiData) {
+    // Try different combinations for best fit
+    const options = [
+      `${mbtiData.attributive}${taihekiData.noun}`, // 最も自然：情熱的な思考家
+      `${mbtiData.attributive}${taihekiData.shortNoun || taihekiData.noun}`, // 短縮版：情熱的な思考家
+      `${mbtiData.base}に満ちた${taihekiData.noun}`, // 感情的：情熱に満ちた思考家
+      generatePattern(mbtiData.connective, taihekiData.noun), // 接続：情熱的で思考家
+    ];
+
+    // Find the best option that fits length requirements
+    for (const option of options) {
+      if (option.length >= 10 && option.length <= 20) {
+        return option;
+      }
+    }
+    return adjustLength(options[0]);
+
+  } else if (mbtiData && zodiacData) {
+    const result = `${mbtiData.attributive}${zodiacData.shortNoun || zodiacData.noun}`;
+    return adjustLength(result);
+
+  } else if (mbtiData) {
+    return adjustLength(`${mbtiData.attributive}${mbtiData.shortNoun || mbtiData.noun}`);
+
+  } else if (taihekiData) {
+    return adjustLength(`${taihekiData.attributive}${taihekiData.shortNoun || taihekiData.noun}`);
+
+  } else if (zodiacData) {
+    return adjustLength(`${zodiacData.attributive}${zodiacData.shortNoun || zodiacData.noun}`);
+
+  } else {
+    return 'バランス型の個性';
+  }
+};
+
+// Generate integrated profile in the new 3-field format
+const generateIntegratedProfile = (
   mbti: any,
   taiheki: any,
   fortuneResult: FortuneResult,
   zodiacSign: string
 ) => {
   const wordBank = getSimpleWordBank();
-  const keywords: string[] = [];
 
-  // 60% 後天的特性 (MBTI + 体癖)
-  if (mbti && wordBank.mbti[mbti.type as keyof typeof wordBank.mbti]) {
-    const mbtiData = wordBank.mbti[mbti.type as keyof typeof wordBank.mbti];
-    keywords.push(mbtiData.catchphrase, mbtiData.trait1, mbtiData.trait2);
+  // Get base data
+  const mbtiData = mbti && wordBank.mbti[mbti.type as keyof typeof wordBank.mbti];
+  const taihekiData = taiheki && wordBank.taiheki[taiheki.primary as keyof typeof wordBank.taiheki];
+  const zodiacData = zodiacSign && wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac];
+
+  // 1. キャッチフレーズ (20文字程度) - 自然な日本語形式
+  const catchphrase = generateNaturalCatchphrase(mbtiData, taihekiData, zodiacData);
+
+  // 2. 対人的特徴 (100文字程度、具体的シチュエーション含む)
+  let interpersonal = '';
+  const situation = ['職場で', '友人と', 'チームで', '初対面の人と'][Math.floor(Math.random() * 4)];
+  
+  if (mbtiData) {
+    const socialStyle = mbti.type.includes('E') ? '積極的にコミュニケーションを取り' : '相手の話をじっくり聞いて';
+    const approach = mbti.type.includes('F') ? '相手の気持ちを大切にし' : '論理的に物事を整理し';
+    interpersonal = `${situation}は${socialStyle}、${approach}ながら関係を築くタイプです。${mbtiData.trait3}な面が周りから信頼されています。`;
+  } else {
+    interpersonal = `${situation}は自然体で接し、相手に合わせたコミュニケーションを心がけるタイプです。バランスの取れた対人関係を築くことができます。`;
   }
 
-  if (taiheki && wordBank.taiheki[taiheki.primary as keyof typeof wordBank.taiheki]) {
-    const taihekiData = wordBank.taiheki[taiheki.primary as keyof typeof wordBank.taiheki];
-    keywords.push(taihekiData.catchphrase, taihekiData.trait1);
+  // 3. 思考と行動の特徴 (100文字程度)
+  let cognition = '';
+  if (taihekiData && mbtiData) {
+    const thinkingStyle = mbti.type.includes('T') ? '論理的に分析し' : '直感的に判断し';
+    const actionStyle = mbti.type.includes('J') ? '計画を立ててから着実に' : '状況に応じて柔軟に';
+    cognition = `${thinkingStyle}、${actionStyle}行動するタイプです。${taihekiData.trait1}で${mbtiData.trait1}な特徴があり、独自のペースで物事を進めます。`;
+  } else if (mbtiData) {
+    const processStyle = mbti.type.includes('N') ? '全体像を把握してから' : '具体的な事実を重視して';
+    cognition = `${processStyle}判断し、${mbtiData.trait2}に行動するタイプです。自分なりの価値観を大切にしながら決断を下します。`;
+  } else if (taihekiData) {
+    cognition = `${taihekiData.trait1}で${taihekiData.trait2}な思考パターンを持ち、自分のペースを大切にしながら行動するタイプです。`;
+  } else {
+    cognition = '状況を客観的に判断し、バランスを取りながら行動するタイプです。柔軟性と安定性の両方を重視して物事を進めます。';
   }
 
-  // 40% 先天的特性 (動物占い + 星座 + 六星占術)
-  const animalKey = (fortuneResult as any).animalDetails?.character || fortuneResult.animal;
-  if (animalKey && wordBank.animals60[animalKey as keyof typeof wordBank.animals60]) {
-    const animalData = wordBank.animals60[animalKey as keyof typeof wordBank.animals60];
-    // 新しいデータ構造: keywordsから2つのキーワードを取得
-    keywords.push(...animalData.keywords.slice(0, 2));
-  }
-
-  if (zodiacSign && wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac]) {
-    const zodiacData = wordBank.zodiac[zodiacSign as keyof typeof wordBank.zodiac];
-    keywords.push(zodiacData.trait1);
-  }
-
-  if (fortuneResult.sixStar && wordBank.sixStar[fortuneResult.sixStar as keyof typeof wordBank.sixStar]) {
-    const sixStarData = wordBank.sixStar[fortuneResult.sixStar as keyof typeof wordBank.sixStar];
-    keywords.push(sixStarData.trait1);
-  }
-
-  return keywords.filter(Boolean).slice(0, 6); // Top 6 keywords
+  return {
+    catchphrase,
+    interpersonal,
+    cognition
+  };
 };
 
 // Helper function to get orientation from animal character name
@@ -407,18 +553,18 @@ const getAnimalOrientation = (animalCharacter: string): string => {
 
 export default function DiagnosisResults() {
   const { basicInfo, mbti, taiheki, fortune: fortuneResult, chatSummary, hasCompletedCounseling } = useDiagnosisStore();
-  const [summary, setSummary] = useState<string>('');
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const zodiacSign = basicInfo ? getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day) : '';
-  const integratedKeywords = (basicInfo && fortuneResult)
-    ? extractIntegratedKeywords(mbti, taiheki, fortuneResult, zodiacSign)
-    : [];
+  const integratedProfile = useMemo(() => {
+    return (basicInfo && fortuneResult)
+      ? generateIntegratedProfile(mbti, taiheki, fortuneResult, zodiacSign)
+      : { catchphrase: '', interpersonal: '', cognition: '' };
+  }, [basicInfo, fortuneResult, mbti, taiheki, zodiacSign]);
 
   // Save diagnosis result to admin database - AUTO SAVE ENABLED
   useEffect(() => {
     const saveDiagnosisResult = async () => {
-      if (basicInfo && fortuneResult && zodiacSign && integratedKeywords.length > 0) {
+      if (basicInfo && fortuneResult && zodiacSign && integratedProfile.catchphrase) {
         try {
           console.log('💾 自動保存開始: 診断結果をデータベースに保存中...');
 
@@ -434,20 +580,20 @@ export default function DiagnosisResults() {
             zodiac: zodiacSign || 'Unknown',
             animal: fortuneResult.animal || 'Unknown',
             orientation: getAnimalOrientation(fortuneResult.animal || ''),
-            color: integratedKeywords.join(', '), // キーワードを色として使用
+            color: integratedProfile.catchphrase, // キャッチフレーズを色として使用
             mbti: mbti?.type || 'UNKNOWN',
             mainTaiheki: taiheki?.primary || 1,
             subTaiheki: taiheki?.secondary || null,
             sixStar: fortuneResult.sixStar || 'Unknown',
-            theme: integratedKeywords.length > 0 ? integratedKeywords.join(', ') : 'No themes',
+            theme: integratedProfile.catchphrase || 'No theme',
             advice: '',
             satisfaction: 5,
             duration: '自動記録',
             feedback: '診断完了時に自動保存されました',
             // 統合診断専用フィールド
-            integratedKeywords: JSON.stringify(integratedKeywords),
-            aiSummary: summary || '',
-            fortuneColor: integratedKeywords.length > 0 ? integratedKeywords[0] : '',
+            integratedKeywords: JSON.stringify(integratedProfile),
+            aiSummary: `キャッチフレーズ: ${integratedProfile.catchphrase}\n対人的特徴: ${integratedProfile.interpersonal}\n思考と行動: ${integratedProfile.cognition}`,
+            fortuneColor: integratedProfile.catchphrase,
             reportVersion: 'v2.0-integrated',
             isIntegratedReport: true,
             // AIカウンセリングデータ
@@ -478,74 +624,8 @@ export default function DiagnosisResults() {
 
     // データが揃った時点で一度だけ保存実行
     saveDiagnosisResult();
-  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedKeywords, summary, hasCompletedCounseling, chatSummary]);
+  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedProfile, hasCompletedCounseling, chatSummary]);
 
-  // Generate AI summary using server-side API
-  const generateAISummary = async () => {
-    if (!basicInfo || !fortuneResult) return;
-
-    setIsGeneratingSummary(true);
-
-    const prompt = `以下の診断結果から、${basicInfo.name}さんの性格や特徴を分かりやすく要約してください。
-
-診断結果:
-- MBTI: ${mbti?.type || '未診断'}
-- 体癖: ${taiheki ? `${taiheki.primary}種` : '未診断'}
-- 動物占い: ${fortuneResult.animal}
-- 六星占術: ${fortuneResult.sixStar}
-- 星座: ${zodiacSign}
-- 統合キーワード: ${integratedKeywords.join('、')}
-
-要約は親しみやすく、ポジティブな表現で書いてください。`;
-
-    // フォールバック用の静的サマリー
-    const fallbackSummary = `${basicInfo.name}さんは、${mbti?.type || '未知の'}タイプで、${taiheki ? `${taiheki.primary}種体癖の` : ''}個性的な方です。${fortuneResult.animal}の特徴を持ち、${fortuneResult.sixStar}の性格が表れています。バランスの取れた魅力的な人格をお持ちです。`;
-
-    try {
-      const response = await fetch('/api/diagnosis/summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          keywords: integratedKeywords
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('AI summary API error:', errorData);
-
-        // サーバーエラーの場合はフォールバックを使用
-        setSummary(fallbackSummary);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.summary) {
-        setSummary(data.summary);
-      } else {
-        console.warn('AI summary generation failed, using fallback');
-        setSummary(fallbackSummary);
-      }
-
-    } catch (error) {
-      console.error('Error calling AI summary API:', error);
-      // ネットワークエラーの場合もフォールバックを使用
-      setSummary(fallbackSummary);
-    } finally {
-      setIsGeneratingSummary(false);
-    }
-  };
-
-  // Load initial summary
-  useEffect(() => {
-    if (basicInfo && fortuneResult && !summary && !isGeneratingSummary) {
-      generateAISummary();
-    }
-  }, [basicInfo, fortuneResult, summary, isGeneratingSummary]);
 
   // Basic info and fortune result are required, MBTI and taiheki are optional
   if (!basicInfo || !fortuneResult) {
@@ -773,32 +853,23 @@ export default function DiagnosisResults() {
           </div>
 
           <div className="space-y-4">
-            {/* AI要約 */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-xs text-blue-700 mb-2">AIによる性格分析</p>
-              {isGeneratingSummary ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <p className="text-sm text-blue-700">分析中...</p>
-                </div>
-              ) : (
-                <p className="text-sm text-blue-900 leading-relaxed">{summary}</p>
-              )}
+            {/* あなたの性格をひとことで表すと */}
+            <div className="bg-amber-50 rounded-lg p-4">
+              <p className="text-xs text-amber-700 mb-2 font-medium">あなたの性格をひとことで表すと</p>
+              <p className="text-lg text-amber-900 font-medium leading-relaxed">{integratedProfile.catchphrase}</p>
             </div>
 
-            {/* 統合キーワード */}
-            {integratedKeywords.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-light-fg mb-2">統合キーワード</p>
-                <div className="flex flex-wrap gap-2">
-                  {integratedKeywords.map((keyword, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* 対人的特徴 */}
+            <div className="bg-green-50 rounded-lg p-4">
+              <p className="text-xs text-green-700 mb-2 font-medium">対人的特徴</p>
+              <p className="text-sm text-green-900 leading-relaxed">{integratedProfile.interpersonal}</p>
+            </div>
+
+            {/* 思考と行動の特徴 */}
+            <div className="bg-purple-50 rounded-lg p-4">
+              <p className="text-xs text-purple-700 mb-2 font-medium">思考と行動の特徴</p>
+              <p className="text-sm text-purple-900 leading-relaxed">{integratedProfile.cognition}</p>
+            </div>
           </div>
         </div>
       </div>
