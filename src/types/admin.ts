@@ -13,7 +13,7 @@ export interface DiagnosisRecord {
   color: string;
   mbti: string;
   mainTaiheki: number;
-  subTaiheki: number;
+  subTaiheki: number | null;
   sixStar: string;
   theme: string; // カンマ区切りのタグ
   advice: string;
@@ -25,6 +25,12 @@ export interface DiagnosisRecord {
   interviewDone?: string;
   interviewNotes?: string;
   memo?: string;
+  // 統合診断専用フィールド
+  integratedKeywords?: string; // JSON配列形式
+  aiSummary?: string;
+  fortuneColor?: string;
+  reportVersion?: string;
+  isIntegratedReport?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

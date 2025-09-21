@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
-import { Select } from '@/ui/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { mbtiQuestions, calculateMBTI, mbtiDescriptions } from '@/lib/data/mbti-questions';
 import type { MBTIType } from '@/types';
@@ -143,13 +143,21 @@ export function MbtiStep() {
               既知のMBTIタイプ
             </h3>
             
-            <Select
-              label="あなたのMBTIタイプ"
-              options={mbtiOptions}
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value as MBTIType)}
-              placeholder="選択してください"
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-light-fg">あなたのMBTIタイプ</label>
+              <Select value={selectedType || ''} onValueChange={(value) => setSelectedType(value as MBTIType)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="選択してください" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mbtiOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {selectedType && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">

@@ -1,4 +1,5 @@
 // OpenAI API統合クライアント
+import OpenAI from 'openai';
 import type { UserDiagnosisData } from '@/types';
 
 interface OpenAIMessage {
@@ -251,6 +252,7 @@ ${JSON.stringify(diagnosisData, null, 2)}
 
 // シングルトンインスタンス
 let openaiClient: OpenAIClient | null = null;
+let openaiSDK: OpenAI | null = null;
 
 export function getOpenAIClient(): OpenAIClient {
   if (!openaiClient) {
@@ -262,6 +264,28 @@ export function getOpenAIClient(): OpenAIClient {
   }
   return openaiClient;
 }
+
+// OpenAI SDK インスタンスをエクスポート（ai-analysis.ts と integrated-report-service.ts 用）
+export function getOpenAISDK(): OpenAI {
+  if (!openaiSDK) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openaiSDK = new OpenAI({ apiKey });
+  }
+  return openaiSDK;
+}
+
+// 遅延初期化されたインスタンス（下位互換性のため）
+export const openai = {
+  get chat() {
+    return getOpenAISDK().chat;
+  },
+  get completions() {
+    return getOpenAISDK().completions;
+  }
+};
 
 // エクスポート用の便利な関数
 export async function generateDiagnosisSummary(data: UserDiagnosisData): Promise<string> {

@@ -3,6 +3,7 @@ import { getServerAdminSession } from '@/lib/admin-session-server';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/prisma';
 import { RecordEditForm } from '@/ui/features/admin/record-edit-form';
+import type { DiagnosisRecord } from '@/types/admin';
 
 interface EditRecordPageProps {
   params: {
@@ -10,11 +11,17 @@ interface EditRecordPageProps {
   };
 }
 
-async function getRecord(id: string) {
+async function getRecord(id: string): Promise<DiagnosisRecord | null> {
   try {
-    const record = await db.diagnosisRecord.findUnique({
+    const prismaRecord = await db.diagnosisRecord.findUnique({
       where: { id: parseInt(id) },
     });
+
+    if (!prismaRecord) return null;
+
+    // Prismaの型をDiagnosisRecord型に変換（型アサーション）
+    const record = prismaRecord as DiagnosisRecord;
+
     return record;
   } catch (error) {
     console.error('Failed to fetch record:', error);

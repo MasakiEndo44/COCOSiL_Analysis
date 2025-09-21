@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
-import { Select } from '@/ui/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
 import { ErrorDisplay } from '@/ui/components/ui/error-display';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { basicInfoSchema, type BasicInfoFormData } from '@/lib/validations';
@@ -47,6 +47,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
     setError: setFormError
   } = useForm<BasicInfoFormData>({
@@ -286,14 +287,32 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
         />
 
         {/* 性別 */}
-        <Select
-          label="性別"
-          options={genderOptions}
-          placeholder="性別を選択してください"
-          {...register('gender')}
-          error={errors.gender?.message}
-          required
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-light-fg">
+            性別 <span className="text-error ml-1">*</span>
+          </label>
+          <Controller
+            name="gender"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value || ''} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="性別を選択してください" />
+                </SelectTrigger>
+                <SelectContent>
+                  {genderOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.gender && (
+            <p className="text-sm text-error">{errors.gender.message}</p>
+          )}
+        </div>
 
         {/* 生年月日 */}
         <div className="space-y-2">
@@ -304,31 +323,71 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
             算命学計算に必要なため、正確な生年月日を入力してください
           </p>
           <div className="grid grid-cols-3 gap-3">
-            <Select
-              options={years}
-              placeholder="年"
-              {...register('birthdate.year', { valueAsNumber: true })}
-              error={errors.birthdate?.year?.message}
-              required
+            <Controller
+              name="birthdate.year"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="年" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <Select
-              options={months}
-              placeholder="月"
-              {...register('birthdate.month', { valueAsNumber: true })}
-              error={errors.birthdate?.month?.message}
-              required
+            <Controller
+              name="birthdate.month"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="月" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <Select
-              options={availableDays}
-              placeholder="日"
-              {...register('birthdate.day', { valueAsNumber: true })}
-              error={errors.birthdate?.day?.message}
-              required
-              disabled={!selectedYear || !selectedMonth}
+            <Controller
+              name="birthdate.day"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value?.toString() || ''}
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="日" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDays.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
           </div>
-          {errors.birthdate?.message && (
-            <p className="text-sm text-error">{errors.birthdate.message}</p>
+          {(errors.birthdate?.year || errors.birthdate?.month || errors.birthdate?.day || errors.birthdate?.message) && (
+            <div className="text-sm text-error space-y-1">
+              {errors.birthdate?.year && <p>{errors.birthdate.year.message}</p>}
+              {errors.birthdate?.month && <p>{errors.birthdate.month.message}</p>}
+              {errors.birthdate?.day && <p>{errors.birthdate.day.message}</p>}
+              {errors.birthdate?.message && <p>{errors.birthdate.message}</p>}
+            </div>
           )}
           {selectedYear && selectedMonth && (
             <p className="text-xs text-light-fg-muted">

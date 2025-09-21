@@ -10,8 +10,6 @@ import StatsOverview from './stats-overview';
 import { RecordFormModal } from './record-form-modal';
 import { InterviewModal } from './interview-modal';
 import { ExportForm } from './export-form';
-import MemoModal from './memo-modal';
-import MemoList from './memo-list';
 import { Button } from '@/ui/components/ui/button';
 import { ExportOptions } from '@/types/admin';
 
@@ -33,9 +31,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
   const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
   const [interviewRecord, setInterviewRecord] = useState<DiagnosisRecord | null>(null);
   const [isInterviewSubmitting, setIsInterviewSubmitting] = useState(false);
-  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
-  const [isMemoListOpen, setIsMemoListOpen] = useState(false);
-  const [memoRecord, setMemoRecord] = useState<DiagnosisRecord | null>(null);
 
   useEffect(() => {
     loadData();
@@ -215,22 +210,31 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
       });
 
       if (!response.ok) {
-        throw new Error('レポート生成に失敗しました');
+        throw new Error('統合レポート生成に失敗しました');
       }
 
       const data = await response.json();
-      
-      // レコードリストを更新して新しいレポートURLを反映
-      setRecords(prev => prev.map(record => 
-        record.id === id 
-          ? { ...record, reportUrl: data.reportUrl }
+
+      // レコードリストを更新して新しい統合レポート情報を反映
+      setRecords(prev => prev.map(record =>
+        record.id === id
+          ? {
+              ...record,
+              reportUrl: data.reportUrl,
+              isIntegratedReport: data.isIntegratedReport || true,
+              reportVersion: data.reportVersion
+            }
           : record
       ));
 
-      alert('レポートが生成されました');
+      const message = data.isIntegratedReport
+        ? `統合レポートが生成されました（${data.keywordsCount}個のキーワード抽出）`
+        : 'レポートが生成されました';
+
+      alert(message);
     } catch (err) {
-      console.error('レポート生成エラー:', err);
-      alert('レポート生成に失敗しました');
+      console.error('統合レポート生成エラー:', err);
+      alert('統合レポート生成に失敗しました');
     }
   };
 
@@ -309,28 +313,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
     }
   };
 
-  const handleManageMemo = (record: DiagnosisRecord) => {
-    setMemoRecord(record);
-    setIsMemoListOpen(true);
-  };
-
-  const handleAddMemo = () => {
-    setIsMemoListOpen(false);
-    setIsMemoModalOpen(true);
-  };
-
-  const handleMemoSaved = () => {
-    // メモが保存された後、必要に応じて何か処理を行う
-    setIsMemoModalOpen(false);
-    // メモリストを再表示
-    setIsMemoListOpen(true);
-  };
-
-  const handleCloseMemoModals = () => {
-    setIsMemoModalOpen(false);
-    setIsMemoListOpen(false);
-    setMemoRecord(null);
-  };
 
   const handleCloseInterviewModal = () => {
     setIsInterviewModalOpen(false);
@@ -384,7 +366,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
                 onGenerateReport={handleGenerateReport}
                 onDownloadReport={handleDownloadReport}
                 onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
-                onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
                 userRole={session.role}
                 rowOffset={0}
               />
@@ -409,7 +390,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
               onGenerateReport={handleGenerateReport}
               onDownloadReport={handleDownloadReport}
               onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
-              onManageMemo={session.role === 'admin' ? handleManageMemo : undefined}
               userRole={session.role}
               rowOffset={0}
             />
@@ -455,20 +435,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
         record={interviewRecord}
         onSave={handleInterviewSave}
         isLoading={isInterviewSubmitting}
-      />
-
-      <MemoList
-        isOpen={isMemoListOpen}
-        onClose={handleCloseMemoModals}
-        record={memoRecord}
-        onAddMemo={handleAddMemo}
-      />
-
-      <MemoModal
-        isOpen={isMemoModalOpen}
-        onClose={handleCloseMemoModals}
-        record={memoRecord}
-        onMemoSaved={handleMemoSaved}
       />
     </div>
   );

@@ -26,19 +26,19 @@ model AdminUser {
 model DiagnosisRecord {
   id                  Int      @id @default(autoincrement())
   date                String   // YYYY-MM-DD形式
-  name                String   
+  name                String
   birthDate           String   // YYYY/MM/DD形式
   age                 Int
   gender              String   // male | female | no_answer
   zodiac              String   // 星座
   animal              String   // 動物占い
   orientation         String   // 志向（動物から自動計算）
-  color               String   // 動物占いの色
+  color               String   // 動物占いの色（統合診断では算命学の色）
   mbti                String   // MBTIタイプ
   mainTaiheki         Int      // 主体癖
   subTaiheki          Int?     // 副体癖（任意）
   sixStar             String   // 6星占術
-  theme               String   // 相談テーマ（カンマ区切り）
+  theme               String   // 相談テーマ（統合診断では統合キーワード）
   advice              String   // 提供アドバイス
   satisfaction        Int      // 満足度 1-5
   duration            String   // 所要時間
@@ -47,7 +47,12 @@ model DiagnosisRecord {
   interviewScheduled  String?  // インタビュー予定日
   interviewDone       String?  // インタビュー実施日
   memo                String?  // 備考
-  memos               Memo[]   // 関連メモ
+  // 統合診断専用フィールド
+  integratedKeywords  String?  // 統合キーワード（JSON配列）
+  aiSummary           String?  // AIサマリー
+  fortuneColor        String?  // 算命学由来の色
+  reportVersion       String?  // レポートバージョン
+  isIntegratedReport  Boolean  @default(false) // 統合診断か手動入力かの判別
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -120,20 +125,6 @@ model SixStarMaster {
   @@map("six_star_master")
 }
 
-// メモ・フィードバック管理
-model Memo {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  category  String   // general | follow_up | improvement | concern
-  priority  String   // low | medium | high
-  recordId  Int
-  record    DiagnosisRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("memos")
-}
 
 // システム設定
 model SystemConfig {

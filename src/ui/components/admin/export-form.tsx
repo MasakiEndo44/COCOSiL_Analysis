@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
 import { Label } from '@/ui/components/ui/label';
-import { Root, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
 import { Checkbox } from '@/ui/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/components/ui/card';
 import { ExportOptions } from '@/types/admin';
@@ -52,7 +52,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
             {/* 出力形式 */}
             <div className="space-y-2">
               <Label>出力形式</Label>
-              <Root value={format} onValueChange={(value) => setFormat(value as 'excel' | 'csv')}>
+              <Select value={format} onValueChange={(value) => setFormat(value as 'excel' | 'csv')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -60,7 +60,7 @@ export function ExportForm({ onExport, isLoading = false }: ExportFormProps) {
                   <SelectItem value="excel">Excel (.xlsx)</SelectItem>
                   <SelectItem value="csv">CSV (.csv)</SelectItem>
                 </SelectContent>
-              </Root>
+              </Select>
             </div>
 
             {/* 含めるデータ */}

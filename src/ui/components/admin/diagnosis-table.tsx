@@ -1,7 +1,7 @@
 'use client';
 
 import { DiagnosisRecord } from '@/types/admin';
-import { Edit, Trash2, ExternalLink, FileText, Download, Calendar, MessageSquare, StickyNote } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, FileText, Download, Calendar, MessageSquare } from 'lucide-react';
 import { ORIENTATION_LABELS } from '@/lib/data/animal-fortune-mapping';
 
 interface DiagnosisTableProps {
@@ -11,7 +11,6 @@ interface DiagnosisTableProps {
   onGenerateReport?: (id: number) => void;
   onDownloadReport?: (id: number) => void;
   onManageInterview?: (record: DiagnosisRecord) => void;
-  onManageMemo?: (record: DiagnosisRecord) => void;
   userRole?: 'admin' | 'viewer';
   rowOffset?: number;
 }
@@ -23,7 +22,6 @@ export default function DiagnosisTable({
   onGenerateReport,
   onDownloadReport,
   onManageInterview,
-  onManageMemo,
   userRole = 'admin',
   rowOffset = 0
 }: DiagnosisTableProps) {
@@ -207,23 +205,33 @@ export default function DiagnosisTable({
                   <div className="flex items-center space-x-2">
                     {/* Report generation/download buttons */}
                     {record.reportUrl ? (
-                      <button
-                        onClick={() => onDownloadReport?.(record.id)}
-                        className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                        title="レポートをダウンロード"
-                      >
-                        <Download size={16} />
-                      </button>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => onDownloadReport?.(record.id)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                          title={record.isIntegratedReport ? "統合レポートをダウンロード" : "レポートをダウンロード"}
+                        >
+                          <Download size={16} />
+                        </button>
+                        {record.isIntegratedReport && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                            title="統合レポート"
+                          >
+                            AI
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <button
                         onClick={() => onGenerateReport?.(record.id)}
                         className="text-brand-600 hover:text-brand-900 p-1 rounded hover:bg-brand-50"
-                        title="レポート生成"
+                        title="統合レポート生成"
                       >
                         <FileText size={16} />
                       </button>
                     )}
-                    
+
                     {/* External link to view report if exists */}
                     {record.reportUrl && (
                       <a
@@ -231,23 +239,12 @@ export default function DiagnosisTable({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50"
-                        title="レポートを表示"
+                        title={record.isIntegratedReport ? "統合レポートを表示" : "レポートを表示"}
                       >
                         <ExternalLink size={16} />
                       </a>
                     )}
-                    
-                    {/* Memo management button */}
-                    {onManageMemo && (
-                      <button
-                        onClick={() => onManageMemo(record)}
-                        className="text-purple-600 hover:text-purple-900 p-1 rounded hover:bg-purple-50"
-                        title="メモ管理"
-                      >
-                        <StickyNote size={16} />
-                      </button>
-                    )}
-                    
+
                     {/* Edit and Delete buttons - only for admin role */}
                     {userRole === 'admin' && (
                       <a

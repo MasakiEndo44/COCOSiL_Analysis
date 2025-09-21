@@ -117,7 +117,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
       color: record.color,
       mbti: record.mbti as any,
       mainTaiheki: record.mainTaiheki,
-      subTaiheki: record.subTaiheki === 0 || record.subTaiheki === '' || record.subTaiheki === undefined ? null : record.subTaiheki,
+      subTaiheki: record.subTaiheki === 0 || record.subTaiheki === null || record.subTaiheki === undefined ? null : record.subTaiheki,
       sixStar: record.sixStar,
       theme: record.theme,
       advice: record.advice,
@@ -734,7 +734,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
         <div className="flex space-x-2">
           <Button 
             type="button" 
-            variant="outline" 
+            variant="secondary" 
             onClick={() => router.push('/admin')}
             disabled={isLoading}
           >

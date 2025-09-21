@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
+import { EmptyQAState } from '@/ui/components/counseling/empty-qa-state';
+import { SummarizedQAList } from '@/ui/components/counseling/summarized-qa-list';
 
 import { mbtiDescriptions } from '@/lib/data/mbti-questions';
 import { animals60WordBank } from '@/lib/data/animals60';
@@ -404,7 +406,7 @@ const getAnimalOrientation = (animalCharacter: string): string => {
 };
 
 export default function DiagnosisResults() {
-  const { basicInfo, mbti, taiheki, fortune: fortuneResult } = useDiagnosisStore();
+  const { basicInfo, mbti, taiheki, fortune: fortuneResult, chatSummary, hasCompletedCounseling } = useDiagnosisStore();
   const [summary, setSummary] = useState<string>('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
@@ -441,7 +443,16 @@ export default function DiagnosisResults() {
             advice: '',
             satisfaction: 5,
             duration: '自動記録',
-            feedback: '診断完了時に自動保存されました'
+            feedback: '診断完了時に自動保存されました',
+            // 統合診断専用フィールド
+            integratedKeywords: JSON.stringify(integratedKeywords),
+            aiSummary: summary || '',
+            fortuneColor: integratedKeywords.length > 0 ? integratedKeywords[0] : '',
+            reportVersion: 'v2.0-integrated',
+            isIntegratedReport: true,
+            // AIカウンセリングデータ
+            counselingCompleted: hasCompletedCounseling,
+            counselingSummary: chatSummary ? JSON.stringify(chatSummary) : null
           };
 
           console.log('📋 保存データ:', payload);
@@ -467,7 +478,7 @@ export default function DiagnosisResults() {
 
     // データが揃った時点で一度だけ保存実行
     saveDiagnosisResult();
-  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedKeywords]);
+  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedKeywords, summary, hasCompletedCounseling, chatSummary]);
 
   // Generate AI summary using server-side API
   const generateAISummary = async () => {
@@ -792,21 +803,19 @@ export default function DiagnosisResults() {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
-        <Button
-          onClick={() => window.print()}
-          variant="secondary"
-          className="flex-1"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          結果を印刷
-        </Button>
+      {/* AI Counseling Section */}
+      <div className="max-w-6xl mx-auto">
+        {hasCompletedCounseling && chatSummary ? (
+          <SummarizedQAList summary={chatSummary} />
+        ) : (
+          <EmptyQAState />
+        )}
+      </div>
 
-        <Link href="/diagnosis" className="flex-1">
-          <Button className="w-full">
+      {/* Action Buttons */}
+      <div className="flex justify-center max-w-lg mx-auto">
+        <Link href="/diagnosis">
+          <Button className="px-8">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
