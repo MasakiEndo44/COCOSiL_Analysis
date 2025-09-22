@@ -9,6 +9,7 @@
     --brand-50: 240 249 255;  /* #F0F9FF */
     --brand-100: 224 242 254; /* #E0F2FE */
     --brand-200: 186 230 253; /* #BAE6FD */
+    --brand-300: 147 216 249; /* #93D8F9 */
     --brand-500: 122 197 229; /* #7AC5E5 */
     --brand-600: 14 165 233;  /* #0EA5E9 */
     --brand-700: 74 159 208;  /* #4A9FD0 */
@@ -26,6 +27,8 @@
     --foreground: 16 24 40;        /* #101828 */
     --muted-foreground: 71 84 103; /* #475467 */
     --secondary-foreground: 154 164 178; /* #9AA4B2 */
+    --light-fg: 100 116 139;       /* #64748B */
+    --light-fg-muted: 148 163 184; /* #94A3B8 */
     
     /* Semantic colors */
     --success: 22 163 74;          /* #16A34A */

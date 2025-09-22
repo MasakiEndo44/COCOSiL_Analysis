@@ -49,7 +49,7 @@ describe('/api/ai/admin-prompt', () => {
   })
 
   test('should return 400 for incomplete data', async () => {
-    const incompleteData = { ...mockUserData }
+    const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
     delete incompleteData.basic
 
     const request = new NextRequest('http://localhost:3000/api/ai/admin-prompt', {
@@ -97,7 +97,7 @@ describe('/api/ai/admin-prompt', () => {
     ]
 
     for (const testCase of testCases) {
-      const incompleteData = { ...mockUserData }
+      const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
       delete (incompleteData as any)[testCase.field]
 
       const request = new NextRequest('http://localhost:3000/api/ai/admin-prompt', {

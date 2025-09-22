@@ -47,7 +47,7 @@ describe('/api/ai/summary', () => {
   })
 
   test('should return 400 for missing basic info', async () => {
-    const incompleteData = { ...mockUserData }
+    const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
     delete incompleteData.basic
 
     const request = new NextRequest('http://localhost:3000/api/ai/summary', {
@@ -66,7 +66,7 @@ describe('/api/ai/summary', () => {
   })
 
   test('should return 400 for missing mbti data', async () => {
-    const incompleteData = { ...mockUserData }
+    const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
     delete incompleteData.mbti
 
     const request = new NextRequest('http://localhost:3000/api/ai/summary', {
@@ -82,7 +82,7 @@ describe('/api/ai/summary', () => {
   })
 
   test('should return 400 for missing taiheki data', async () => {
-    const incompleteData = { ...mockUserData }
+    const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
     delete incompleteData.taiheki
 
     const request = new NextRequest('http://localhost:3000/api/ai/summary', {
@@ -98,7 +98,7 @@ describe('/api/ai/summary', () => {
   })
 
   test('should return 400 for missing fortune data', async () => {
-    const incompleteData = { ...mockUserData }
+    const incompleteData: Partial<UserDiagnosisData> = { ...mockUserData }
     delete incompleteData.fortune
 
     const request = new NextRequest('http://localhost:3000/api/ai/summary', {

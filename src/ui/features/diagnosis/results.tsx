@@ -157,50 +157,71 @@ const getSimpleWordBank = () => {
         trait3: '感情的'
       },
       'ISFP': {
-        adjective: '芸術的な',
+        base: '芸術',
+        attributive: '芸術的な',
+        connective: '芸術的で',
         noun: '魂の人',
+        shortNoun: '魂の人',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '感情的'
       },
       'ESFJ': {
-        adjective: '思いやり深い',
+        base: '思いやり',
+        attributive: '思いやり深い',
+        connective: '思いやり深く',
         noun: '社交家',
+        shortNoun: '社交家',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ISFJ': {
-        adjective: '献身的な',
+        base: '献身',
+        attributive: '献身的な',
+        connective: '献身的で',
         noun: '守護者',
+        shortNoun: '守護者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ESTP': {
-        adjective: '行動的な',
+        base: '行動',
+        attributive: '行動的な',
+        connective: '行動的で',
         noun: '実行者',
+        shortNoun: '実行者',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '柔軟'
       },
       'ISTP': {
-        adjective: '職人気質の',
+        base: '職人',
+        attributive: '職人気質の',
+        connective: '職人気質で',
         noun: '技術者',
+        shortNoun: '技術者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '論理的'
       },
       'ESTJ': {
-        adjective: '実務的な',
+        base: '実務',
+        attributive: '実務的な',
+        connective: '実務的で',
         noun: '管理者',
+        shortNoun: '管理者',
         trait1: '外向的',
         trait2: '現実的',
         trait3: '計画的'
       },
       'ISTJ': {
-        adjective: '堅実な',
+        base: '堅実',
+        attributive: '堅実な',
+        connective: '堅実で',
         noun: '管理者',
+        shortNoun: '管理者',
         trait1: '内向的',
         trait2: '現実的',
         trait3: '計画的'
@@ -218,64 +239,91 @@ const getSimpleWordBank = () => {
         trait3: '集中力'
       },
       2: {
-        adjective: '協調性のある',
+        base: '協調',
+        attributive: '協調性のある',
+        connective: '協調性を持ち',
         noun: '調整役',
+        shortNoun: '調整役',
         trait1: '思考力',
         trait2: '共感力',
         trait3: '調和'
       },
       3: {
-        adjective: '明るく',
+        base: '明るさ',
+        attributive: '明るい',
+        connective: '明るく',
         noun: 'ムードメーカー',
+        shortNoun: 'ムードメーカー',
         trait1: '感情豊か',
         trait2: '楽しさ重視',
         trait3: '愛され'
       },
       4: {
-        adjective: '感性豊かな',
+        base: '感性',
+        attributive: '感性豊かな',
+        connective: '感性豊かで',
         noun: '芸術家',
+        shortNoun: '芸術家',
         trait1: '感情豊か',
         trait2: '内面世界',
         trait3: '美的感覚'
       },
       5: {
-        adjective: '行動的な',
+        base: '行動',
+        attributive: '行動的な',
+        connective: '行動的で',
         noun: '実業家',
+        shortNoun: '実業家',
         trait1: 'リーダーシップ',
         trait2: '実用重視',
         trait3: '常に動く'
       },
       6: {
-        adjective: 'ロマンチックな',
+        base: 'ロマン',
+        attributive: 'ロマンチックな',
+        connective: 'ロマンチックで',
         noun: '夢想家',
+        shortNoun: '夢想家',
         trait1: 'ロマンチスト',
         trait2: '想像力',
         trait3: 'ひねくれ'
       },
       7: {
-        adjective: '闘争心のある',
+        base: '闘争',
+        attributive: '闘争心のある',
+        connective: '闘争心を持ち',
         noun: '戦士',
+        shortNoun: '戦士',
         trait1: '闘争心',
         trait2: '経験重視',
         trait3: '勝ち負け'
       },
       8: {
-        adjective: '忍耐強い',
+        base: '忍耐',
+        attributive: '忍耐強い',
+        connective: '忍耐強く',
         noun: '支援者',
+        shortNoun: '支援者',
         trait1: '正義感',
         trait2: '我慢強い',
         trait3: '安定感'
       },
       9: {
-        adjective: '完璧主義の',
+        base: '完璧',
+        attributive: '完璧主義の',
+        connective: '完璧主義で',
         noun: '専門家',
+        shortNoun: '専門家',
         trait1: '職人気質',
         trait2: '完璧主義',
         trait3: '集中力'
       },
       10: {
-        adjective: '包容力のある',
+        base: '包容',
+        attributive: '包容力のある',
+        connective: '包容力を持ち',
         noun: '母性型',
+        shortNoun: '母性型',
         trait1: '安定感',
         trait2: '包容力',
         trait3: '母性'
@@ -343,16 +391,22 @@ const getSimpleWordBank = () => {
       },
       '蠍座': {
         element: '水',
-        adjective: '神秘的な',
+        base: '神秘',
+        attributive: '神秘的な',
+        connective: '神秘的で',
         noun: '洞察者',
+        shortNoun: '洞察者',
         trait1: '集中力',
         trait2: '深い愛情',
         trait3: '洞察力'
       },
       '射手座': {
         element: '火',
-        adjective: '自由な',
+        base: '自由',
+        attributive: '自由な',
+        connective: '自由で',
         noun: '冒険家',
+        shortNoun: '冒険家',
         trait1: '楽観的',
         trait2: '向学心',
         trait3: '自由愛好'
@@ -431,6 +485,23 @@ const generateNaturalCatchphrase = (
   zodiacData: any
 ): string => {
 
+  // Safe accessor functions for vocabulary data with fallbacks
+  const getAttributive = (data: any): string => {
+    return data?.attributive || data?.adjective || '多面的な';
+  };
+
+  const getNoun = (data: any): string => {
+    return data?.shortNoun || data?.noun || 'タイプ';
+  };
+
+  const getBase = (data: any): string => {
+    return data?.base || data?.adjective?.replace(/な$|の$/, '') || '個性';
+  };
+
+  const getConnective = (data: any): string => {
+    return data?.connective || data?.adjective?.replace(/な$/, 'で') || '多面的で';
+  };
+
   // Helper function to ensure length is appropriate (15-20 characters)
   const adjustLength = (phrase: string, maxLength: number = 20): string => {
     if (phrase.length <= maxLength) return phrase;
@@ -458,34 +529,33 @@ const generateNaturalCatchphrase = (
 
   // Priority: MBTI + Taiheki > MBTI + Zodiac > Single source
   if (mbtiData && taihekiData) {
-    // Try different combinations for best fit
+    // Try different combinations for best fit using safe accessors
     const options = [
-      `${mbtiData.attributive}${taihekiData.noun}`, // 最も自然：情熱的な思考家
-      `${mbtiData.attributive}${taihekiData.shortNoun || taihekiData.noun}`, // 短縮版：情熱的な思考家
-      `${mbtiData.base}に満ちた${taihekiData.noun}`, // 感情的：情熱に満ちた思考家
-      generatePattern(mbtiData.connective, taihekiData.noun), // 接続：情熱的で思考家
+      `${getAttributive(mbtiData)}${getNoun(taihekiData)}`, // 最も自然：情熱的な思考家
+      `${getBase(mbtiData)}に満ちた${getNoun(taihekiData)}`, // 感情的：情熱に満ちた思考家
+      generatePattern(getConnective(mbtiData), getNoun(taihekiData)), // 接続：情熱的で思考家
     ];
 
     // Find the best option that fits length requirements
     for (const option of options) {
-      if (option.length >= 10 && option.length <= 20) {
+      if (option.length >= 8 && option.length <= 20) {
         return option;
       }
     }
     return adjustLength(options[0]);
 
   } else if (mbtiData && zodiacData) {
-    const result = `${mbtiData.attributive}${zodiacData.shortNoun || zodiacData.noun}`;
+    const result = `${getAttributive(mbtiData)}${getNoun(zodiacData)}`;
     return adjustLength(result);
 
   } else if (mbtiData) {
-    return adjustLength(`${mbtiData.attributive}${mbtiData.shortNoun || mbtiData.noun}`);
+    return adjustLength(`${getAttributive(mbtiData)}${getNoun(mbtiData)}`);
 
   } else if (taihekiData) {
-    return adjustLength(`${taihekiData.attributive}${taihekiData.shortNoun || taihekiData.noun}`);
+    return adjustLength(`${getAttributive(taihekiData)}${getNoun(taihekiData)}`);
 
   } else if (zodiacData) {
-    return adjustLength(`${zodiacData.attributive}${zodiacData.shortNoun || zodiacData.noun}`);
+    return adjustLength(`${getAttributive(zodiacData)}${getNoun(zodiacData)}`);
 
   } else {
     return 'バランス型の個性';
@@ -631,7 +701,7 @@ export default function DiagnosisResults() {
   if (!basicInfo || !fortuneResult) {
     return (
       <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
         <p className="text-light-fg-muted">診断結果を生成中...</p>
       </div>
     );

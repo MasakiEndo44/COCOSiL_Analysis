@@ -131,7 +131,7 @@ test.describe('レスポンシブデザイン', () => {
 
     // スクロール可能性確認
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await expect(page.locator('[data-dev-tag*="CTA"]')).toBeVisible();
+    await expect(page.getByRole('link', { name: /診断を開始/ })).toBeVisible();
   });
 
   test('タブレットビューポート（768px）', async ({ page }) => {

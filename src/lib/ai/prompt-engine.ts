@@ -1,0 +1,208 @@
+/**
+ * Integrated Prompt Engine for COCOSiL AI Chat
+ * Phase 1: 基盤改善 - Dynamic token management and unified prompt generation
+ */
+
+interface DiagnosisData {
+  mbti: string;
+  taiheki: { primary: number; secondary: number };
+  fortune: { animal: string; sixStar: string };
+  basic: { age: number; name: string };
+}
+
+interface PromptContext {
+  topic: string;
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
+  complexity: number; // 1-3 scale for conversation complexity
+  priority: 'speed' | 'quality';
+}
+
+/**
+ * IntegratedPromptEngine - Core class for unified prompt generation
+ * Implements 4-diagnosis integration with strict quality guidelines
+ */
+export class IntegratedPromptEngine {
+  /**
+   * Generate system prompt integrating all 4 diagnosis types
+   * Enforces 相槌禁止 and 本質分析特化 requirements
+   */
+  generateSystemPrompt(userData: DiagnosisData, topic: string): string {
+    return `あなたは統合診断に基づく専門カウンセラーです。
+
+## 禁止事項（厳格遵守）
+- 相槌や挨拶は一切禁止（「そうですね」「なるほど」「よくわかります」等）
+- 一般的な励ましや慰めは不要（「がんばって」「大丈夫」「きっと」等）
+- 表面的な質問は避ける
+- 複数の質問を一度に投げかけない
+
+## 実行指示
+1. ${userData.mbti}型の思考パターンと意思決定スタイルを深く考慮
+2. 体癖${userData.taiheki.primary}種の身体的傾向と心理的特性を分析
+3. ${userData.fortune.animal}の性格特性と行動パターンを統合
+4. ${userData.fortune.sixStar}の運命傾向と人生の課題を加味
+5. ${topic}における根本原因を3層掘り下げて質問
+
+## 応答形式（必須）
+- 最重要質問1つのみ
+- 具体的状況の深掘り
+- 300-400文字で簡潔に
+- 診断結果に基づいた個別化された質問
+
+## 分析アプローチ
+- ${this.getMBTIAnalysisPrompt(userData.mbti)}
+- ${this.getTaihekiAnalysisPrompt(userData.taiheki.primary)}
+- ${this.getFortuneAnalysisPrompt(userData.fortune)}
+
+## 質問の深度設定
+真因分析のため、以下の順序で深掘りを実施：
+1. 表面的な症状の確認
+2. 背景にある構造的な問題の特定
+3. 根本的な価値観や思考パターンの探索`;
+  }
+
+  /**
+   * Calculate optimal token count based on context and complexity
+   * Replaces fixed 150 token limit with dynamic 300-800 range
+   */
+  calculateOptimalTokens(context: string, complexity: number, priority: 'speed' | 'quality' = 'quality'): number {
+    const baseTokens = priority === 'speed' ? 300 : 400;
+    const contextLength = context.length;
+    
+    // Context multiplier: longer conversations need more tokens
+    const contextMultiplier = Math.min(contextLength / 1000, 2.0);
+    
+    // Complexity bonus: complex topics need deeper responses
+    const complexityBonus = complexity * 100;
+    
+    // Calculate with ceiling at 800 tokens
+    const calculatedTokens = baseTokens + (contextMultiplier * 100) + complexityBonus;
+    
+    return Math.min(Math.max(calculatedTokens, 300), 800);
+  }
+
+  /**
+   * Assess conversation complexity based on topic and history
+   */
+  assessComplexity(topic: string, conversationHistory: Array<{ content: string }>): number {
+    const complexTopics = ['人間関係', 'キャリア', '将来'];
+    const isComplexTopic = complexTopics.includes(topic) ? 1 : 0;
+    
+    const conversationLength = conversationHistory.length;
+    const lengthComplexity = Math.min(conversationLength / 4, 2);
+    
+    const deepKeywords = ['なぜ', '根本的', '本質的', '価値観', '信念'];
+    const deepnessScore = conversationHistory.reduce((score, msg) => {
+      const matches = deepKeywords.filter(keyword => msg.content.includes(keyword)).length;
+      return score + matches;
+    }, 0);
+    const deepnessComplexity = Math.min(deepnessScore / 3, 1);
+    
+    return Math.min(isComplexTopic + lengthComplexity + deepnessComplexity, 3);
+  }
+
+  /**
+   * Generate MBTI-specific analysis prompt
+   */
+  private getMBTIAnalysisPrompt(mbtiType: string): string {
+    const mbtiPrompts: Record<string, string> = {
+      'INTJ': '戦略的思考と長期計画に焦点を当て、システム改善の視点から質問',
+      'ENFP': '可能性と人間関係の価値を重視し、創造的解決策を探る質問',
+      'ISTJ': '具体的事実と実践的解決策に基づく、段階的アプローチの質問',
+      'ESFJ': '人間関係の調和と他者への配慮を考慮した、共感的な質問',
+      // 他のMBTIタイプも同様に定義
+    };
+    
+    return mbtiPrompts[mbtiType] || '思考パターンと価値観に基づいた個別化された質問';
+  }
+
+  /**
+   * Generate Taiheki-specific analysis prompt
+   */
+  private getTaihekiAnalysisPrompt(primaryType: number): string {
+    const taihekiPrompts: Record<number, string> = {
+      1: '上下型：上昇志向と権威への関心を考慮し、目標達成に関する質問',
+      2: '左右型：バランス感覚と調和を重視し、対人関係の均衡に関する質問',
+      3: '前後型：積極性と慎重さのバランスを考慮し、行動パターンに関する質問',
+      4: '捻れ型：独創性と変化への対応を重視し、適応戦略に関する質問',
+      5: '開閉型：開放性と内省のバランスを考慮し、コミュニケーションに関する質問',
+      // 他の体癖タイプも同様に定義
+    };
+    
+    return taihekiPrompts[primaryType] || '身体的特性と心理傾向に基づいた質問';
+  }
+
+  /**
+   * Generate Fortune-specific analysis prompt
+   */
+  private getFortuneAnalysisPrompt(fortune: { animal: string; sixStar: string }): string {
+    return `${fortune.animal}の特性（${this.getAnimalCharacteristics(fortune.animal)}）と${fortune.sixStar}の運命傾向を統合した質問`;
+  }
+
+  /**
+   * Get animal-specific characteristics for prompt generation
+   */
+  private getAnimalCharacteristics(animal: string): string {
+    const characteristics: Record<string, string> = {
+      '子（ネズミ）': '機敏性と適応力',
+      '丑（ウシ）': '忍耐力と着実性',
+      '寅（トラ）': '勇気と行動力',
+      '卯（ウサギ）': '優雅さと協調性',
+      '辰（龍）': 'リーダーシップと理想主義',
+      '巳（ヘビ）': '洞察力と慎重性',
+      '午（ウマ）': '自由奔放さと情熱',
+      '未（ヒツジ）': '温和さと芸術性',
+      '申（サル）': '知恵と創造性',
+      '酉（トリ）': '几帳面さと正義感',
+      '戌（イヌ）': '忠実さと責任感',
+      '亥（イノシシ）': '直進性と情熱'
+    };
+    
+    return characteristics[animal] || '個性的特性';
+  }
+
+  /**
+   * Generate context-aware prompt with conversation history
+   */
+  generateContextualPrompt(
+    userData: DiagnosisData,
+    context: PromptContext
+  ): { systemPrompt: string; maxTokens: number; temperature: number } {
+    const systemPrompt = this.generateSystemPrompt(userData, context.topic);
+    const complexity = this.assessComplexity(context.topic, context.conversationHistory);
+    const maxTokens = this.calculateOptimalTokens(
+      context.conversationHistory.map(msg => msg.content).join(' '),
+      complexity,
+      context.priority
+    );
+    
+    // Temperature調整: 複雑な話題ほど創造性を要求
+    const temperature = Math.min(0.3 + (complexity * 0.2), 0.7);
+    
+    return {
+      systemPrompt,
+      maxTokens,
+      temperature
+    };
+  }
+}
+
+/**
+ * Factory function for creating IntegratedPromptEngine instances
+ */
+export function createPromptEngine(): IntegratedPromptEngine {
+  return new IntegratedPromptEngine();
+}
+
+/**
+ * Utility function for validating diagnosis data completeness
+ */
+export function validateDiagnosisData(data: Partial<DiagnosisData>): data is DiagnosisData {
+  return !!(
+    data.mbti &&
+    data.taiheki?.primary &&
+    data.fortune?.animal &&
+    data.fortune?.sixStar &&
+    data.basic?.age &&
+    data.basic?.name
+  );
+}

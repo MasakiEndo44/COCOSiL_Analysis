@@ -1,6 +1,5 @@
 'use client';
 
-import { ComponentTag } from '@/lib/dev-tag';
 import { TaihekiNavigationSidebar } from './taiheki-navigation-sidebar';
 import { TaihekiBreadcrumbs } from './taiheki-breadcrumbs';
 

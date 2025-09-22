@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PageTag } from '@/lib/dev-tag';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import type { ChatSession } from '@/types';
 import { generateSessionId } from '@/lib/utils';
@@ -142,26 +141,7 @@ export default function ChatPage() {
       // AbortControllerを作成
       abortControllerRef.current = new AbortController();
       
-      const systemPrompt = `
-あなたはCOCOSiL診断システムのAI相談員です。以下の診断結果を持つ方の相談に乗ってください：
-
-## 診断データ
-- 年齢: ${userData.basic.age}歳
-- MBTI: ${userData.mbti?.type}
-- 体癖: 主体癖${userData.taiheki?.primary}種・副体癖${userData.taiheki?.secondary}種
-- 動物占い: ${userData.fortune?.animal}
-- 算命学: ${userData.fortune?.sixStar}
-
-## 相談方針
-1. 診断結果を統合した個別化アドバイス
-2. 実用的で具体的な改善提案
-3. ユーザーの自律性を重視
-4. 医療的判断は一切行わない
-5. 温かく共感的な態度で対応
-
-前回までの会話を踏まえて、自然な対話を続けてください。
-`;
-
+      // IntegratedPromptEngine handles system prompt generation
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
@@ -169,10 +149,26 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: systemPrompt },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: userMessage }
           ],
+          diagnosisData: {
+            mbti: userData.mbti?.type || '',
+            taiheki: {
+              primary: userData.taiheki?.primary || 1,
+              secondary: userData.taiheki?.secondary || 1
+            },
+            fortune: {
+              animal: userData.fortune?.animal || '',
+              sixStar: userData.fortune?.sixStar || ''
+            },
+            basic: {
+              age: userData.basic?.age || 0,
+              name: userData.basic?.name || ''
+            }
+          },
+          topic: selectedTopic || 'relationship',
+          priority: 'quality',
           stream: true
         }),
         signal: abortControllerRef.current.signal
@@ -353,7 +349,6 @@ export default function ChatPage() {
   }
 
   return (
-    <PageTag route="/diagnosis/chat" description="AI相談チャット - Claude診断結果連携">
       <div className="flex flex-col h-screen bg-surface">
       {/* Header */}
       <div className="bg-white border-b border-border p-4">
@@ -466,6 +461,5 @@ export default function ChatPage() {
         </>
       )}
     </div>
-    </PageTag>
   );
 }

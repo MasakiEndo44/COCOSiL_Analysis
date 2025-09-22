@@ -36,7 +36,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('プロンプトが正しく表示される', () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     expect(screen.getByText('振り返りと考察')).toBeInTheDocument()
     expect(screen.getByText('理解度')).toBeInTheDocument()
@@ -44,7 +44,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('テキストエリアに入力できる', () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     fireEvent.change(textarea, { target: { value: 'テスト入力です' } })
@@ -53,7 +53,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('文字数カウントが正しく表示される', () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     fireEvent.change(textarea, { target: { value: 'テスト' } })
@@ -62,7 +62,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('プロンプトを切り替えできる', async () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding', 'growth-mindset']} />)
     
     // 2番目のプロンプトに切り替え
     fireEvent.click(screen.getByText('感想'))
@@ -73,7 +73,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('保存ボタンが機能する', async () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     fireEvent.change(textarea, { target: { value: 'テスト回答' } })
@@ -95,14 +95,14 @@ describe('ReflectionPrompt Component', () => {
       1: ' 保存されたテキスト'
     }))
     
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     expect(textarea).toHaveValue('保存されたテキスト')
   })
 
   it('リセットボタンが機能する', async () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     fireEvent.change(textarea, { target: { value: 'リセット対象のテキスト' } })
@@ -118,7 +118,7 @@ describe('ReflectionPrompt Component', () => {
   it('自動保存が機能する', async () => {
     jest.useFakeTimers()
     
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const textarea = screen.getByPlaceholderText('ここに記録してください...')
     fireEvent.change(textarea, { target: { value: '自動保存テスト' } })
@@ -134,7 +134,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('プロンプトが空の場合にエラーメッセージを表示する', () => {
-    render(<ReflectionPrompt prompts={[]} />)
+    render(<ReflectionPrompt selectedPrompts={[]} />)
     
     expect(screen.getByText('プロンプトが設定されていません')).toBeInTheDocument()
   })
@@ -146,7 +146,7 @@ describe('ReflectionPrompt Component', () => {
       { id: 3, category: "感想", question: "感想について" }
     ]
     
-    render(<ReflectionPrompt prompts={mixedPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding', 'growth-mindset']} />)
     
     // 理解度カテゴリが表示される
     expect(screen.getByText('理解度')).toBeInTheDocument()
@@ -157,7 +157,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('長いテキストでも適切に処理される', () => {
-    render(<ReflectionPrompt prompts={mockPrompts} />)
+    render(<ReflectionPrompt selectedPrompts={['self-understanding']} />)
     
     const longText = 'あ'.repeat(1000)
     const textarea = screen.getByPlaceholderText('ここに記録してください...')

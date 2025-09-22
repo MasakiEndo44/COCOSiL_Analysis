@@ -348,3 +348,67 @@ import { DiagnosisData } from '@/types';           // Types
 
 import './component.css';               // Styles (last)
 ```
+
+## Styling & CSS Guidelines (Prevention Rules)
+
+**Critical styling rules to prevent UI regression issues:**
+
+### Tailwind CSS Class Validation
+- **ALWAYS verify** Tailwind classes exist before using them in components
+- **NEVER use undefined** color tokens like `text-light-fg`, `border-brand-primary` without first defining them in:
+  1. `tailwind.config.ts` - Add token definitions with CSS variable references
+  2. `src/app/globals.css` - Add corresponding CSS custom properties
+- **VALIDATE before commit**: Run `npm run build` to ensure all Tailwind classes compile correctly
+
+### CSS Token Management
+```typescript
+// Required pattern for new color tokens in tailwind.config.ts
+colors: {
+  'token-name': 'rgb(var(--token-name) / <alpha-value>)',
+}
+
+// Corresponding CSS variables in globals.css
+:root {
+  --token-name: R G B; /* RGB values space-separated */
+}
+```
+
+### Pre-Implementation Checklist
+**Before adding new styling classes:**
+1. Check if token exists in `tailwind.config.ts`
+2. Verify CSS variable is defined in `globals.css`
+3. Use existing design system tokens when possible
+4. Test with `npm run build` before commit
+
+### Common Undefined Class Patterns (AVOID)
+```scss
+// ❌ NEVER use these undefined patterns:
+text-light-fg              // Use: text-muted-foreground or text-secondary-foreground
+text-light-fg-muted        // Define in config first or use existing tokens
+border-brand-primary       // Use: border-brand-500 or specific brand token
+border-brand-300           // Define --brand-300 CSS variable first
+bg-surface-light           // Use: bg-surface or define if needed
+
+// ✅ ALWAYS use defined tokens:
+text-foreground            // Defined main text color
+text-muted-foreground      // Defined muted text color
+border-brand-500           // Defined brand border color
+bg-surface                 // Defined surface background
+```
+
+### Design System Integrity
+- **Follow existing patterns**: Check similar components for color token usage
+- **Maintain consistency**: Use the established brand color scale (25, 50, 100, 200, 300, 500, 600, 700, 800, 900)
+- **Document new tokens**: Add comments in CSS files explaining token purpose
+
+### Debug Commands for Styling Issues
+```bash
+# Validate Tailwind compilation
+npm run build
+
+# Clear Next.js cache if styles not updating
+rm -rf .next && npm run dev
+
+# Check for undefined Tailwind classes
+grep -r "text-.*undefined\|border-.*undefined\|bg-.*undefined" src/
+```

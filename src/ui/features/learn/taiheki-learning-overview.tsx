@@ -2,7 +2,6 @@
 
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
 import { Button } from '@/ui/components/ui/button';
-import { ComponentTag } from '@/lib/dev-tag';
 import Link from 'next/link';
 import { CheckCircle, Clock, BookOpen, ArrowRight } from 'lucide-react';
 

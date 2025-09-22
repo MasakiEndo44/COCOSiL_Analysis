@@ -20,9 +20,11 @@ describe('MBTI Questions and Calculation', () => {
         
         question.choices.forEach(choice => {
           expect(choice).toHaveProperty('text')
-          expect(choice).toHaveProperty('value')
+          expect(choice).toHaveProperty('type')
+          expect(choice).toHaveProperty('weight')
           expect(typeof choice.text).toBe('string')
-          expect([0, 1]).toContain(choice.value)
+          expect(['E', 'I', 'S', 'N', 'T', 'F', 'J', 'P']).toContain(choice.type)
+          expect(typeof choice.weight).toBe('number')
         })
       })
     })

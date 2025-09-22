@@ -63,7 +63,7 @@ export function TaihekiSelection({ onSelect }: TaihekiSelectionProps) {
       </div>
 
       {/* Selection Options */}
-      <div className="max-w-4xl mx-auto grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+      <div className="max-w-3xl mx-auto grid gap-6 sm:grid-cols-2">
         {options.map((option) => (
           <div key={option.id} className="relative">
             {option.recommended && (

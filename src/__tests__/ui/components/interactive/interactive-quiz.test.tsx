@@ -7,21 +7,23 @@ import { InteractiveQuiz } from '@/ui/components/interactive/interactive-quiz'
 jest.mock('@/lib/zustand/learning-store', () => ({
   useLearningStore: jest.fn(() => ({
     updateQuizScore: jest.fn(),
+    setQuizScore: jest.fn(),
     getQuizScore: jest.fn(() => null),
+    progress: 0,
   })),
 }))
 
 const mockQuestions = [
   {
-    id: 1,
+    id: 'q1',
     question: "テスト質問1",
     options: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
     correct: 0,
     explanation: "これはテスト用の解説です。"
   },
   {
-    id: 2,
-    question: "テスト質問2", 
+    id: 'q2',
+    question: "テスト質問2",
     options: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
     correct: 2,
     explanation: "2番目の質問の解説です。"
@@ -30,7 +32,7 @@ const mockQuestions = [
 
 describe('InteractiveQuiz Component', () => {
   it('最初の質問を正しく表示する', () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     expect(screen.getByText('テスト質問1')).toBeInTheDocument()
     expect(screen.getByText('選択肢1')).toBeInTheDocument()
@@ -40,7 +42,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('進捗バーが正しく表示される', () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     expect(screen.getByText('質問 1 / 2')).toBeInTheDocument()
     const progressBar = screen.getByRole('progressbar')
@@ -49,7 +51,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('選択肢をクリックして回答できる', async () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     const firstOption = screen.getByText('選択肢1')
     fireEvent.click(firstOption)
@@ -59,7 +61,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('回答後に次の質問へ進める', async () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     // 最初の質問に回答
     const firstOption = screen.getByText('選択肢1')
@@ -76,7 +78,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('最後の質問後に結果を表示する', async () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     // 1問目に正解
     const firstCorrect = screen.getByText('選択肢1')
@@ -101,7 +103,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('解説が正しく表示される', async () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     // 回答を選択
     const option = screen.getByText('選択肢1')
@@ -112,7 +114,7 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('もう一度挑戦ボタンが機能する', async () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     // クイズを完了
     fireEvent.click(screen.getByText('選択肢1'))
@@ -140,13 +142,13 @@ describe('InteractiveQuiz Component', () => {
   })
 
   it('質問が空の場合にエラーハンドリングする', () => {
-    render(<InteractiveQuiz questions={[]} />)
+    render(<InteractiveQuiz id="empty-quiz" questions={[]} />)
     
     expect(screen.getByText('質問が設定されていません')).toBeInTheDocument()
   })
 
   it('アクセシビリティ属性が適切に設定されている', () => {
-    render(<InteractiveQuiz questions={mockQuestions} />)
+    render(<InteractiveQuiz id="test-quiz" questions={mockQuestions} />)
     
     // ARIA属性の確認
     const progressBar = screen.getByRole('progressbar')

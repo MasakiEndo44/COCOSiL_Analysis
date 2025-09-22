@@ -1,0 +1,226 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - main [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]:
+            - generic [ref=e9]:
+              - img "COCOSiL（ココシル）ロゴ - 幾何学的ハートマーク" [ref=e11]
+              - heading "COCOSiL （ココシル）" [level=1] [ref=e12]:
+                - text: COCOSiL
+                - generic [ref=e13]: （ココシル）
+              - paragraph [ref=e14]:
+                - text: 体癖理論・MBTI・算命学・動物占い・星座占いをAI統合した
+                - text: 科学的根拠に基づく包括的な人間理解プラットフォーム
+              - paragraph [ref=e15]: 特に28-34歳女性の自己理解とキャリア・恋愛の悩み解決をサポート
+            - generic [ref=e16]:
+              - generic [ref=e17]:
+                - img [ref=e19]
+                - heading "AI統合診断" [level=3] [ref=e22]
+                - paragraph [ref=e23]: 5つの診断手法をAIが統合した科学的で包括的な分析
+              - generic [ref=e24]:
+                - img [ref=e26]
+                - heading "プライバシー保護" [level=3] [ref=e28]
+                - paragraph [ref=e29]: 個人データを30日後に自動削除
+              - generic [ref=e30]:
+                - img [ref=e32]
+                - heading "即時結果" [level=3] [ref=e34]
+                - paragraph [ref=e35]: 診断完了後すぐに結果を確認
+            - link "診断を始める" [ref=e37] [cursor=pointer]:
+              - /url: /diagnosis
+              - button "診断を始める" [ref=e38] [cursor=pointer]
+            - paragraph [ref=e40]: 診断時間：約15-20分 | 基本診断無料・詳細分析は月額500円〜
+          - button "🏷️ <LandingHero>• feature" [ref=e41] [cursor=pointer]:
+            - text: 🏷️ <LandingHero>
+            - generic [ref=e42] [cursor=pointer]: • feature
+        - button "🏷️ Hero• メインビジュアル・タイトル" [ref=e43] [cursor=pointer]:
+          - text: 🏷️ Hero
+          - generic [ref=e44] [cursor=pointer]: • メインビジュアル・タイトル
+      - generic [ref=e45]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - heading "AI統合による5つの診断手法" [level=2] [ref=e50]
+            - paragraph [ref=e51]: 体癖理論・MBTI・動物占い・星座占い・6星占術をAIが統合分析。異なる理論体系の診断を組み合わせることで、より立体的で正確な自己理解が可能になります。
+          - generic [ref=e52]:
+            - generic [ref=e54]:
+              - img [ref=e56]
+              - generic [ref=e58]:
+                - heading "体癖理論" [level=3] [ref=e59]
+                - paragraph [ref=e60]: 野口整体の体癖理論に基づく20問の診断で、あなたの身体的・心理的特徴を分析します。
+            - generic [ref=e62]:
+              - img [ref=e64]
+              - generic [ref=e66]:
+                - heading "MBTI" [level=3] [ref=e67]
+                - paragraph [ref=e68]: 16の性格タイプから、あなたの心理的傾向と思考パターンを明らかにします。
+            - generic [ref=e70]:
+              - img [ref=e72]
+              - generic [ref=e74]:
+                - heading "動物占い" [level=3] [ref=e75]
+                - paragraph [ref=e76]: 生年月日から60種類の動物キャラクターで性格と運勢の傾向を読み解きます。
+            - generic [ref=e78]:
+              - img [ref=e80]
+              - generic [ref=e82]:
+                - heading "星座占い" [level=3] [ref=e83]
+                - paragraph [ref=e84]: 12星座の特性から西洋占星術的な性格傾向を読み解きます。
+            - generic [ref=e86]:
+              - img [ref=e88]
+              - generic [ref=e90]:
+                - heading "6星占術" [level=3] [ref=e91]
+                - paragraph [ref=e92]: 算命学をベースにした6つの星人タイプで運勢と性格の周期性を分析します。
+          - generic [ref=e94]:
+            - heading "なぜAI統合診断なのか？" [level=3] [ref=e95]
+            - paragraph [ref=e96]: 単一の診断では見えない多面的な人間性を、AIが5つの理論を統合し複数の視点から捉えることで、 より深く正確な自己理解と成長のヒントを得ることができます。
+          - generic [ref=e98]:
+            - heading "料金プラン" [level=3] [ref=e99]
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - heading "基本診断" [level=4] [ref=e102]
+                - paragraph [ref=e103]: 無料
+                - paragraph [ref=e104]: 基本的な診断結果とAI分析
+              - generic [ref=e105]:
+                - generic [ref=e106]: おすすめ
+                - heading "詳細分析" [level=4] [ref=e107]
+                - paragraph [ref=e108]:
+                  - text: ¥500
+                  - generic [ref=e109]: /月
+                - paragraph [ref=e110]: 詳細レポート・日次アドバイス
+              - generic [ref=e111]:
+                - heading "プレミアム" [level=4] [ref=e112]
+                - paragraph [ref=e113]:
+                  - text: ¥800
+                  - generic [ref=e114]: /月
+                - paragraph [ref=e115]: 無制限AI相談・専門家監修
+        - button "🏷️ Features• 機能紹介・統合診断システム" [ref=e116] [cursor=pointer]:
+          - text: 🏷️ Features
+          - generic [ref=e117] [cursor=pointer]: • 機能紹介・統合診断システム
+      - generic [ref=e118]:
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - heading "診断の流れ" [level=2] [ref=e122]
+            - paragraph [ref=e123]: 5つのステップで、AIが統合した包括的な分析結果を導き出します。
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - generic [ref=e127]: "1"
+                - generic [ref=e128]:
+                  - generic [ref=e129]:
+                    - heading "基本情報入力" [level=3] [ref=e130]
+                    - generic [ref=e131]: 2分
+                  - paragraph [ref=e132]: 名前・生年月日・既知の診断結果を入力（星座・算命学・動物占いを自動算出）
+              - img [ref=e135]
+            - generic [ref=e137]:
+              - generic [ref=e138]:
+                - generic [ref=e139]: "2"
+                - generic [ref=e140]:
+                  - generic [ref=e141]:
+                    - heading "MBTI診断" [level=3] [ref=e142]
+                    - generic [ref=e143]: 5分
+                  - paragraph [ref=e144]: 12問の質問で性格タイプを判定
+              - img [ref=e147]
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - text: "3"
+                  - generic [ref=e152]: 任意
+                - generic [ref=e153]:
+                  - generic [ref=e154]:
+                    - heading "体癖理論学習" [level=3] [ref=e155]
+                    - generic [ref=e156]: 5分
+                  - paragraph [ref=e157]: 診断前に体癖の基礎を学習（任意）
+              - img [ref=e160]
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]: "4"
+                - generic [ref=e165]:
+                  - generic [ref=e166]:
+                    - heading "体癖診断" [level=3] [ref=e167]
+                    - generic [ref=e168]: 8分
+                  - paragraph [ref=e169]: 20問の質問で体癖タイプを判定
+              - img [ref=e172]
+            - generic [ref=e175]:
+              - generic [ref=e176]: "5"
+              - generic [ref=e177]:
+                - generic [ref=e178]:
+                  - heading "AI統合分析" [level=3] [ref=e179]
+                  - generic [ref=e180]: 即時
+                - paragraph [ref=e181]: 全5つの診断結果をAIが統合分析・詳細結果を表示
+          - generic [ref=e184]: 総所要時間：約15-20分
+        - button "🏷️ Flow• 診断フローの説明" [ref=e185] [cursor=pointer]:
+          - text: 🏷️ Flow
+          - generic [ref=e186] [cursor=pointer]: • 診断フローの説明
+      - generic [ref=e187]:
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - img [ref=e193]
+            - heading "プライバシーへの配慮" [level=2] [ref=e195]
+            - paragraph [ref=e196]: あなたの個人情報とプライバシーを最優先に保護します。
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - img [ref=e200]
+              - generic [ref=e202]:
+                - heading "データ自動削除" [level=3] [ref=e203]
+                - paragraph [ref=e204]: 個人情報は診断完了から30日後に自動的に削除されます。
+            - generic [ref=e205]:
+              - img [ref=e207]
+              - generic [ref=e209]:
+                - heading "目的限定使用" [level=3] [ref=e210]
+                - paragraph [ref=e211]: 収集したデータは診断・分析目的以外には一切使用しません。
+            - generic [ref=e212]:
+              - img [ref=e214]
+              - generic [ref=e216]:
+                - heading "匿名化処理" [level=3] [ref=e217]
+                - paragraph [ref=e218]: 分析データは完全に匿名化され、個人を特定できません。
+            - generic [ref=e219]:
+              - img [ref=e221]
+              - generic [ref=e223]:
+                - heading "研究・改善のみ" [level=3] [ref=e224]
+                - paragraph [ref=e225]: 匿名化されたデータは診断精度向上の研究にのみ使用します。
+          - generic [ref=e227]:
+            - img [ref=e229]
+            - generic [ref=e231]:
+              - heading "重要：医療診断ではありません" [level=3] [ref=e232]
+              - paragraph [ref=e233]: この診断は自己理解を深めるための参考情報です。医療・心理学的診断や治療の代替にはなりません。 重要な人生の決定や健康に関わる問題については、必ず専門家にご相談ください。
+          - paragraph [ref=e235]:
+            - text: プライバシーに関するご質問やデータ削除のご要望は、
+            - link "privacy@cocosil.example.com" [ref=e236] [cursor=pointer]:
+              - /url: mailto:privacy@cocosil.example.com
+            - text: までお問い合わせください。
+        - button "🏷️ Privacy• 個人情報保護・使用目的" [ref=e237] [cursor=pointer]:
+          - text: 🏷️ Privacy
+          - generic [ref=e238] [cursor=pointer]: • 個人情報保護・使用目的
+      - generic [ref=e239]:
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - heading "準備はできましたか？" [level=2] [ref=e243]
+            - paragraph [ref=e244]: あなたの包括的な自己分析を始めましょう。約15-20分で完了します。
+          - link "診断を開始する" [ref=e248] [cursor=pointer]:
+            - /url: /diagnosis
+            - button "診断を開始する" [ref=e249] [cursor=pointer]:
+              - img [ref=e250] [cursor=pointer]
+              - text: 診断を開始する
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - img [ref=e254]
+              - generic [ref=e256]: 完全無料
+            - generic [ref=e257]:
+              - img [ref=e258]
+              - generic [ref=e260]: 15-20分
+            - generic [ref=e261]:
+              - img [ref=e262]
+              - generic [ref=e264]: 安全・匿名
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - generic [ref=e267]: 進捗状況
+              - generic [ref=e268]: 0%
+            - paragraph [ref=e270]: まだ診断を開始していません
+        - button "🏷️ CTA• 診断開始ボタン" [ref=e271] [cursor=pointer]:
+          - text: 🏷️ CTA
+          - generic [ref=e272] [cursor=pointer]: • 診断開始ボタン
+    - button "🏷️ /• ランディングページ - システム概要と診断開始" [ref=e273] [cursor=pointer]:
+      - text: 🏷️ /
+      - generic [ref=e274] [cursor=pointer]: • ランディングページ - システム概要と診断開始
+  - alert [ref=e275]
+```

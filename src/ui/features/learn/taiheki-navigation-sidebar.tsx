@@ -1,7 +1,6 @@
 'use client';
 
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
-import { ComponentTag } from '@/lib/dev-tag';
 import { Button } from '@/ui/components/ui/button';
 import { Progress } from '@/ui/components/ui/progress';
 import Link from 'next/link';

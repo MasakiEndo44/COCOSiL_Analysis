@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
-import { ComponentTag } from '@/lib/dev-tag';
 import { Button } from '@/ui/components/ui/button';
 import { Card } from '@/ui/components/ui/card';
 import { Progress } from '@/ui/components/ui/progress';

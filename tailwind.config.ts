@@ -16,6 +16,7 @@ const config: Config = {
           50: 'rgb(var(--brand-50) / <alpha-value>)',
           100: 'rgb(var(--brand-100) / <alpha-value>)',
           200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
           500: 'rgb(var(--brand-500) / <alpha-value>)',
           600: 'rgb(var(--brand-600) / <alpha-value>)',
           700: 'rgb(var(--brand-700) / <alpha-value>)',
@@ -35,6 +36,8 @@ const config: Config = {
         foreground: 'rgb(var(--foreground) / <alpha-value>)',
         'muted-foreground': 'rgb(var(--muted-foreground) / <alpha-value>)',
         'secondary-foreground': 'rgb(var(--secondary-foreground) / <alpha-value>)',
+        'light-fg': 'rgb(var(--light-fg) / <alpha-value>)',
+        'light-fg-muted': 'rgb(var(--light-fg-muted) / <alpha-value>)',
         
         // Semantic colors
         success: 'rgb(var(--success) / <alpha-value>)',

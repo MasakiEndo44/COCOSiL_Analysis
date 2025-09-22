@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { PageTag } from '@/lib/dev-tag';
 import { TaihekiSelection } from '@/ui/features/diagnosis/taiheki-selection';
 import { TaihekiGuide } from '@/ui/features/diagnosis/taiheki-guide';
 import { TaihekiDirectInput } from '@/ui/features/diagnosis/taiheki-direct-input';
@@ -39,9 +38,5 @@ export default function TaihekiDiagnosisPage() {
     }
   };
 
-  return (
-    <PageTag route="/diagnosis/taiheki" description="体癖診断 - 野口整体理論">
-      {renderContent()}
-    </PageTag>
-  );
+  return renderContent();
 }

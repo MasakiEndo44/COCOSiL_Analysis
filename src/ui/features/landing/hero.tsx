@@ -1,4 +1,3 @@
-import { ComponentTag } from '@/lib/dev-tag';
 import { Button } from '@/ui/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -6,7 +5,6 @@ import { CheckCircle, Shield, Zap } from 'lucide-react';
 
 export function LandingHero() {
   return (
-    <ComponentTag name="LandingHero" type="feature">
       <div className="text-center space-y-8">
       {/* Logo/Title */}
       <div className="space-y-4">
@@ -82,6 +80,5 @@ export function LandingHero() {
         </p>
       </div>
     </div>
-    </ComponentTag>
   );
 }
