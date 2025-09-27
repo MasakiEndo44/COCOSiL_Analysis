@@ -13,6 +13,10 @@ interface DiagnosisTableProps {
   onManageInterview?: (record: DiagnosisRecord) => void;
   userRole?: 'admin' | 'viewer';
   rowOffset?: number;
+  // Multi-select props
+  selectedIds?: Set<number>;
+  onToggleSelection?: (id: number) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export default function DiagnosisTable({
@@ -21,7 +25,10 @@ export default function DiagnosisTable({
   onDelete,
   onManageInterview,
   userRole = 'admin',
-  rowOffset = 0
+  rowOffset = 0,
+  selectedIds = new Set(),
+  onToggleSelection,
+  onToggleSelectAll
 }: DiagnosisTableProps) {
   const [selectedMarkdown, setSelectedMarkdown] = useState<{ record: DiagnosisRecord; isOpen: boolean }>({ record: {} as DiagnosisRecord, isOpen: false });
 
@@ -32,14 +39,6 @@ export default function DiagnosisTable({
   const handleCloseMarkdown = () => {
     setSelectedMarkdown({ record: {} as DiagnosisRecord, isOpen: false });
   };
-
-  if (records.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500">診断記録がありません。</p>
-      </div>
-    );
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ja-JP');
@@ -97,12 +96,39 @@ export default function DiagnosisTable({
     }
   };
 
+  if (records.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-8 text-center">
+        <p className="text-gray-500">診断記録がありません。</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              {/* Checkbox column for multi-select */}
+              {onToggleSelection && (
+                <th scope="col" className="w-10 px-3 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    checked={records.length > 0 && records.every(record => selectedIds.has(record.id))}
+                    ref={(input) => {
+                      if (input) {
+                        const someSelected = records.some(record => selectedIds.has(record.id));
+                        const allSelected = records.length > 0 && records.every(record => selectedIds.has(record.id));
+                        input.indeterminate = someSelected && !allSelected;
+                      }
+                    }}
+                    onChange={onToggleSelectAll}
+                    aria-label="Select all diagnoses"
+                  />
+                </th>
+              )}
               <th className="w-16 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 No.
               </th>
@@ -139,16 +165,32 @@ export default function DiagnosisTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {records.map((record, index) => (
-              <tr key={record.id} className="hover:bg-gray-50">
-                <td className="w-16 px-4 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
-                  {rowOffset + index + 1}
-                </td>
+            {records.map((record, index) => {
+              const isSelected = selectedIds.has(record.id);
+              const rowId = `record-${record.id}`;
+
+              return (
+                <tr key={record.id} className="hover:bg-gray-50" aria-selected={isSelected}>
+                  {/* Checkbox column */}
+                  {onToggleSelection && (
+                    <td className="w-10 px-3 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        checked={isSelected}
+                        onChange={() => onToggleSelection(record.id)}
+                        aria-labelledby={`${rowId}-label`}
+                      />
+                    </td>
+                  )}
+                  <td className="w-16 px-4 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                    {rowOffset + index + 1}
+                  </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatDate(record.date)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{record.name}</div>
+                  <div id={`${rowId}-label`} className="text-sm text-gray-900">{record.name}</div>
                   <div className="text-sm text-gray-500">
                     {record.age}歳 / {getGenderLabel(record.gender)}
                   </div>
@@ -251,7 +293,8 @@ export default function DiagnosisTable({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

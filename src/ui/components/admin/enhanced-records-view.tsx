@@ -50,6 +50,9 @@ export default function EnhancedRecordsView({
   // Multi-select state management
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Alert/notification state for better user feedback
+  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Debounce search query
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
@@ -196,27 +199,55 @@ export default function EnhancedRecordsView({
     }
 
     setIsDeleting(true);
+    setAlertMessage(null);
+    
     try {
       // Batch delete using existing individual delete API
-      const deletePromises = Array.from(selectedIds).map(id =>
-        fetch(`/api/admin/records/${id}`, { method: 'DELETE' })
-      );
+      const deletePromises = Array.from(selectedIds).map(async id => {
+        const response = await fetch(`/api/admin/records/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          throw new Error(`Failed to delete record ${id}: ${response.status} ${response.statusText}`);
+        }
+        return { id, success: true };
+      });
 
       const results = await Promise.allSettled(deletePromises);
-      const failures = results.filter(result => result.status === 'rejected').length;
+      const failures = results.filter(result => result.status === 'rejected');
+      const successes = results.filter(result => result.status === 'fulfilled');
 
-      if (failures > 0) {
-        alert(`${failures} 件の削除に失敗しました。`);
+      if (failures.length > 0) {
+        const ids = Array.from(selectedIds);
+        const failureDetails = failures.map((failure, index) => {
+          const recordId = ids[results.indexOf(failure)];
+          const errorMessage = failure.reason?.message || 'Unknown error';
+          return `Record ${recordId}: ${errorMessage}`;
+        }).join('\n');
+
+        setAlertMessage({
+          type: 'error',
+          message: `${failures.length} 件の削除に失敗しました。${successes.length} 件は正常に削除されました。\n詳細:\n${failureDetails}`
+        });
       } else {
-        alert(`${selectedCount} 件の診断記録を削除しました。`);
+        setAlertMessage({
+          type: 'success',
+          message: `${selectedCount} 件の診断記録を正常に削除しました。`
+        });
       }
 
       // Clear selection and refresh data
       clearSelection();
       await fetchRecords(currentPage, debouncedQuery);
+      
+      // Auto-hide success message after 5 seconds
+      if (failures.length === 0) {
+        setTimeout(() => setAlertMessage(null), 5000);
+      }
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('一括削除に失敗しました。');
+      setAlertMessage({
+        type: 'error',
+        message: `一括削除処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -369,6 +400,41 @@ export default function EnhancedRecordsView({
           </div>
         )}
       </div>
+
+      {/* Alert/Notification Section */}
+      {alertMessage && (
+        <div 
+          className={`rounded-lg p-4 ${
+            alertMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}
+          role="alert"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className={`font-medium ${
+            alertMessage.type === 'success' ? 'text-green-800' : 'text-red-800'
+          }`}>
+            {alertMessage.type === 'success' ? '成功' : 'エラー'}
+          </div>
+          <div className={`text-sm mt-1 whitespace-pre-line ${
+            alertMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {alertMessage.message}
+          </div>
+          {alertMessage.type === 'error' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setAlertMessage(null)} 
+              className="mt-3"
+            >
+              閉じる
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Results Section */}
       {error && (
