@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
 import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
+import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,15 +10,27 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const query = searchParams.get('query') || '';
     const skip = (page - 1) * limit;
+
+    // Build search condition
+    const whereCondition = query ? {
+      name: {
+        contains: query,
+        mode: 'insensitive' as const
+      }
+    } : {};
 
     const [records, total] = await Promise.all([
       adminDb.diagnosisRecord.findMany({
+        where: whereCondition,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
-      adminDb.diagnosisRecord.count(),
+      adminDb.diagnosisRecord.count({
+        where: whereCondition,
+      }),
     ]);
 
     return NextResponse.json({
@@ -80,6 +93,21 @@ export async function POST(request: NextRequest) {
         memo: data.memo,
       },
     });
+
+    // Generate and save markdown content
+    try {
+      const markdownContent = generateMarkdownFromRecord(record);
+      await adminDb.diagnosisRecord.update({
+        where: { id: record.id },
+        data: {
+          markdownContent,
+          markdownVersion: '1.0'
+        }
+      });
+    } catch (markdownError) {
+      console.error('Failed to generate markdown for new record:', markdownError);
+      // Continue without failing the entire operation
+    }
 
     return NextResponse.json({
       success: true,

@@ -7,35 +7,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateFortuneSimplified } from '@/lib/fortune/precision-calculator';
 import { getSupportedYearRange } from '@/lib/data/destiny-number-database';
+// Remove unused validation imports
 import {
   createRequestContext,
-  createSuccessResponse,
-  createErrorResponse,
-  createApiError,
-  validateInput,
-  validateDate,
-  checkRateLimit,
   PerformanceMonitor,
-  ValidationRule
+  checkRateLimit,
+  createErrorResponse,
+  createSuccessResponse,
+  createApiError,
+  validateDate,
+  ValidationRule,
+  validateInput
 } from '@/lib/api-utils';
-import {
-  FortuneCalculationRequest,
-  FortuneCalculationData,
-  ErrorCode
-} from '@/types/api';
+import { ErrorCode } from '@/lib/error/errorTypes';
+import type { FortuneCalcRequest, FortuneCalcResponse } from '@/types';
+import type { RequestContext } from '@/types/api';
 
 // Edge Runtime設定 (o3推奨)
 export const runtime = 'edge';
 export const preferredRegion = 'auto';
 
 // 入力バリデーションルール
+interface FortuneCalculationRequest {
+  year: number;
+  month: number;
+  day: number;
+  timezone?: string;
+}
+
+// レスポンスデータ型定義
+interface FortuneCalculationData {
+  age: number;
+  zodiac: string;
+  animal: string;
+  six_star: string;
+  fortune_detail: {
+    birth_date: string;
+    chinese_zodiac: string;
+    animal_fortune: string;
+    six_star_detail: string;
+    personality_traits: string[];
+  };
+  calculation_source: 'database' | 'algorithm';
+  supported_features: string[];
+}
+
 const validationRules: ValidationRule<FortuneCalculationRequest>[] = [
   { field: 'year', required: true, type: 'number', min: 1900, max: 2100 },
   { field: 'month', required: true, type: 'number', min: 1, max: 12 },
   { field: 'day', required: true, type: 'number', min: 1, max: 31 },
-  { 
-    field: 'timezone', 
-    required: false, 
+  {
+    field: 'timezone',
+    required: false,
     type: 'string',
     pattern: /^[A-Za-z]+\/[A-Za-z_]+$/,
     custom: (value) => !value || ['Asia/Tokyo', 'UTC'].includes(value)
@@ -174,29 +197,29 @@ export async function POST(request: NextRequest) {
         if (error.message.includes('対応年度')) {
           return createErrorResponse(
             createApiError(
-              ErrorCode.UNSUPPORTED_DATE,
+              ErrorCode.INVALID_INPUT_FORMAT,
               `指定された年度は対応範囲外です（${getSupportedYearRange().min}-${getSupportedYearRange().max}年）`,
               { year, supportedRange: `${getSupportedYearRange().min}-${getSupportedYearRange().max}` }
             ),
             context
           );
         }
-        
+
         if (error.message.includes('存在しない日付')) {
           return createErrorResponse(
             createApiError(
-              ErrorCode.INVALID_DATE_FORMAT,
+              ErrorCode.INVALID_INPUT_FORMAT,
               '存在しない日付が指定されました',
               { year, month, day }
             ),
             context
           );
         }
-        
+
         if (error.message.includes('database')) {
           return createErrorResponse(
             createApiError(
-              ErrorCode.DATABASE_LOOKUP_FAILED,
+              ErrorCode.DATABASE_CONNECTION_ERROR,
               'データベース検索中にエラーが発生しました',
               { error: error.message },
               true
@@ -209,7 +232,7 @@ export async function POST(request: NextRequest) {
       // その他の計算エラー
       return createErrorResponse(
         createApiError(
-          ErrorCode.CALCULATION_ERROR,
+          ErrorCode.FORTUNE_CALCULATION_ERROR,
           '算命学計算中にエラーが発生しました',
           { error: error instanceof Error ? error.message : String(error) },
           true
@@ -279,9 +302,9 @@ export async function POST(request: NextRequest) {
     
     return createErrorResponse(
       createApiError(
-        ErrorCode.INTERNAL_SERVER_ERROR,
+        ErrorCode.EDGE_RUNTIME_ERROR,
         '内部サーバーエラーが発生しました',
-        { 
+        {
           error: error instanceof Error ? error.message : String(error),
           requestId: context.id
         },
@@ -375,9 +398,9 @@ export async function GET(request: NextRequest) {
     
     return createErrorResponse(
       createApiError(
-        ErrorCode.INTERNAL_SERVER_ERROR,
+        ErrorCode.EDGE_RUNTIME_ERROR,
         'GETリクエスト処理中にエラーが発生しました',
-        { 
+        {
           error: error instanceof Error ? error.message : String(error),
           requestId: context.id
         },

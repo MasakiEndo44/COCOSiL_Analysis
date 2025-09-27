@@ -45,8 +45,9 @@ export class IntegratedPromptEngine {
 ## 応答形式（必須）
 - 最重要質問1つのみ
 - 具体的状況の深掘り
-- 300-400文字で簡潔に
+- 必要な長さで詳細に説明（文字数制限なし）
 - 診断結果に基づいた個別化された質問
+- ユーザーの回答を余すことなく活用した分析
 
 ## 分析アプローチ
 - ${this.getMBTIAnalysisPrompt(userData.mbti)}
@@ -62,22 +63,23 @@ export class IntegratedPromptEngine {
 
   /**
    * Calculate optimal token count based on context and complexity
-   * Replaces fixed 150 token limit with dynamic 300-800 range
+   * Updated to allow full-length responses without artificial limits
    */
   calculateOptimalTokens(context: string, complexity: number, priority: 'speed' | 'quality' = 'quality'): number {
-    const baseTokens = priority === 'speed' ? 300 : 400;
+    const baseTokens = priority === 'speed' ? 1000 : 2000;
     const contextLength = context.length;
-    
+
     // Context multiplier: longer conversations need more tokens
-    const contextMultiplier = Math.min(contextLength / 1000, 2.0);
-    
+    const contextMultiplier = Math.min(contextLength / 1000, 4.0);
+
     // Complexity bonus: complex topics need deeper responses
-    const complexityBonus = complexity * 100;
-    
-    // Calculate with ceiling at 800 tokens
-    const calculatedTokens = baseTokens + (contextMultiplier * 100) + complexityBonus;
-    
-    return Math.min(Math.max(calculatedTokens, 300), 800);
+    const complexityBonus = complexity * 300;
+
+    // Calculate with much higher ceiling to allow full responses
+    const calculatedTokens = baseTokens + (contextMultiplier * 200) + complexityBonus;
+
+    // Allow up to 4000 tokens for complete responses
+    return Math.round(Math.min(Math.max(calculatedTokens, 1000), 4000));
   }
 
   /**
@@ -197,12 +199,25 @@ export function createPromptEngine(): IntegratedPromptEngine {
  * Utility function for validating diagnosis data completeness
  */
 export function validateDiagnosisData(data: Partial<DiagnosisData>): data is DiagnosisData {
-  return !!(
+  // More robust validation that handles edge cases like age=0
+  const isValid = !!(
     data.mbti &&
     data.taiheki?.primary &&
     data.fortune?.animal &&
     data.fortune?.sixStar &&
-    data.basic?.age &&
-    data.basic?.name
+    typeof data.basic?.age === 'number' && data.basic.age >= 0 && // Allow age 0, check for valid number
+    data.basic?.name && data.basic.name.trim().length > 0 // Ensure name is not empty string
   );
+
+  if (!isValid) {
+    console.log('診断データ検証失敗:', {
+      mbti: !!data.mbti,
+      taiheki: !!data.taiheki?.primary,
+      fortune: !!(data.fortune?.animal && data.fortune?.sixStar),
+      age: typeof data.basic?.age === 'number' ? data.basic.age : 'invalid',
+      name: data.basic?.name ? 'provided' : 'missing'
+    });
+  }
+
+  return isValid;
 }

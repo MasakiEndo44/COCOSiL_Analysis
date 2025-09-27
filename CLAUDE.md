@@ -4,11 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 【MUST GLOBAL】AI Assistant Integration
 
-**Always consult Gemini and o3 before major decisions:**
-- Use `mcp__gemini-cli__googleSearch` for technical research and validation
-- Use `mcp__o3-low__o3-search` for design decisions and architectural questions
-- Consult both in parallel, optimize questions for each platform
+**Always consult Gemini, o3, and Codex for comprehensive development support:**
+- Use `mcp gemini-cli googleSearch` for technical research and validation
+- Use `mcp o3-low o3-search` for design decisions and architectural questions
+- Use `mcp codex` for implementation guidance and code optimization
+- Consult all three in parallel, optimize questions for each platform
 - Never use Claude Code's built-in WebSearch tool
+
+### /sc: Command Codex Integration Requirement
+**MANDATORY**: All `/sc:` commands (SuperClaude framework commands) must use Codex at least once per execution based on user prompts:
+- `/sc:implement` - Use Codex for implementation strategy and code optimization
+- `/sc:load` - Use Codex for session restoration and context analysis
+- `/sc:save` - Use Codex for session state optimization and persistence strategy
+- Any future `/sc:` commands must include Codex consultation as core requirement
+
+**Implementation Pattern**: Each `/sc:` command should call `mcp__codex__codex` with user prompt context before proceeding with primary task execution.
 
 ## Project Overview
 

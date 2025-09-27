@@ -16,7 +16,7 @@ export interface BasicInfo {
 }
 
 // MBTI関連
-export type MBTIType = 
+export type MBTIType =
   | 'INTJ' | 'INTP' | 'ENTJ' | 'ENTP'
   | 'INFJ' | 'INFP' | 'ENFJ' | 'ENFP'
   | 'ISTJ' | 'ISFJ' | 'ESTJ' | 'ESFJ'
@@ -84,7 +84,7 @@ export interface ProgressState {
   completedSteps: DiagnosisStep[];
 }
 
-export type DiagnosisStep = 
+export type DiagnosisStep =
   | 'basic_info'    // 基本情報入力 (20%)
   | 'mbti'          // MBTI収集 (40%)
   | 'taiheki_learn' // 体癖理論学習 (60%, 任意)
@@ -122,7 +122,7 @@ export interface AdminSubmitData {
 // API関連
 export interface FortuneCalcRequest {
   year: number;   // 1900-2025
-  month: number;  // 1-12  
+  month: number;  // 1-12
   day: number;    // 1-31
 }
 
@@ -165,23 +165,82 @@ export interface ChatSession {
   isCompleted: boolean;
 }
 
+// Enhanced ChatSummary for Phase 2 with AI-powered features
 export interface ChatSummary {
   topicId: string;
   topicTitle: string;
-  qaExchanges: QAExchange[];     // Simple Q&A pairs
+  qaExchanges: QAExchange[];     // Enhanced Q&A pairs with insights
   sessionDuration: number;       // Duration in minutes
+
+  // Phase 2 AI-powered enhancements
+  aiGenerated?: boolean;         // Whether summary was AI-generated
+  keyPoints?: string[];          // AI-extracted key points (Phase 2)
+  overallInsight?: string;       // AI-generated overall session insight
+  actionableAdvice?: string[];   // AI-generated actionable advice
+  qualityScore?: number;         // Content quality score (0-1)
+
+  // Full transcript preservation for Claude integration
+  fullTranscript?: ChatMessage[]; // Complete message array for full content access
+
+  // Metadata
+  generatedAt?: Date;            // When summary was generated
+  summaryVersion?: string;       // Version identifier for summary format
 }
 
+// Enhanced QAExchange for Phase 2 with AI insights
 export interface QAExchange {
-  question: string;              // OpenAI question summary (max 100 chars)
-  answer: string;                // User response summary (max 150 chars)
+  question: string;              // AI summarized question (max 100 chars)
+  answer: string;                // AI summarized user response (max 150 chars)
   timestamp: Date;               // When this exchange occurred
+
+  // Phase 2 enhancements
+  insight?: string;              // AI-generated insight from this exchange (max 80 chars)
+  emotionalTone?: 'positive' | 'neutral' | 'concerned' | 'stressed'; // AI-detected tone
+  importance?: number;           // Importance score 1-5
 }
 
 export interface ChatRequest {
   messages: ChatMessage[];
   systemPrompt?: string;
   userData?: UserDiagnosisData; // 診断データ活用時
+}
+
+// Phase 2: Quality monitoring and content validation
+export interface QualityCheckResult {
+  isAppropriate: boolean;        // Content passes quality checks
+  confidence: number;            // Confidence in quality assessment (0-1)
+  flags: string[];               // Quality issues flagged
+  recommendation?: string;       // Recommended action
+  sanitizedContent?: string;     // Content with sensitive parts removed
+}
+
+// Phase 2: Summarization system interfaces
+export interface SummarizationOptions {
+  useAI: boolean;                // Whether to use AI summarization
+  maxRetries: number;            // Max retry attempts for AI calls
+  cacheTimeout: number;          // Cache timeout in milliseconds
+  qualityCheck: boolean;         // Whether to run quality checks
+  priority: 'speed' | 'quality'; // Prioritize speed vs quality
+}
+
+export interface SummarizationCache {
+  summary: ChatSummary;
+  timestamp: number;
+  size: number;                  // Estimated memory size in bytes
+}
+
+export interface SystemStats {
+  cache: {
+    current: number;             // Current cache size in bytes
+    max: number;                 // Maximum cache size in bytes
+    utilization: number;         // Cache utilization percentage (0-1)
+  };
+  options: SummarizationOptions;
+  performance: {
+    aiCalls: number;             // Number of AI calls made
+    cacheHits: number;           // Number of cache hits
+    averageResponseTime: number; // Average AI response time in ms
+  };
 }
 
 // エラーハンドリング
@@ -197,15 +256,20 @@ export interface AppError {
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
-// 状態管理 (Zustand)
+// 状態管理 (Zustand) - Enhanced for Phase 2
 export interface DiagnosisStore {
   // 状態
   userData: UserDiagnosisData | null;
   currentStep: DiagnosisStep;
   isLoading: boolean;
   error: AppError | null;
-  
-  // アクション  
+
+  // Phase 2: Chat session management
+  chatSession: ChatSession | null;
+  chatSummary: ChatSummary | null;
+  isCounselingCompleted: boolean;
+
+  // アクション
   setBasicInfo: (info: BasicInfo) => void;
   setMBTI: (result: MBTIResult) => void;
   setTaiheki: (result: TaihekiResult) => void;
@@ -215,6 +279,13 @@ export interface DiagnosisStore {
   clearAll: () => void;
   saveToStorage: () => void;
   loadFromStorage: () => void;
+
+  // Phase 2: Chat session actions
+  setChatSession: (session: ChatSession) => void;
+  setChatSummary: (summary: ChatSummary) => void;
+  markCounselingCompleted: (completed: boolean) => void;
+  setCurrentStep: (step: DiagnosisStep) => void;
+  getUserData: () => UserDiagnosisData | null;
 }
 
 // UI関連

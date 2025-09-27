@@ -9,7 +9,7 @@ interface TaihekiLearningLayoutProps {
 
 export function TaihekiLearningLayout({ children }: TaihekiLearningLayoutProps) {
   return (
-    <ComponentTag name="TaihekiLearningLayout" type="layout">
+    
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-border">
@@ -34,6 +34,6 @@ export function TaihekiLearningLayout({ children }: TaihekiLearningLayoutProps) 
           </main>
         </div>
       </div>
-    </ComponentTag>
+    
   );
 }

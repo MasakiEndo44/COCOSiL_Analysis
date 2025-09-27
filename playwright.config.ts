@@ -7,6 +7,8 @@ const PORT = process.env.PORT || 3000;
 // Set webServer.url and use.baseURL with the location of the WebServer respecting the PORT environment variable.
 const baseURL = `http://localhost:${PORT}`;
 
+const useWebServer = !process.env.PLAYWRIGHT_DISABLE_WEBSERVER;
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -51,10 +53,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    url: baseURL,
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: useWebServer
+    ? {
+        command: `npm run dev -- --hostname 127.0.0.1 --port ${PORT}`,
+        url: baseURL,
+        timeout: 120 * 1000,
+        reuseExistingServer: !process.env.CI,
+      }
+    : undefined,
 });

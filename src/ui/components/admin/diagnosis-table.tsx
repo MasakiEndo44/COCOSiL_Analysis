@@ -1,15 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { DiagnosisRecord } from '@/types/admin';
-import { Edit, Trash2, ExternalLink, FileText, Download, Calendar, MessageSquare } from 'lucide-react';
+import { Edit, Trash2, Calendar, MessageSquare, Eye } from 'lucide-react';
 import { ORIENTATION_LABELS } from '@/lib/data/animal-fortune-mapping';
+import { AdminMarkdownModal } from './admin-markdown-modal';
 
 interface DiagnosisTableProps {
   records: DiagnosisRecord[];
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
-  onGenerateReport?: (id: number) => void;
-  onDownloadReport?: (id: number) => void;
   onManageInterview?: (record: DiagnosisRecord) => void;
   userRole?: 'admin' | 'viewer';
   rowOffset?: number;
@@ -19,12 +19,20 @@ export default function DiagnosisTable({
   records,
   onEdit,
   onDelete,
-  onGenerateReport,
-  onDownloadReport,
   onManageInterview,
   userRole = 'admin',
   rowOffset = 0
 }: DiagnosisTableProps) {
+  const [selectedMarkdown, setSelectedMarkdown] = useState<{ record: DiagnosisRecord; isOpen: boolean }>({ record: {} as DiagnosisRecord, isOpen: false });
+
+  const handleShowMarkdown = (record: DiagnosisRecord) => {
+    setSelectedMarkdown({ record, isOpen: true });
+  };
+
+  const handleCloseMarkdown = () => {
+    setSelectedMarkdown({ record: {} as DiagnosisRecord, isOpen: false });
+  };
+
   if (records.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -122,6 +130,9 @@ export default function DiagnosisTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 インタビュー
               </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Markdown
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 操作
               </th>
@@ -201,50 +212,23 @@ export default function DiagnosisTable({
                     );
                   })()}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  {record.markdownContent ? (
+                    <button
+                      onClick={() => handleShowMarkdown(record)}
+                      className="text-blue-600 hover:text-blue-900 p-2 rounded hover:bg-blue-50"
+                      title="診断結果Markdownを表示"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  ) : (
+                    <span className="text-gray-400" title="Markdownコンテンツなし">
+                      <Eye size={16} className="opacity-30" />
+                    </span>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-2">
-                    {/* Report generation/download buttons */}
-                    {record.reportUrl ? (
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => onDownloadReport?.(record.id)}
-                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                          title={record.isIntegratedReport ? "統合レポートをダウンロード" : "レポートをダウンロード"}
-                        >
-                          <Download size={16} />
-                        </button>
-                        {record.isIntegratedReport && (
-                          <span
-                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                            title="統合レポート"
-                          >
-                            AI
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => onGenerateReport?.(record.id)}
-                        className="text-brand-600 hover:text-brand-900 p-1 rounded hover:bg-brand-50"
-                        title="統合レポート生成"
-                      >
-                        <FileText size={16} />
-                      </button>
-                    )}
-
-                    {/* External link to view report if exists */}
-                    {record.reportUrl && (
-                      <a
-                        href={record.reportUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50"
-                        title={record.isIntegratedReport ? "統合レポートを表示" : "レポートを表示"}
-                      >
-                        <ExternalLink size={16} />
-                      </a>
-                    )}
-
                     {/* Edit and Delete buttons - only for admin role */}
                     {userRole === 'admin' && (
                       <a
@@ -279,6 +263,15 @@ export default function DiagnosisTable({
           </p>
         </div>
       )}
+
+      {/* Markdown Modal */}
+      <AdminMarkdownModal
+        isOpen={selectedMarkdown.isOpen}
+        onClose={handleCloseMarkdown}
+        markdownContent={selectedMarkdown.record.markdownContent || ''}
+        recordName={selectedMarkdown.record.name}
+        recordId={selectedMarkdown.record.id}
+      />
     </div>
   );
 }

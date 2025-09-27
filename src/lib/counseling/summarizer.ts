@@ -7,15 +7,16 @@ interface SummarizationOptions {
 
 const defaultOptions: SummarizationOptions = {
   maxLength: 200,
-  maxExchanges: 5
+  maxExchanges: 100 // Increased to preserve all exchanges
 };
 
 /**
- * Summarize text content with character limit
+ * Preserve full text content without truncation
+ * Modified to support full transcript preservation for Claude integration
  */
 export const summarizeText = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3) + '...';
+  // Return full text without any truncation
+  return text;
 };
 
 /**
@@ -33,8 +34,8 @@ export const extractQAExchanges = (
   for (let i = 0; i < messages.length - 1; i++) {
     if (messages[i].role === 'assistant' && messages[i + 1].role === 'user') {
       exchanges.push({
-        question: summarizeText(messages[i].content, 100), // Limit to 100 chars
-        answer: summarizeText(messages[i + 1].content, 150), // Limit to 150 chars
+        question: messages[i].content, // Preserve full question content
+        answer: messages[i + 1].content, // Preserve full answer content
         timestamp: messages[i].timestamp
       });
     }

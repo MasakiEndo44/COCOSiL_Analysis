@@ -402,7 +402,7 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
   const sectionProgress = ((currentSection + 1) / sections.length) * 100;
 
   return (
-    <ComponentTag name="TaihekiChapterContent" type="feature">
+    
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-4">
@@ -616,6 +616,6 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
           </div>
         </div>
       </div>
-    </ComponentTag>
+    
   );
 }

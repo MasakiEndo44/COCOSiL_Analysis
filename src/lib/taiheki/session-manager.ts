@@ -8,7 +8,7 @@
  * - プライバシー保護
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 import {
   DiagnosisSession,
@@ -98,7 +98,7 @@ export async function createDiagnosisSession(
   userAgent?: string
 ): Promise<DiagnosisSession> {
   try {
-    const sessionId = uuidv4();
+    const sessionId = randomUUID();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TAIHEKI_CONFIG.SESSION_TTL_MINUTES * 60 * 1000);
     
@@ -262,7 +262,7 @@ export async function saveDiagnosisResult(request: SaveDiagnosisRequest): Promis
     
     // 診断記録作成
     const record: DiagnosisRecord = {
-      id: uuidv4(),
+      id: randomUUID(),
       sessionId,
       result,
       answers,

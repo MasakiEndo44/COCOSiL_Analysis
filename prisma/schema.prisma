@@ -53,6 +53,9 @@ model DiagnosisRecord {
   fortuneColor        String?  // 算命学由来の色
   reportVersion       String?  // レポートバージョン
   isIntegratedReport  Boolean  @default(false) // 統合診断か手動入力かの判別
+  // Markdown関連フィールド
+  markdownContent     String?  // 診断完了時のMarkdown全体
+  markdownVersion     String?  // Markdownバージョン（互換性管理用）
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

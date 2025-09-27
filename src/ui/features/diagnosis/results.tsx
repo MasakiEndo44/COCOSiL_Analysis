@@ -1,30 +1,20 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { EmptyQAState } from '@/ui/components/counseling/empty-qa-state';
 import { SummarizedQAList } from '@/ui/components/counseling/summarized-qa-list';
+import { calculateAge } from '@/lib/utils';
+import { ExportDialog } from '@/ui/components/diagnosis/export-dialog';
+import { buildDiagnosisMarkdown, validateDiagnosisData } from '@/lib/build-diagnosis-markdown';
+import { GuidanceOverlay } from '@/ui/components/overlays/guidance-overlay';
 
 import { mbtiDescriptions } from '@/lib/data/mbti-questions';
 import { animals60WordBank } from '@/lib/data/animals60';
 import { ANIMAL_FORTUNE_MAPPING } from '@/lib/data/animal-fortune-mapping';
 import Link from 'next/link';
 import type { FortuneResult } from '@/types';
-
-// Utility functions for age and zodiac calculation
-const calculateAge = (year: number, month: number, day: number): number => {
-  const today = new Date();
-  const birthDate = new Date(year, month - 1, day);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-
-  return age;
-};
 
 const getWesternZodiac = (month: number, day: number): string => {
   const zodiacData = [
@@ -622,7 +612,20 @@ const getAnimalOrientation = (animalCharacter: string): string => {
 };
 
 export default function DiagnosisResults() {
-  const { basicInfo, mbti, taiheki, fortune: fortuneResult, chatSummary, hasCompletedCounseling } = useDiagnosisStore();
+  const {
+    basicInfo,
+    mbti,
+    taiheki,
+    fortune: fortuneResult,
+    chatSummary,
+    hasCompletedCounseling,
+    overlayHints,
+    markOverlaySeen
+  } = useDiagnosisStore();
+
+  // Overlay state management
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const zodiacSign = basicInfo ? getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day) : '';
   const integratedProfile = useMemo(() => {
@@ -630,6 +633,73 @@ export default function DiagnosisResults() {
       ? generateIntegratedProfile(mbti, taiheki, fortuneResult, zodiacSign)
       : { catchphrase: '', interpersonal: '', cognition: '' };
   }, [basicInfo, fortuneResult, mbti, taiheki, zodiacSign]);
+
+  // Generate markdown content for export
+  const { markdownContent, dataValidation } = useMemo(() => {
+    const diagnosisData = {
+      basicInfo,
+      mbti,
+      taiheki,
+      fortune: fortuneResult,
+      integratedProfile,
+      zodiacSign,
+      chatSummary: chatSummary || undefined
+    };
+
+    const validation = validateDiagnosisData(diagnosisData);
+    const markdown = buildDiagnosisMarkdown(diagnosisData);
+
+    return {
+      markdownContent: markdown,
+      dataValidation: validation
+    };
+  }, [basicInfo, mbti, taiheki, fortuneResult, integratedProfile, zodiacSign, chatSummary]);
+
+  // Handle mounting state for SSR
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Show welcome overlay on initial load if not seen before
+  useEffect(() => {
+    if (hasMounted && basicInfo && !overlayHints.resultsIntroSeen) {
+      setShowWelcomeOverlay(true);
+    }
+  }, [hasMounted, basicInfo, overlayHints.resultsIntroSeen]);
+
+  // Overlay content definition
+  const overlayContent = useMemo(() => {
+    const userName = basicInfo?.name || 'お疲れさまでした';
+    return {
+      title: '診断完了！',
+      body: `${userName}さん、診断お疲れさまでした！ここからはAIチャットで相談することも、このまま結果を出力することもできます。どちらも自由にお選びいただけます。`,
+      primaryAction: {
+        label: 'AIチャットで相談する',
+        onClick: () => {
+          setShowWelcomeOverlay(false);
+          markOverlaySeen('results');
+          // Navigate to chat - we can use window.location or router here
+          window.location.href = '/diagnosis/chat';
+        },
+        variant: 'primary' as const,
+        'data-testid': 'welcome-overlay-chat-action'
+      },
+      secondaryAction: {
+        label: '結果を確認する',
+        onClick: () => {
+          setShowWelcomeOverlay(false);
+          markOverlaySeen('results');
+        },
+        variant: 'secondary' as const,
+        'data-testid': 'welcome-overlay-continue-action'
+      }
+    };
+  }, [basicInfo, markOverlaySeen]);
+
+  const handleOverlayClose = () => {
+    setShowWelcomeOverlay(false);
+    markOverlaySeen('results');
+  };
 
   // Save diagnosis result to admin database - AUTO SAVE ENABLED
   useEffect(() => {
@@ -642,11 +712,7 @@ export default function DiagnosisResults() {
             name: basicInfo.name || 'Unknown',
             birthDate: `${basicInfo.birthdate.year}/${String(basicInfo.birthdate.month).padStart(2, '0')}/${String(basicInfo.birthdate.day).padStart(2, '0')}`,
             gender: basicInfo.gender || 'no_answer',
-            age: calculateAge(
-              basicInfo.birthdate.year,
-              basicInfo.birthdate.month,
-              basicInfo.birthdate.day
-            ),
+            age: calculateAge(basicInfo.birthdate),
             zodiac: zodiacSign || 'Unknown',
             animal: fortuneResult.animal || 'Unknown',
             orientation: getAnimalOrientation(fortuneResult.animal || ''),
@@ -721,7 +787,7 @@ export default function DiagnosisResults() {
             診断完了！
           </h1>
           <p className="text-body-l-mobile md:text-body-l-desktop text-light-fg-muted">
-            {basicInfo.name}さん（{calculateAge(basicInfo.birthdate.year, basicInfo.birthdate.month, basicInfo.birthdate.day)}歳・{basicInfo.gender === 'male' ? '男性' : basicInfo.gender === 'female' ? '女性' : '回答なし'}）の統合診断結果
+            {basicInfo.name}さん（{calculateAge(basicInfo.birthdate)}歳・{basicInfo.gender === 'male' ? '男性' : basicInfo.gender === 'female' ? '女性' : '回答なし'}）の統合診断結果
           </p>
         </div>
       </div>
@@ -944,6 +1010,38 @@ export default function DiagnosisResults() {
         </div>
       </div>
 
+      {/* Action Buttons - Moved above AI Counseling Section */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <nav
+          className="flex flex-col sm:flex-row justify-center items-center gap-4 p-6 bg-white rounded-lg border border-border shadow-sm"
+          aria-label="診断結果の操作"
+        >
+          <h3 className="text-sm font-medium text-muted-foreground mb-2 sm:mb-0 sm:mr-4">診断結果の操作:</h3>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Link href="/diagnosis" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto px-8" aria-describedby="new-diagnosis-desc">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                新しい診断を受ける
+              </Button>
+            </Link>
+
+            <ExportDialog
+              markdownContent={markdownContent}
+              isDataComplete={dataValidation.isValid}
+              missingFields={dataValidation.missingFields}
+            />
+          </div>
+
+          {/* Screen reader descriptions */}
+          <div className="sr-only">
+            <p id="new-diagnosis-desc">新しい診断を開始します</p>
+            <p id="export-desc">診断結果をMarkdown形式で出力します</p>
+          </div>
+        </nav>
+      </div>
+
       {/* AI Counseling Section */}
       <div className="max-w-6xl mx-auto">
         {hasCompletedCounseling && chatSummary ? (
@@ -953,17 +1051,23 @@ export default function DiagnosisResults() {
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-center max-w-lg mx-auto">
-        <Link href="/diagnosis">
-          <Button className="px-8">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      {/* Welcome Guidance Overlay */}
+      <GuidanceOverlay
+        open={showWelcomeOverlay}
+        onClose={handleOverlayClose}
+        title={overlayContent.title}
+        body={overlayContent.body}
+        primaryAction={overlayContent.primaryAction}
+        secondaryAction={overlayContent.secondaryAction}
+        tone="welcome"
+        illustration={
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            新しい診断を受ける
-          </Button>
-        </Link>
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 }

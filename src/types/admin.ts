@@ -31,6 +31,8 @@ export interface DiagnosisRecord {
   fortuneColor?: string;
   reportVersion?: string;
   isIntegratedReport?: boolean;
+  markdownContent?: string | null;
+  markdownVersion?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,53 +52,6 @@ export interface DiagnosisStats {
   averageDuration: number;
 }
 
-export interface MasterData {
-  animals: AnimalMaster[];
-  zodiac: ZodiacMaster[];
-  mbti: MbtiMaster[];
-  taiheki: TaihekiMaster[];
-  sixStar: SixStarMaster[];
-}
-
-export interface AnimalMaster {
-  animal: string;
-  orientation: string;
-  trait: string;
-  strength: string;
-  caution: string;
-}
-
-export interface ZodiacMaster {
-  zodiac: string;
-  period: string;
-  element: string;
-  nature: string;
-  ruler: string;
-}
-
-export interface MbtiMaster {
-  type: string;
-  nickname: string;
-  trait: string;
-  strength: string;
-  caution: string;
-}
-
-export interface TaihekiMaster {
-  number: string;
-  type: string;
-  trait: string;
-  pattern: string;
-  career: string;
-}
-
-export interface SixStarMaster {
-  star: string;
-  plusminus: '+' | '-';
-  trait: string;
-  career: string;
-  caution: string;
-}
 
 export interface AdminUser {
   id: string;

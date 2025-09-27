@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { TaihekiCalculator } from '@/lib/taiheki/calculator';
 import { 
   BulkDiagnosisResponse,
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     // 4. セッション作成・結果保存
     // ============================================================
     
-    const sessionId = uuidv4();
+    const sessionId = randomUUID();
     
     // 回答パターンハッシュ生成（重複検知用）
     const answerPattern = answers

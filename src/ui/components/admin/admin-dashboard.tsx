@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { AdminSession } from '@/lib/admin-middleware';
 import { DiagnosisRecord, DiagnosisStats } from '@/types/admin';
 import { AdminHeader } from './admin-header';
-import DiagnosisTable from './diagnosis-table';
 import StatsOverview from './stats-overview';
 import { RecordFormModal } from './record-form-modal';
 import { InterviewModal } from './interview-modal';
 import { ExportForm } from './export-form';
+import EnhancedRecordsView from './enhanced-records-view';
 import { Button } from '@/ui/components/ui/button';
 import { ExportOptions } from '@/types/admin';
 
@@ -203,70 +203,6 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
     }
   };
 
-  const handleGenerateReport = async (id: number) => {
-    try {
-      const response = await fetch(`/api/admin/reports/${id}`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('統合レポート生成に失敗しました');
-      }
-
-      const data = await response.json();
-
-      // レコードリストを更新して新しい統合レポート情報を反映
-      setRecords(prev => prev.map(record =>
-        record.id === id
-          ? {
-              ...record,
-              reportUrl: data.reportUrl,
-              isIntegratedReport: data.isIntegratedReport || true,
-              reportVersion: data.reportVersion
-            }
-          : record
-      ));
-
-      const message = data.isIntegratedReport
-        ? `統合レポートが生成されました（${data.keywordsCount}個のキーワード抽出）`
-        : 'レポートが生成されました';
-
-      alert(message);
-    } catch (err) {
-      console.error('統合レポート生成エラー:', err);
-      alert('統合レポート生成に失敗しました');
-    }
-  };
-
-  const handleDownloadReport = async (id: number) => {
-    try {
-      // 該当記録のレポートURLを取得
-      const record = records.find(r => r.id === id);
-      if (!record?.reportUrl) {
-        alert('レポートが見つかりません');
-        return;
-      }
-
-      // レポートをダウンロード
-      const response = await fetch(record.reportUrl);
-      if (!response.ok) {
-        throw new Error('レポートダウンロードに失敗しました');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `診断レポート_${record.name}_${record.date}.html`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('レポートダウンロードエラー:', err);
-      alert('レポートダウンロードに失敗しました');
-    }
-  };
 
   const handleManageInterview = (record: DiagnosisRecord) => {
     setInterviewRecord(record);
@@ -359,15 +295,11 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
             <h1 className="text-2xl font-bold text-gray-900 mb-6">ダッシュボード概要</h1>
             <StatsOverview stats={stats} />
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">最近の診断記録（最新10件）</h2>
-              <DiagnosisTable
-                records={records.slice(0, 10)}
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">診断記録一覧</h2>
+              <EnhancedRecordsView
                 onDelete={session.role === 'admin' ? handleDelete : undefined}
-                onGenerateReport={handleGenerateReport}
-                onDownloadReport={handleDownloadReport}
                 onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
                 userRole={session.role}
-                rowOffset={0}
               />
             </div>
           </div>
@@ -383,15 +315,10 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
                 </Button>
               )}
             </div>
-            <DiagnosisTable
-              records={records}
-              onEdit={session.role === 'admin' ? handleEdit : undefined}
+            <EnhancedRecordsView
               onDelete={session.role === 'admin' ? handleDelete : undefined}
-              onGenerateReport={handleGenerateReport}
-              onDownloadReport={handleDownloadReport}
               onManageInterview={session.role === 'admin' ? handleManageInterview : undefined}
               userRole={session.role}
-              rowOffset={0}
             />
           </div>
         )}

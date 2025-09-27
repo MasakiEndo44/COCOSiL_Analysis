@@ -20,7 +20,7 @@ export function TaihekiNavigationSidebar() {
   };
 
   return (
-    <ComponentTag name="TaihekiNavigationSidebar" type="ui">
+    
       <div className="bg-white border-r border-border h-full">
         <div className="p-6 space-y-6">
           {/* Header */}
@@ -189,6 +189,6 @@ export function TaihekiNavigationSidebar() {
           )}
         </div>
       </div>
-    </ComponentTag>
+    
   );
 }

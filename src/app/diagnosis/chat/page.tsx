@@ -7,6 +7,8 @@ import type { ChatSession } from '@/types';
 import { generateSessionId } from '@/lib/utils';
 import { Button } from '@/ui/components/ui/button';
 import { UserDiagnosisData } from '@/types';
+import { optimizeMessagesForStorage, estimateConversationMemoryUsage } from '@/lib/chat/conversation-utils';
+import { GuidanceOverlay } from '@/ui/components/overlays/guidance-overlay';
 
 interface ChatMessage {
   id: string;
@@ -51,7 +53,15 @@ const consultationTopics: ConsultationTopic[] = [
 
 export default function ChatPage() {
   const router = useRouter();
-  const { getUserData, setCurrentStep, setChatSession, setChatSummary, markCounselingCompleted } = useDiagnosisStore();
+  const {
+    getUserData,
+    setCurrentStep,
+    setChatSession,
+    setChatSummary,
+    markCounselingCompleted,
+    overlayHints,
+    markOverlaySeen
+  } = useDiagnosisStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -59,6 +69,11 @@ export default function ChatPage() {
   const [conversationPhase, setConversationPhase] = useState<'topic_selection' | 'consultation' | 'summary'>('topic_selection');
   const [userData, setUserData] = useState<UserDiagnosisData | null>(null);
   const [chatSession, setChatSessionLocal] = useState<ChatSession | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Overlay state management
+  const [showChatOverlay, setShowChatOverlay] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const initializedRef = useRef(false);
@@ -66,23 +81,45 @@ export default function ChatPage() {
   useEffect(() => {
     // 初期化が既に実行されている場合は何もしない
     if (initializedRef.current) return;
-    
+
     const data = getUserData();
-    
+
+    // Debug: Check Zustand store state
+    console.log('🏪 Zustand Store Debug:', {
+      hasData: !!data,
+      storeState: {
+        sessionId: useDiagnosisStore.getState().sessionId,
+        basicInfo: !!useDiagnosisStore.getState().basicInfo,
+        mbti: !!useDiagnosisStore.getState().mbti,
+        taiheki: !!useDiagnosisStore.getState().taiheki,
+        fortune: !!useDiagnosisStore.getState().fortune,
+        currentStep: useDiagnosisStore.getState().currentStep,
+        progress: useDiagnosisStore.getState().progress
+      },
+      getUserDataResult: data ? {
+        hasId: !!data.id,
+        hasBasic: !!data.basic,
+        hasMbti: !!data.mbti,
+        hasTaiheki: !!data.taiheki,
+        hasFortune: !!data.fortune
+      } : null
+    });
+
     // 診断データが不完全な場合は診断ページに戻す
     if (!data || !data.basic || !data.mbti || !data.taiheki) {
+      console.log('❌ Redirecting to diagnosis page due to incomplete data');
       router.push('/diagnosis');
       return;
     }
 
     // 初期化フラグを設定
     initializedRef.current = true;
-    
+
     // userDataを設定
     setUserData(data);
-    
+
     setCurrentStep('integration');
-    
+
     // 初期メッセージを設定
     const welcomeMessage: ChatMessage = {
       id: 'welcome',
@@ -92,7 +129,7 @@ export default function ChatPage() {
     };
 
     setMessages([welcomeMessage]);
-  }, []); // 空の依存配列で一度だけ実行
+  }, [getUserData, router, setCurrentStep]); // Include dependencies
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,10 +139,42 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  // Handle mounting state for SSR
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Show chat overlay on initial load if not seen before
+  useEffect(() => {
+    if (hasMounted && userData && !overlayHints.chatIntroSeen) {
+      setShowChatOverlay(true);
+    }
+  }, [hasMounted, userData, overlayHints.chatIntroSeen]);
+
+  // Chat overlay content and handlers
+  const chatOverlayContent = {
+    title: 'AIチャットについて',
+    body: 'AIカウンセラーとの相談を始めます。いつでも何度でも相談していただけます。十分だと感じたら画面下の「相談終了」ボタンを押してください。',
+    primaryAction: {
+      label: '相談を始める',
+      onClick: () => {
+        setShowChatOverlay(false);
+        markOverlaySeen('chat');
+      },
+      variant: 'primary' as const,
+      'data-testid': 'chat-overlay-start-action'
+    }
+  };
+
+  const handleChatOverlayClose = () => {
+    setShowChatOverlay(false);
+    markOverlaySeen('chat');
+  };
+
   const handleTopicSelect = (topicId: string) => {
     setSelectedTopic(topicId);
     setConversationPhase('consultation');
-    
+
     const topic = consultationTopics.find(t => t.id === topicId);
     if (topic) {
       const topicMessage: ChatMessage = {
@@ -114,7 +183,7 @@ export default function ChatPage() {
         content: `「${topic.title}」について相談したいです。`,
         timestamp: new Date()
       };
-      
+
       // Initialize chat session
       const session: ChatSession = {
         sessionId: generateSessionId(),
@@ -124,9 +193,9 @@ export default function ChatPage() {
         isCompleted: false
       };
       setChatSessionLocal(session);
-      
+
       setMessages(prev => [...prev, topicMessage]);
-      
+
       // AIの初期質問を送信
       generateAIResponse(`ユーザーが「${topic.title}」について相談したいとのことです。診断結果を踏まえて、具体的なヒアリングを開始してください。`);
     }
@@ -136,11 +205,33 @@ export default function ChatPage() {
     if (!userData) return;
 
     setIsStreaming(true);
-    
+
     try {
       // AbortControllerを作成
       abortControllerRef.current = new AbortController();
-      
+
+      // Debug: Check userData before sending
+      console.log('🔍 Frontend Debug - userData before API call:', {
+        hasUserData: !!userData,
+        basicInfo: userData?.basic ? {
+          hasName: !!userData.basic.name,
+          hasAge: !!userData.basic.age,
+          hasEmail: !!userData.basic.email
+        } : null,
+        mbti: userData?.mbti ? {
+          hasType: !!userData.mbti.type,
+          type: userData.mbti.type
+        } : null,
+        taiheki: userData?.taiheki ? {
+          hasPrimary: !!userData.taiheki.primary,
+          primary: userData.taiheki.primary
+        } : null,
+        fortune: userData?.fortune ? {
+          hasAnimal: !!userData.fortune.animal,
+          animal: userData.fortune.animal
+        } : null
+      });
+
       // IntegratedPromptEngine handles system prompt generation
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -152,23 +243,7 @@ export default function ChatPage() {
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: userMessage }
           ],
-          diagnosisData: {
-            mbti: userData.mbti?.type || '',
-            taiheki: {
-              primary: userData.taiheki?.primary || 1,
-              secondary: userData.taiheki?.secondary || 1
-            },
-            fortune: {
-              animal: userData.fortune?.animal || '',
-              sixStar: userData.fortune?.sixStar || ''
-            },
-            basic: {
-              age: userData.basic?.age || 0,
-              name: userData.basic?.name || ''
-            }
-          },
-          topic: selectedTopic || 'relationship',
-          priority: 'quality',
+          userData: userData,
           stream: true
         }),
         signal: abortControllerRef.current.signal
@@ -194,7 +269,7 @@ export default function ChatPage() {
 
       setMessages(prev => {
         const newMessages = [...prev, aiMessage];
-        
+
         // Update session with AI message
         if (chatSession) {
           setChatSessionLocal({
@@ -202,13 +277,13 @@ export default function ChatPage() {
             messages: newMessages
           });
         }
-        
+
         return newMessages;
       });
 
       // ストリーミング処理
       const decoder = new TextDecoder();
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -227,12 +302,12 @@ export default function ChatPage() {
               if (content) {
                 aiContent += content;
                 setMessages(prev => {
-                  const updatedMessages = prev.map(msg => 
-                    msg.id === aiMessageId 
+                  const updatedMessages = prev.map(msg =>
+                    msg.id === aiMessageId
                       ? { ...msg, content: aiContent }
                       : msg
                   );
-                  
+
                   // Update session with streaming content
                   if (chatSession) {
                     setChatSessionLocal({
@@ -240,7 +315,7 @@ export default function ChatPage() {
                       messages: updatedMessages
                     });
                   }
-                  
+
                   return updatedMessages;
                 });
               }
@@ -255,7 +330,7 @@ export default function ChatPage() {
       if (error instanceof Error && error.name === 'AbortError') {
         return; // ユーザーがキャンセル
       }
-      
+
       console.error('AI応答エラー:', error);
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
@@ -282,7 +357,7 @@ export default function ChatPage() {
 
     setMessages(prev => {
       const newMessages = [...prev, userMessage];
-      
+
       // Update session with new messages
       if (chatSession) {
         setChatSessionLocal({
@@ -290,10 +365,10 @@ export default function ChatPage() {
           messages: newMessages
         });
       }
-      
+
       return newMessages;
     });
-    
+
     const messageText = currentInput.trim();
     setCurrentInput('');
 
@@ -308,31 +383,83 @@ export default function ChatPage() {
     }
   };
 
+  /**
+   * Phase 2: Enhanced session completion with IntelligentSummarizer
+   */
   const handleEndConsultation = async () => {
     if (chatSession && messages.length > 2) {
-      // Complete session data
-      const completedSession: ChatSession = {
-        ...chatSession,
-        messages: messages,
-        endTime: new Date(),
-        isCompleted: true
-      };
-      
-      // Save to global store
-      setChatSession(completedSession);
-      markCounselingCompleted(true);
-      
-      // Generate and save summary
+      setIsSummarizing(true);
+
       try {
-        const { generateSessionSummary } = await import('@/lib/counseling/summarizer');
-        const summary = generateSessionSummary(completedSession);
-        setChatSummary(summary);
+        // Performance: Optimize messages for storage before saving
+        const memoryUsage = estimateConversationMemoryUsage(messages);
+        console.log('Storage Optimization:', {
+          originalMessages: messages.length,
+          estimatedBytes: memoryUsage.estimatedBytes,
+          isOverThreshold: memoryUsage.isOverThreshold,
+          averageMessageSize: memoryUsage.averageMessageSize
+        });
+
+        const storageOptimizedMessages = optimizeMessagesForStorage(messages);
+        
+        // Complete session data with optimized storage
+        const completedSession: ChatSession = {
+          ...chatSession,
+          messages: storageOptimizedMessages,
+          endTime: new Date(),
+          isCompleted: true
+        };
+
+        // Save to global store with optimized storage
+        setChatSession(completedSession);
+        markCounselingCompleted(true);
+
+        // Phase 2: Use IntelligentSummarizer API for enhanced summarization
+        console.log('Generating intelligent summary...');
+
+        const summaryResponse = await fetch('/api/ai/intelligent-summary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session: completedSession,
+            options: {
+              useAI: true,
+              qualityCheck: true,
+              priority: 'quality'
+            }
+          })
+        });
+
+        if (summaryResponse.ok) {
+          const { summary, metadata } = await summaryResponse.json();
+          console.log('Intelligent summary generated:', { metadata });
+          setChatSummary(summary);
+        } else {
+          // Fallback to legacy summarization
+          console.warn('Intelligent summarization failed, using fallback');
+          const { generateSessionSummary } = await import('@/lib/counseling/summarizer');
+          const fallbackSummary = generateSessionSummary(completedSession);
+          setChatSummary(fallbackSummary);
+        }
+
       } catch (error) {
         console.error('Failed to generate summary:', error);
-        // Continue without summary - fallback will be used
+        // Continue without summary - fallback will be used in results page
+        try {
+          const { generateSessionSummary } = await import('@/lib/counseling/summarizer');
+          const fallbackSummary = generateSessionSummary(chatSession);
+          setChatSummary(fallbackSummary);
+        } catch (fallbackError) {
+          console.error('Fallback summarization also failed:', fallbackError);
+          // Continue without summary
+        }
+      } finally {
+        setIsSummarizing(false);
       }
     }
-    
+
     setConversationPhase('summary');
     router.push('/diagnosis/results');
   };
@@ -349,20 +476,30 @@ export default function ChatPage() {
   }
 
   return (
-      <div className="flex flex-col h-screen bg-surface">
+    <div className="flex flex-col h-screen bg-surface">
       {/* Header */}
       <div className="bg-white border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">AIカウンセリング</h1>
-            <p className="text-sm text-muted-foreground">診断結果を基にした個別相談</p>
+            <p className="text-sm text-muted-foreground">
+              {isSummarizing ? 'セッション要約を生成中...' : '診断結果を基にした個別相談'}
+            </p>
           </div>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={handleEndConsultation}
             size="sm"
+            disabled={isSummarizing}
           >
-            相談終了
+            {isSummarizing ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <span>要約生成中...</span>
+              </div>
+            ) : (
+              '相談終了'
+            )}
           </Button>
         </div>
       </div>
@@ -375,7 +512,7 @@ export default function ChatPage() {
               <h2 className="text-2xl font-bold text-foreground mb-2">相談内容をお選びください</h2>
               <p className="text-muted-foreground">あなたの診断結果を踏まえて、最適なアドバイスをいたします</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {consultationTopics.map((topic) => (
                 <button
@@ -399,7 +536,7 @@ export default function ChatPage() {
       {conversationPhase === 'consultation' && (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 pb-6">
             <div className="max-w-3xl mx-auto space-y-4">
               {messages.map((message) => (
                 <div
@@ -407,7 +544,7 @@ export default function ChatPage() {
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] p-4 rounded-lg ${
+                    className={`max-w-[85%] sm:max-w-[70%] p-4 rounded-lg ${
                       message.role === 'user'
                         ? 'bg-brand-500 text-white'
                         : 'bg-white text-foreground border border-border'
@@ -447,19 +584,64 @@ export default function ChatPage() {
                 placeholder="メッセージを入力してください..."
                 className="flex-1 p-3 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
                 rows={3}
-                disabled={isStreaming}
+                disabled={isStreaming || isSummarizing}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!currentInput.trim() || isStreaming}
+                disabled={!currentInput.trim() || isStreaming || isSummarizing}
                 className="px-6"
               >
                 送信
               </Button>
             </div>
+
+            {/* Sticky End Consultation Button */}
+            <div className="max-w-3xl mx-auto mt-4 pt-4 border-t border-border">
+              <div className="flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={handleEndConsultation}
+                  size="sm"
+                  disabled={isSummarizing}
+                  className="w-full sm:w-auto px-8"
+                  aria-label="相談を終了して結果ページに移動"
+                >
+                  {isSummarizing ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>要約生成中...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      相談終了
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </>
       )}
+
+      {/* Chat Guidance Overlay */}
+      <GuidanceOverlay
+        open={showChatOverlay}
+        onClose={handleChatOverlayClose}
+        title={chatOverlayContent.title}
+        body={chatOverlayContent.body}
+        primaryAction={chatOverlayContent.primaryAction}
+        tone="instruction"
+        illustration={
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-2.4-.32l-3.2.32 1.6-2.4a8 8 0 118-8z" />
+            </svg>
+          </div>
+        }
+      />
     </div>
   );
 }

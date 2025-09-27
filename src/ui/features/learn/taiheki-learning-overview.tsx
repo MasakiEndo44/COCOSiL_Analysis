@@ -16,7 +16,7 @@ export function TaihekiLearningOverview() {
   };
 
   return (
-    <ComponentTag name="TaihekiLearningOverview" type="feature">
+    
       <div className="space-y-8 animate-fade-in">
         {/* Hero Section */}
         <div className="text-center space-y-6">
@@ -179,6 +179,6 @@ export function TaihekiLearningOverview() {
           )}
         </div>
       </div>
-    </ComponentTag>
+    
   );
 }

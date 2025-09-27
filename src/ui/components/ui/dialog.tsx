@@ -51,22 +51,24 @@ DialogTrigger.displayName = 'DialogTrigger';
 
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  containerClassName?: string;
+  hideCloseButton?: boolean;
 }
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, containerClassName, hideCloseButton = false, ...props }, ref) => {
     const context = React.useContext(DialogContext);
-    
+
     if (!context?.open) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className={cn("fixed inset-0 z-50 flex items-center justify-center", containerClassName)}>
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black/80"
           onClick={() => context.onOpenChange(false)}
         />
-        
+
         {/* Dialog */}
         <div
           ref={ref}
@@ -77,13 +79,15 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           {...props}
         >
           {children}
-          <button
-            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => context.onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </button>
+          {!hideCloseButton && (
+            <button
+              className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={() => context.onOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          )}
         </div>
       </div>
     );

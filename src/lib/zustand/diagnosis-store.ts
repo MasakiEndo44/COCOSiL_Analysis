@@ -20,19 +20,26 @@ interface DiagnosisState {
   mbti: MBTIResult | null;
   taiheki: TaihekiResult | null;
   fortune: FortuneResult | null;
-  
+
   // AIカウンセリングデータ
   chatSession: ChatSession | null;
   chatSummary: ChatSummary | null;
   hasCompletedCounseling: boolean;
-  
+
   // 状態
   currentStep: DiagnosisStep;
   completedSteps: DiagnosisStep[];
   progress: number; // 0-100
   isLoading: boolean;
   error: AppError | null;
-  
+
+  // オーバーレイガイダンス状態
+  overlayHints: {
+    resultsIntroSeen: boolean;
+    chatIntroSeen: boolean;
+    exportIntroSeen: boolean;
+  };
+
   // 診断データ統合
   getUserData: () => UserDiagnosisData | null;
 }
@@ -44,21 +51,24 @@ interface DiagnosisActions {
   setMBTI: (result: MBTIResult) => void;
   setTaiheki: (result: TaihekiResult) => void;
   setFortune: (result: FortuneResult) => void;
-  
+
   // AIカウンセリング設定
   setChatSession: (session: ChatSession) => void;
   setChatSummary: (summary: ChatSummary) => void;
   markCounselingCompleted: (completed: boolean) => void;
-  
+
   // 進捗管理
   setCurrentStep: (step: DiagnosisStep) => void;
   completeStep: (step: DiagnosisStep) => void;
   updateProgress: () => void;
-  
+
   // 状態管理
   setLoading: (loading: boolean) => void;
   setError: (error: AppError | null) => void;
-  
+
+  // オーバーレイガイダンス管理
+  markOverlaySeen: (type: 'results' | 'chat' | 'export') => void;
+
   // データ操作
   clearAll: () => void;
   exportData: () => UserDiagnosisData | null;
@@ -96,14 +106,19 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       progress: 0,
       isLoading: false,
       error: null,
+      overlayHints: {
+        resultsIntroSeen: false,
+        chatIntroSeen: false,
+        exportIntroSeen: false,
+      },
       
       // セッション初期化
       initializeSession: () => {
         const sessionId = generateSessionId();
-        set({ 
-          sessionId, 
-          currentStep: 'basic_info', 
-          completedSteps: [], 
+        set({
+          sessionId,
+          currentStep: 'basic_info',
+          completedSteps: [],
           progress: 0,
           basicInfo: null,
           mbti: null,
@@ -112,6 +127,11 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
           chatSession: null,
           chatSummary: null,
           hasCompletedCounseling: false,
+          overlayHints: {
+            resultsIntroSeen: false,
+            chatIntroSeen: false,
+            exportIntroSeen: false,
+          },
           isLoading: false,
           error: null
         });
@@ -183,9 +203,23 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
       },
-      
+
       setError: (error: AppError | null) => {
         set({ error });
+      },
+
+      // オーバーレイガイダンス管理
+      markOverlaySeen: (type: 'results' | 'chat' | 'export') => {
+        const { overlayHints } = get();
+        const overlayKey = type === 'results' ? 'resultsIntroSeen' :
+                          type === 'chat' ? 'chatIntroSeen' : 'exportIntroSeen';
+
+        set({
+          overlayHints: {
+            ...overlayHints,
+            [overlayKey]: true
+          }
+        });
       },
       
       // データ統合取得
@@ -193,10 +227,19 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         const state = get();
         const { sessionId, basicInfo, mbti, taiheki, fortune, currentStep, completedSteps, progress } = state;
         
-        if (!sessionId || !basicInfo) return null;
+        // Fix: Only require basicInfo, generate sessionId if missing
+        if (!basicInfo) return null;
+        
+        // Generate sessionId if missing (common hydration issue)
+        let currentSessionId = sessionId;
+        if (!currentSessionId) {
+          currentSessionId = generateSessionId();
+          set({ sessionId: currentSessionId });
+          console.log('🔧 Generated missing sessionId:', currentSessionId);
+        }
         
         return {
-          id: sessionId,
+          id: currentSessionId,
           basic: basicInfo,
           mbti,
           taiheki,
@@ -224,6 +267,11 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
           currentStep: 'basic_info',
           completedSteps: [],
           progress: 0,
+          overlayHints: {
+            resultsIntroSeen: false,
+            chatIntroSeen: false,
+            exportIntroSeen: false,
+          },
           isLoading: false,
           error: null
         });
@@ -247,7 +295,12 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         hasCompletedCounseling: state.hasCompletedCounseling,
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,
-        progress: state.progress
+        progress: state.progress,
+        overlayHints: state.overlayHints || {
+          resultsIntroSeen: false,
+          chatIntroSeen: false,
+          exportIntroSeen: false,
+        }
       })
     }
   )

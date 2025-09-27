@@ -42,8 +42,7 @@ export default async function EditRecordPage({ params }: EditRecordPageProps) {
   }
 
   return (
-    <PageTag route={`/admin/records/${params.id}/edit`} description="診断記録編集ページ">
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto py-8 px-4">
           {/* ヘッダー */}
           <div className="mb-8">
@@ -72,6 +71,5 @@ export default async function EditRecordPage({ params }: EditRecordPageProps) {
           <RecordEditForm record={record} />
         </div>
       </div>
-    </PageTag>
   );
 }

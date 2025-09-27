@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/prisma';
+import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
 
 const diagnosisResultSchema = z.object({
   name: z.string().min(1),
@@ -20,6 +21,11 @@ const diagnosisResultSchema = z.object({
   satisfaction: z.number().min(1).max(5).default(5),
   duration: z.string().default(''),
   feedback: z.string().default(''),
+  // 統合診断専用フィールド
+  integratedKeywords: z.string().optional(), // JSON配列形式
+  aiSummary: z.string().optional(),
+  isIntegratedReport: z.boolean().default(false),
+  reportVersion: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -27,28 +33,46 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = diagnosisResultSchema.parse(body);
 
-    // Create diagnosis record
+    // Create diagnosis record with integrated fields
+    const createData = {
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      name: validatedData.name,
+      birthDate: validatedData.birthDate,
+      age: validatedData.age,
+      gender: validatedData.gender,
+      zodiac: validatedData.zodiac,
+      animal: validatedData.animal,
+      orientation: validatedData.orientation,
+      color: validatedData.color,
+      mbti: validatedData.mbti,
+      mainTaiheki: validatedData.mainTaiheki,
+      subTaiheki: validatedData.subTaiheki,
+      sixStar: validatedData.sixStar,
+      theme: validatedData.theme,
+      advice: validatedData.advice,
+      satisfaction: validatedData.satisfaction,
+      duration: validatedData.duration,
+      feedback: validatedData.feedback,
+      // 統合診断専用フィールド
+      integratedKeywords: validatedData.integratedKeywords,
+      aiSummary: validatedData.aiSummary,
+      isIntegratedReport: validatedData.isIntegratedReport,
+      reportVersion: validatedData.reportVersion || 'v2.0-integrated',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     const record = await db.diagnosisRecord.create({
+      data: createData,
+    });
+
+    // Generate and save markdown content
+    const markdownContent = generateMarkdownFromRecord(record);
+    const updatedRecord = await db.diagnosisRecord.update({
+      where: { id: record.id },
       data: {
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-        name: validatedData.name,
-        birthDate: validatedData.birthDate,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        zodiac: validatedData.zodiac,
-        animal: validatedData.animal,
-        orientation: validatedData.orientation,
-        color: validatedData.color,
-        mbti: validatedData.mbti,
-        mainTaiheki: validatedData.mainTaiheki,
-        subTaiheki: validatedData.subTaiheki,
-        sixStar: validatedData.sixStar,
-        theme: validatedData.theme,
-        advice: validatedData.advice,
-        satisfaction: validatedData.satisfaction,
-        duration: validatedData.duration,
-        feedback: validatedData.feedback,
-        createdAt: new Date(),
+        markdownContent,
+        markdownVersion: '1.0',
         updatedAt: new Date(),
       },
     });
@@ -57,6 +81,8 @@ export async function POST(request: NextRequest) {
       success: true,
       id: record.id,
       message: '診断結果が保存されました',
+      markdownGenerated: !!markdownContent,
+      markdownLength: markdownContent?.length || 0,
     });
   } catch (error) {
     console.error('Error saving diagnosis result:', error);

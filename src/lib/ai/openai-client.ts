@@ -265,7 +265,7 @@ export function getOpenAIClient(): OpenAIClient {
   return openaiClient;
 }
 
-// OpenAI SDK インスタンスをエクスポート（ai-analysis.ts と integrated-report-service.ts 用）
+// OpenAI SDK インスタンスをエクスポート（integrated-report-service.ts 用）
 export function getOpenAISDK(): OpenAI {
   if (!openaiSDK) {
     const apiKey = process.env.OPENAI_API_KEY;
