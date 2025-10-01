@@ -5,8 +5,6 @@
 import {
   COCOSiLError,
   ErrorCode,
-  ErrorType,
-  ErrorSeverity,
   getErrorPriority,
   isCriticalError,
   requiresImmediateAlert

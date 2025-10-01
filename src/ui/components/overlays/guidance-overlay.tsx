@@ -118,12 +118,11 @@ export function GuidanceOverlay({
           <DialogDescription
             id="guidance-overlay-description"
             className={`text-base leading-relaxed ${toneClasses.body}`}
-            asChild={typeof body !== 'string'}
           >
             {typeof body === 'string' ? (
               <div>{body}</div>
             ) : (
-              body
+              <div>{body}</div>
             )}
           </DialogDescription>
         </DialogHeader>

@@ -364,7 +364,7 @@ export default function EnhancedRecordsView({
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">診断記録検索</h2>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <Button variant="secondary" size="sm" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
             更新
           </Button>
@@ -387,7 +387,7 @@ export default function EnhancedRecordsView({
             {isSearching ? '検索中...' : '検索'}
           </Button>
           {searchQuery && (
-            <Button type="button" variant="outline" onClick={handleClearSearch}>
+            <Button type="button" variant="secondary" onClick={handleClearSearch}>
               クリア
             </Button>
           )}
@@ -425,7 +425,7 @@ export default function EnhancedRecordsView({
           </div>
           {alertMessage.type === 'error' && (
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="sm" 
               onClick={() => setAlertMessage(null)} 
               className="mt-3"
@@ -441,7 +441,7 @@ export default function EnhancedRecordsView({
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="text-red-800 font-medium">エラーが発生しました</div>
           <div className="text-red-600 text-sm mt-1">{error}</div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-3">
+          <Button variant="secondary" size="sm" onClick={handleRefresh} className="mt-3">
             再試行
           </Button>
         </div>

@@ -3,11 +3,6 @@
  */
 
 import {
-  basicInfoSchema,
-  mbtiResultSchema,
-  taihekiResultSchema,
-  fortuneCalcRequestSchema,
-  chatRequestSchema,
   validateBasicInfo,
   validateMBTIResult,
   validateTaihekiResult,

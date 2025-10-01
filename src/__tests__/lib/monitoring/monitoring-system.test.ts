@@ -4,9 +4,7 @@
 
 import { collector } from '@/lib/monitoring/collector';
 import { metricQueue, RUMCollector } from '@/lib/monitoring/queue';
-import { aggregator } from '@/lib/monitoring/aggregator';
 import { monitor, initializeMonitoring, getMonitoringStatus } from '@/lib/monitoring/index';
-import type { AllMetrics, MetricSummary } from '@/lib/monitoring/schema';
 
 // Mock dependencies
 jest.mock('@/lib/monitoring/queue');

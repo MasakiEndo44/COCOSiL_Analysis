@@ -19,9 +19,7 @@ import {
   ValidationRule,
   validateInput
 } from '@/lib/api-utils';
-import { ErrorCode } from '@/lib/error/errorTypes';
-import type { FortuneCalcRequest, FortuneCalcResponse } from '@/types';
-import type { RequestContext } from '@/types/api';
+import { ErrorCode } from '@/types/api';
 
 // Edge Runtime設定 (o3推奨)
 export const runtime = 'edge';
@@ -197,7 +195,7 @@ export async function POST(request: NextRequest) {
         if (error.message.includes('対応年度')) {
           return createErrorResponse(
             createApiError(
-              ErrorCode.INVALID_INPUT_FORMAT,
+              ErrorCode.DATE_OUT_OF_RANGE,
               `指定された年度は対応範囲外です（${getSupportedYearRange().min}-${getSupportedYearRange().max}年）`,
               { year, supportedRange: `${getSupportedYearRange().min}-${getSupportedYearRange().max}` }
             ),
@@ -208,7 +206,7 @@ export async function POST(request: NextRequest) {
         if (error.message.includes('存在しない日付')) {
           return createErrorResponse(
             createApiError(
-              ErrorCode.INVALID_INPUT_FORMAT,
+              ErrorCode.INVALID_DATE_FORMAT,
               '存在しない日付が指定されました',
               { year, month, day }
             ),
@@ -232,7 +230,7 @@ export async function POST(request: NextRequest) {
       // その他の計算エラー
       return createErrorResponse(
         createApiError(
-          ErrorCode.FORTUNE_CALCULATION_ERROR,
+          ErrorCode.CALCULATION_ERROR,
           '算命学計算中にエラーが発生しました',
           { error: error instanceof Error ? error.message : String(error) },
           true
@@ -302,7 +300,7 @@ export async function POST(request: NextRequest) {
     
     return createErrorResponse(
       createApiError(
-        ErrorCode.EDGE_RUNTIME_ERROR,
+        ErrorCode.INTERNAL_SERVER_ERROR,
         '内部サーバーエラーが発生しました',
         {
           error: error instanceof Error ? error.message : String(error),
@@ -398,7 +396,7 @@ export async function GET(request: NextRequest) {
     
     return createErrorResponse(
       createApiError(
-        ErrorCode.EDGE_RUNTIME_ERROR,
+        ErrorCode.INTERNAL_SERVER_ERROR,
         'GETリクエスト処理中にエラーが発生しました',
         {
           error: error instanceof Error ? error.message : String(error),

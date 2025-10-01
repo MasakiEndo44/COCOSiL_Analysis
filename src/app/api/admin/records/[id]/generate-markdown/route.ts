@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
 import { requireAdminRole } from '@/lib/admin-middleware';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
+import type { DiagnosisRecord } from '@/types/admin';
 
 /**
  * 指定された診断記録にMarkdownを生成・保存するAPI
@@ -33,8 +34,8 @@ export async function POST(
       );
     }
 
-    // Markdownを生成
-    const markdownContent = generateMarkdownFromRecord(record);
+    // Markdownを生成 - type cast for compatibility
+    const markdownContent = generateMarkdownFromRecord(record as DiagnosisRecord);
 
     // レコードを更新
     const updatedRecord = await adminDb.diagnosisRecord.update({

@@ -448,8 +448,7 @@ class COCOSiLLogger {
   }
 
   private isEdgeRuntime(): boolean {
-    return typeof EdgeRuntime !== 'undefined' || 
-           typeof process === 'undefined' ||
+    return typeof process === 'undefined' ||
            process.env.NEXT_RUNTIME === 'edge';
   }
 }

@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { BasicInfo, MBTIType, TaihekiType } from '@/types';
+import type { BasicInfo } from '@/types';
 
 /**
  * Tailwind CSS クラス名をマージするユーティリティ

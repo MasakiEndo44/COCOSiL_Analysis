@@ -11,7 +11,7 @@ import {
   RequestContext,
   isCOCOSiLError 
 } from './errorTypes';
-import { getRecoveryStrategy, attemptAutoRecovery } from './recoveryStrategies';
+import { attemptAutoRecovery } from './recoveryStrategies';
 import { createRequestLogger } from './logger';
 import { validateRequestBody } from '@/lib/validation/utils';
 
@@ -131,7 +131,7 @@ export function withErrorBoundary<T = any>(
             'moderate',
             ErrorCode.RATE_LIMIT_EXCEEDED,
             'api.rateLimitExceeded',
-            { clientId: clientId.substring(0, 8) + '***' }
+            { request: requestContext }
           );
         }
       }
@@ -154,7 +154,7 @@ export function withErrorBoundary<T = any>(
       if (options.validateSchema && (request.method === 'POST' || request.method === 'PUT')) {
         const validation = await validateRequestBody(request, options.validateSchema);
         if (!validation.success) {
-          return validation.error;
+          return validation.error as NextResponse;
         }
         validatedData = validation.data;
       }
@@ -250,7 +250,7 @@ async function handleApiError(
       'high',
       ErrorCode.EDGE_RUNTIME_ERROR,
       'api.unknownError',
-      { originalError: String(error) },
+      undefined,
       error
     );
   }
@@ -311,7 +311,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
         'moderate',
         ErrorCode.OPENAI_RATE_LIMIT,
         'api.openai.rateLimit',
-        { originalError: error.message },
+        undefined,
         error
       );
     }
@@ -322,7 +322,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
         'moderate',
         ErrorCode.OPENAI_TIMEOUT,
         'api.openai.timeout',
-        { originalError: error.message },
+        undefined,
         error
       );
     }
@@ -332,7 +332,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
       'high',
       ErrorCode.OPENAI_API_ERROR,
       'api.openai.general',
-      { originalError: error.message },
+      undefined,
       error
     );
   }
@@ -344,7 +344,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
       'low',
       ErrorCode.VALIDATION_FAILED,
       'api.validation.failed',
-      { originalError: error.message },
+      undefined,
       error
     );
   }
@@ -356,7 +356,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
       'moderate',
       ErrorCode.NETWORK_CONNECTION_ERROR,
       'api.network.connectionFailed',
-      { originalError: error.message },
+      undefined,
       error
     );
   }
@@ -368,7 +368,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
       'high',
       ErrorCode.DATABASE_CONNECTION_ERROR,
       'api.database.connectionFailed',
-      { originalError: error.message },
+      undefined,
       error
     );
   }
@@ -380,7 +380,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
       'moderate',
       ErrorCode.FUNCTION_TIMEOUT,
       'api.timeout.functionTimeout',
-      { originalError: error.message },
+      undefined,
       error
     );
   }
@@ -391,7 +391,7 @@ function classifyError(error: Error, context: RequestContext): COCOSiLError {
     'moderate',
     ErrorCode.EDGE_RUNTIME_ERROR,
     'api.error.general',
-    { originalError: error.message },
+    undefined,
     error
   );
 }

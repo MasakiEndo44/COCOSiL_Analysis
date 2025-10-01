@@ -3,7 +3,7 @@
  * Edge Runtime compatible batch processing for metrics
  */
 
-import { MetricData, AllMetrics, STORAGE_KEYS, RETENTION } from './schema';
+import { AllMetrics, STORAGE_KEYS, RETENTION } from './schema';
 
 interface QueueConfig {
   batchSize: number;

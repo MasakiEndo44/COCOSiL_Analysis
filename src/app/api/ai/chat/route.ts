@@ -9,7 +9,8 @@ import {
   chatRequestSchema,
   userDiagnosisDataSchema
 } from '@/lib/validation/schemas';
-import { validateRequestBody, formatApiValidationError, validateDiagnosisCompleteness } from '@/lib/validation/utils';
+import { validateDiagnosisCompleteness } from '@/lib/validation/utils';
+import type { ChatMessage } from '@/types';
 
 // OpenAI クライアントの初期化
 const openai = new OpenAI({
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
         path: err.path.join('.'),
         message: err.message,
         code: err.code,
-        received: err.received || 'N/A'
+        received: 'received' in err ? err.received : 'N/A'
       })));
 
       return NextResponse.json({
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Performance: Apply conversation windowing to prevent unlimited growth
-    const { windowedMessages, droppedCount, contextInfo } = applyConversationWindowing(messages);
+    const { windowedMessages, droppedCount, contextInfo } = applyConversationWindowing(messages as ChatMessage[]);
     const contextSummary = generateContextSummary(windowedMessages);
 
     let systemPrompt: string;
@@ -194,16 +195,16 @@ export async function POST(request: NextRequest) {
 
     if (usePsychologicalSafety) {
       // === 心理的安全性システムを使用 ===
-      
+
       // 1. 心理的安全性スコア計算
       const safetyScore = SafetyScoreCalculator.calculateSafetyScore(windowedMessages);
-      
+
       // 2. 心理的安全性プロンプトエンジン初期化
-      const psychoEngine = new PsychologicalSafetyPromptEngine(diagnosisData);
+      const psychoEngine = new PsychologicalSafetyPromptEngine(diagnosisData as import('@/types').UserDiagnosisData);
       const psychoPrompt = psychoEngine.generatePsychologicalSafetyPrompt(windowedMessages);
-      
+
       // 3. 選択式質問生成（必要に応じて）
-      const questionGenerator = new ChoiceQuestionGenerator(diagnosisData);
+      const questionGenerator = new ChoiceQuestionGenerator(diagnosisData as import('@/types').UserDiagnosisData);
       
       // 質問タイプに基づいて選択式質問を生成
       if (psychoPrompt.questionType === 'choice' || psychoPrompt.questionType === 'hybrid') {
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
       
     } else {
       // === 従来のシステムを使用 ===
-      
+
       // Filter out system messages and transform to PromptContext format
       const filteredMessages = windowedMessages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -246,8 +247,25 @@ export async function POST(request: NextRequest) {
         priority: priority as 'speed' | 'quality'
       };
 
+      // Transform UserDiagnosisData to simplified DiagnosisData format for prompt engine
+      const simplifiedDiagnosisData = {
+        mbti: diagnosisData.mbti?.type || 'INFP',
+        taiheki: {
+          primary: diagnosisData.taiheki?.primary || 1,
+          secondary: diagnosisData.taiheki?.secondary || 0
+        },
+        fortune: {
+          animal: diagnosisData.fortune?.animal || '未知',
+          sixStar: diagnosisData.fortune?.sixStar || '未知'
+        },
+        basic: {
+          age: diagnosisData.basic?.age || 0,
+          name: diagnosisData.basic?.name || 'ユーザー'
+        }
+      };
+
       const promptResult = promptEngine.generateContextualPrompt(
-        diagnosisData,
+        simplifiedDiagnosisData,
         promptContext
       );
 

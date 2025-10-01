@@ -183,7 +183,7 @@ export function withOpenAIMonitoring<T extends any[], R>(
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     const startTime = Date.now();
-    let result: R;
+    let result: R | undefined;
     let error: string | undefined;
 
     try {
@@ -193,9 +193,9 @@ export function withOpenAIMonitoring<T extends any[], R>(
       throw err;
     } finally {
       const duration = Date.now() - startTime;
-      
-      // Calculate token usage if function provided
-      const tokens = config.getTokenCount && result 
+
+      // Calculate token usage if function provided (only if result exists)
+      const tokens = config.getTokenCount && result !== undefined
         ? config.getTokenCount(args, result)
         : { prompt: 0, completion: 0, total: 0 };
 
@@ -209,7 +209,7 @@ export function withOpenAIMonitoring<T extends any[], R>(
       });
     }
 
-    return result;
+    return result as R;
   };
 }
 

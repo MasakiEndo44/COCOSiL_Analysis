@@ -6,7 +6,8 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { COCOSiLError, ErrorCode, getRecoveryStrategy } from '@/lib/error/errorTypes';
+import { COCOSiLError, ErrorCode } from '@/lib/error/errorTypes';
+import { getRecoveryStrategy } from '@/lib/error/recoveryStrategies';
 import { logger } from '@/lib/error/logger';
 import { Button } from '@/ui/components/ui/button';
 import { AlertTriangle, RefreshCw, Home, Mail } from 'lucide-react';
@@ -37,14 +38,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     // COCOSiLErrorに変換
-    const cocosilError = error instanceof COCOSiLError 
-      ? error 
+    const cocosilError = error instanceof COCOSiLError
+      ? error
       : new COCOSiLError(
           'Infrastructure',
           'high',
           ErrorCode.EDGE_RUNTIME_ERROR,
           'errorBoundary.unexpectedError',
-          { originalError: error.message, stack: error.stack },
+          undefined,
           error
         );
 
@@ -237,7 +238,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
               }}
               disabled={button.action === 'retry' && isRetryDisabled}
               className="w-full flex items-center justify-center"
-              variant={index === 0 ? 'default' : 'outline'}
+              variant={index === 0 ? 'primary' : 'secondary'}
             >
               {button.action === 'retry' && <RefreshCw className="h-4 w-4 mr-2" />}
               {button.action === 'contact' && <Mail className="h-4 w-4 mr-2" />}
@@ -257,7 +258,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
               
               <Button 
                 onClick={onHome} 
-                variant="outline" 
+                variant="secondary" 
                 className="w-full flex items-center justify-center"
               >
                 <Home className="h-4 w-4 mr-2" />
@@ -266,7 +267,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
               
               <Button 
                 onClick={onContact} 
-                variant="outline" 
+                variant="secondary" 
                 className="w-full flex items-center justify-center"
               >
                 <Mail className="h-4 w-4 mr-2" />

@@ -4,6 +4,10 @@
  */
 
 // Core monitoring system
+import { collector as monitoringCollector } from './collector';
+import { metricQueue as queue, rumCollector as rum } from './queue';
+import { aggregator as metricsAggregator } from './aggregator';
+import type { UserAction } from './schema';
 export { collector, useMonitoring } from './collector';
 export { metricQueue, rumCollector, RUMCollector } from './queue';
 export { aggregator } from './aggregator';
@@ -69,7 +73,7 @@ export function initializeMonitoring(config?: {
   // Set up global error handling
   if (typeof window !== 'undefined' && enableErrorTracking) {
     window.addEventListener('error', (event) => {
-      collector.collectError(
+      monitoringCollector.collectError(
         new Error(event.message),
         {
           route: window.location.pathname,
@@ -81,7 +85,7 @@ export function initializeMonitoring(config?: {
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-      collector.collectError(
+      monitoringCollector.collectError(
         new Error(`Unhandled Promise Rejection: ${event.reason}`),
         {
           route: window.location.pathname,
@@ -98,7 +102,7 @@ export function initializeMonitoring(config?: {
   // Set up periodic flush
   if (typeof window !== 'undefined') {
     setInterval(() => {
-      metricQueue.flush();
+      queue.flush();
     }, flushInterval);
   }
 
@@ -110,11 +114,11 @@ export function initializeMonitoring(config?: {
  */
 export function getMonitoringStatus() {
   return {
-    collector: collector.getStats(),
-    queue: metricQueue.getStats(),
+    collector: monitoringCollector.getStats(),
+    queue: queue.getStats(),
     aggregator: {
-      activeAlerts: aggregator.getActiveAlerts().length,
-      alertRules: aggregator.getAlertRules().length,
+      activeAlerts: metricsAggregator.getActiveAlerts().length,
+      alertRules: metricsAggregator.getAlertRules().length,
     },
     system: {
       initialized: true,
@@ -128,17 +132,17 @@ export function getMonitoringStatus() {
  */
 export function shutdownMonitoring() {
   console.log('[Monitoring] Shutting down monitoring system...');
-  
+
   // Flush remaining metrics
-  metricQueue.flush();
-  
+  queue.flush();
+
   // Clean up collectors
-  collector.reset();
-  metricQueue.clear();
+  monitoringCollector.reset();
+  queue.clear();
   
   // Disconnect RUM collector
   if (typeof window !== 'undefined') {
-    rumCollector.disconnect();
+    rum.disconnect();
   }
   
   console.log('[Monitoring] System shutdown complete');
@@ -153,8 +157,8 @@ export const monitor = {
    */
   action: (action: UserAction, result: 'success' | 'error' | 'abandon' = 'success') => {
     if (typeof window === 'undefined') return;
-    
-    collector.collectUserAction({
+
+    monitoringCollector.collectUserAction({
       action,
       page: window.location.pathname,
       result,
@@ -171,13 +175,13 @@ export const monitor = {
     completed: boolean,
     duration?: number
   ) => {
-    collector.collectDiagnosisStep({
+    monitoringCollector.collectDiagnosisStep({
       type,
       step,
       completed,
       duration: duration || 0,
-      sessionId: typeof window !== 'undefined' 
-        ? sessionStorage.getItem('cocosil-session-id') || undefined 
+      sessionId: typeof window !== 'undefined'
+        ? sessionStorage.getItem('cocosil-session-id') || undefined
         : undefined,
     });
   },
@@ -186,11 +190,11 @@ export const monitor = {
    * Track error with simplified interface
    */
   error: (error: Error, component?: string, severity?: 'low' | 'medium' | 'high' | 'critical') => {
-    collector.collectError(error, {
+    monitoringCollector.collectError(error, {
       component,
       route: typeof window !== 'undefined' ? window.location.pathname : undefined,
-      sessionId: typeof window !== 'undefined' 
-        ? sessionStorage.getItem('cocosil-session-id') || undefined 
+      sessionId: typeof window !== 'undefined'
+        ? sessionStorage.getItem('cocosil-session-id') || undefined
         : undefined,
       severity: severity || 'medium',
     });
@@ -221,13 +225,13 @@ export const monitor = {
       },
     };
 
-    metricQueue.enqueue(metric);
+    queue.enqueue(metric);
   },
 
   /**
    * Flush metrics immediately
    */
-  flush: () => metricQueue.flush(),
+  flush: () => queue.flush(),
 
   /**
    * Get current monitoring stats

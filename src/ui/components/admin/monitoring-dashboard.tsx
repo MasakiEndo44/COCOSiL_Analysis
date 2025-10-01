@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Activity, Users, Clock, TrendingUp, AlertCircle } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
 import type { MetricSummary, Alert } from '@/lib/monitoring/schema';
 
 interface MonitoringDashboardProps {
@@ -83,7 +83,7 @@ export function MonitoringDashboard({ className }: MonitoringDashboardProps) {
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            variant={autoRefresh ? "default" : "outline"}
+            variant={autoRefresh ? "primary" : "secondary"}
             size="sm"
             onClick={() => setAutoRefresh(!autoRefresh)}
           >

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/prisma';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
+import type { DiagnosisRecord } from '@/types/admin';
 
 const diagnosisResultSchema = z.object({
   name: z.string().min(1),
@@ -66,9 +67,9 @@ export async function POST(request: NextRequest) {
       data: createData,
     });
 
-    // Generate and save markdown content
-    const markdownContent = generateMarkdownFromRecord(record);
-    const updatedRecord = await db.diagnosisRecord.update({
+    // Generate and save markdown content - type cast for compatibility
+    const markdownContent = generateMarkdownFromRecord(record as DiagnosisRecord);
+    const _updatedRecord = await db.diagnosisRecord.update({
       where: { id: record.id },
       data: {
         markdownContent,

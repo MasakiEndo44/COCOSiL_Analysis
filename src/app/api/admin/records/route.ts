@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
 import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
+import type { DiagnosisRecord } from '@/types/admin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generate and save markdown content
+    // Generate and save markdown content - type cast for compatibility
     try {
-      const markdownContent = generateMarkdownFromRecord(record);
+      const markdownContent = generateMarkdownFromRecord(record as DiagnosisRecord);
       await adminDb.diagnosisRecord.update({
         where: { id: record.id },
         data: {

@@ -5,8 +5,7 @@
 
 import { Suspense } from 'react';
 import { MonitoringDashboard } from '@/components/admin/monitoring-dashboard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export const metadata = {
   title: 'システム監視 | COCOSiL Admin',

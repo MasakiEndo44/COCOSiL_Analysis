@@ -18,36 +18,36 @@ export function convertDiagnosisRecordToData(record: DiagnosisRecord) {
   // BasicInfo構築
   const basicInfo: BasicInfo = {
     name: record.name,
+    email: '', // Admin records don't store email for privacy
     birthdate: { year, month, day },
     gender: record.gender as 'male' | 'female' | 'no_answer'
   };
 
   // MBTIResult構築
   const mbti: MBTIResult = {
-    type: record.mbti,
+    type: record.mbti as import('@/types').MBTIType,
     source: 'known' as const,
-    confidence: 1.0,
-    description: `${record.mbti}タイプ`
+    confidence: 1.0
   };
 
   // TaihekiResult構築
   const taiheki: TaihekiResult = {
-    primary: record.mainTaiheki,
-    secondary: record.subTaiheki || 0,
-    characteristics: [`主体癖${record.mainTaiheki}種（感情豊かな芸術家）`, `副体癖${record.subTaiheki || 0}種（忍耐強い支援者）`]
+    primary: record.mainTaiheki as import('@/types').TaihekiType,
+    secondary: (record.subTaiheki || 0) as import('@/types').SecondaryTaihekiType,
+    scores: {} as Record<import('@/types').TaihekiType, number>,
+    characteristics: [`主体癖${record.mainTaiheki}種（感情豊かな芸術家）`, `副体癖${record.subTaiheki || 0}種（忍耐強い支援者）`],
+    recommendations: []
   };
 
   // FortuneResult構築
   const fortune: FortuneResult = {
+    zodiac: record.zodiac || '未知',
     animal: record.animal,
     sixStar: record.sixStar,
     element: record.color,
-    animalDetails: {
-      character: record.animal,
-      color: record.color,
-      orientation: record.orientation
-    }
-  } as FortuneResult;
+    fortune: `${record.animal}の運勢`,
+    characteristics: [`${record.animal}の特徴`, `カラー：${record.color}`, `${record.orientation}`]
+  };
 
   // 星座計算（簡単な例：実際はより複雑な計算が必要）
   const zodiacSign = record.zodiac;
@@ -61,21 +61,30 @@ export function convertDiagnosisRecordToData(record: DiagnosisRecord) {
 
   // ChatSummary構築（管理者記録から）
   const chatSummary: ChatSummary | undefined = record.advice ? {
-    topicTitle: record.theme,
+    topicId: `topic-${record.id}`,
+    topicTitle: record.theme || '相談内容',
+    qaExchanges: [],
+    sessionDuration: 0,
     overallInsight: record.advice,
     keyPoints: [record.feedback],
     fullTranscript: [
       {
+        id: '1',
         role: 'assistant',
-        content: `こんにちは、${record.name}さん！診断結果を基にご相談をお受けします。`
+        content: `こんにちは、${record.name}さん！診断結果を基にご相談をお受けします。`,
+        timestamp: new Date()
       },
       {
+        id: '2',
         role: 'user',
-        content: `「${record.theme}」について相談したいです。`
+        content: `「${record.theme}」について相談したいです。`,
+        timestamp: new Date()
       },
       {
+        id: '3',
         role: 'assistant',
-        content: record.advice
+        content: record.advice,
+        timestamp: new Date()
       }
     ]
   } : undefined;

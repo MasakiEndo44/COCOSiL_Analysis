@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWTSession } from '@/lib/jwt-session';
+import { verifySession } from '@/lib/jwt-session';
 import { aggregator } from '@/lib/monitoring/aggregator';
 import { collector } from '@/lib/monitoring/collector';
 import { withAPIMonitoring } from '@/lib/monitoring/middleware';
@@ -13,8 +13,9 @@ import type { MetricSummary } from '@/lib/monitoring/schema';
 async function getMonitoringHandler(request: NextRequest): Promise<NextResponse> {
   try {
     // Verify admin authentication
-    const session = await verifyJWTSession(request);
-    if (!session || !session.isAdmin) {
+    const token = request.cookies.get('admin_token')?.value || '';
+    const session = await verifySession(token);
+    if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
         { status: 401 }

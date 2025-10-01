@@ -6,8 +6,6 @@
 import { 
   COCOSiLError, 
   ErrorCode, 
-  ErrorType, 
-  ErrorSeverity, 
   RecoveryStrategy 
 } from './errorTypes';
 
@@ -32,8 +30,10 @@ export const getOpenAIRecoveryStrategy = (
         type: 'alternative',
         description: 'AIチャットの代わりに事前作成済みの診断テンプレートを使用',
         action: async () => {
-          // 事前作成済みテンプレートの呼び出し
-          return await import('@/lib/ai/fallback-templates').then(m => m.getStaticTemplate());
+          // 簡易フォールバックメッセージ (TODO: 実装予定のfallback-templatesに置き換え)
+          return {
+            message: '現在、AIチャット機能が利用できません。診断結果ページからレポートをご確認ください。'
+          };
         }
       },
       userAction: {
@@ -337,15 +337,15 @@ export const attemptAutoRecovery = async (
       // 最後の試行でもエラーの場合
       if (attempt === maxAttempts) {
         return { 
-          success: false, 
-          error: retryError instanceof COCOSiLError 
-            ? retryError 
+          success: false,
+          error: retryError instanceof COCOSiLError
+            ? retryError
             : new COCOSiLError(
                 error.type,
                 error.severity,
                 error.code,
                 'recovery.autoRetryFailed',
-                { ...error.context, retryAttempt: attempt },
+                undefined,
                 retryError
               )
         };
@@ -372,7 +372,7 @@ export const executeFallback = async (error: COCOSiLError): Promise<any> => {
       'high',
       ErrorCode.FUNCTION_TIMEOUT,
       'recovery.fallbackFailed',
-      { originalError: error, fallbackError },
+      undefined,
       fallbackError
     );
   }

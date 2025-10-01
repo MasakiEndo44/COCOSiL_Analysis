@@ -5,6 +5,7 @@
 
 // Core Error Types and Classes
 export * from './errorTypes';
+import { COCOSiLError, ErrorCode } from './errorTypes';
 
 // Recovery Strategies
 export * from './recoveryStrategies';
@@ -64,37 +65,38 @@ export const createDiagnosisError = (
 );
 
 export const createValidationError = (
-  field: string,
+  _field: string,
   message: string,
-  context?: Record<string, any>
+  _context?: Record<string, any>
 ) => new COCOSiLError(
   'Operational',
   'low',
   ErrorCode.VALIDATION_FAILED,
   message,
-  { field, ...context }
+  undefined
 );
 
 export const createOpenAIError = (
   cause: unknown,
-  context?: Record<string, any>
+  _context?: Record<string, any>
 ) => new COCOSiLError(
   'Integration',
   'high',
   ErrorCode.OPENAI_API_ERROR,
   'openai.apiError',
-  { ...context, cause }
+  undefined,
+  cause
 );
 
 export const createSecurityError = (
-  action: string,
-  context?: Record<string, any>
+  _action: string,
+  _context?: Record<string, any>
 ) => new COCOSiLError(
   'Security',
   'high',
   ErrorCode.SUSPICIOUS_ACTIVITY,
   'security.suspiciousActivity',
-  { action, ...context }
+  undefined
 );
 
 // Error Handler Configuration
