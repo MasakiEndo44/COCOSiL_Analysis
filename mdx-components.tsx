@@ -5,7 +5,7 @@ import { Progress } from '@/ui/components/ui/progress'
 import { InteractiveQuiz } from '@/ui/components/interactive/interactive-quiz'
 import { BodyTypeSelector } from '@/ui/components/interactive/body-type-selector'
 import { TaihekiComparison } from '@/ui/components/interactive/taiheki-comparison'
-// import { ReflectionPrompt } from '@/ui/components/interactive/reflection-prompt'
+import { ReflectionPrompt } from '@/ui/components/interactive/reflection-prompt'
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -63,7 +63,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     InteractiveQuiz: InteractiveQuiz,
     BodyTypeSelector: BodyTypeSelector,
     TaihekiComparison: TaihekiComparison,
-    // ReflectionPrompt: ReflectionPrompt,
+    ReflectionPrompt: ReflectionPrompt,
     
     // Custom learning components
     InfoBox: ({ children, type = 'info' }: { children: React.ReactNode, type?: 'info' | 'warning' | 'success' | 'tip' }) => {
@@ -98,6 +98,30 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         </h4>}
         <div className="text-orange-700">{children}</div>
       </Card>
+    ),
+
+    Callout: ({ children, type = 'info' }: { children: React.ReactNode, type?: 'info' | 'warning' | 'success' | 'error' }) => {
+      const styles = {
+        info: 'bg-blue-50 border-blue-500 text-blue-900',
+        warning: 'bg-yellow-50 border-yellow-500 text-yellow-900',
+        success: 'bg-green-50 border-green-500 text-green-900',
+        error: 'bg-red-50 border-red-500 text-red-900'
+      }
+
+      return (
+        <div className={`border-l-4 rounded-r-lg p-4 my-4 ${styles[type]}`}>
+          {children}
+        </div>
+      )
+    },
+
+    Warning: ({ children }: { children: React.ReactNode }) => (
+      <div className="border-l-4 border-yellow-500 bg-yellow-50 rounded-r-lg p-4 my-4 text-yellow-900">
+        <div className="flex items-start gap-2">
+          <span className="text-xl">⚠️</span>
+          <div className="flex-1">{children}</div>
+        </div>
+      </div>
     ),
 
     ...components,

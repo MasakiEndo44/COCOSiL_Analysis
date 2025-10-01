@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/admin-db';
 import { requireAdminAuth } from '@/lib/admin-middleware';
 import { DiagnosisStats } from '@/types/admin';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminAuth(request);

@@ -4,6 +4,8 @@ import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
 import type { DiagnosisRecord } from '@/types/admin';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminAuth(request);

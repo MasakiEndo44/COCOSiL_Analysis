@@ -3,6 +3,8 @@ import ExcelJS from 'exceljs';
 import { adminDb } from '@/lib/admin-db';
 import { requireAdminRole } from '@/lib/admin-middleware';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await requireAdminRole(request);

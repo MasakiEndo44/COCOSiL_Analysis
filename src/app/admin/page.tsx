@@ -2,6 +2,8 @@ import AdminDashboard from '@/components/admin/admin-dashboard';
 import { AdminLogin } from '@/ui/features/admin/admin-login';
 import { getServerAdminSession } from '@/lib/admin-session-server';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   // 署名付きJWTを検証してセッションを取得
   const session = await getServerAdminSession();

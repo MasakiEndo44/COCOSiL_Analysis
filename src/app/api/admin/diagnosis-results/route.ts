@@ -4,6 +4,8 @@ import { db } from '@/lib/prisma';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
 import type { DiagnosisRecord } from '@/types/admin';
 
+export const dynamic = 'force-dynamic';
+
 const diagnosisResultSchema = z.object({
   name: z.string().min(1),
   birthDate: z.string(), // YYYY/MM/DD format

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AdminAuthService } from '@/lib/admin-auth';
 import { signSession, getSessionCookieOptions } from '@/lib/jwt-session';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
