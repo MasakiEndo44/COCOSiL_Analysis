@@ -49,8 +49,8 @@ export function DiagnosisFlow() {
         </p>
       </div>
 
-      {/* Desktop Flow */}
-      <div className="hidden md:block">
+      {/* Desktop Flow - デスクトップとタブレット横画面で表示 */}
+      <div className="hidden lg:block">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           {steps.map((step, index) => (
             <div key={index} className="flex items-center">
@@ -90,8 +90,8 @@ export function DiagnosisFlow() {
         </div>
       </div>
 
-      {/* Mobile Flow */}
-      <div className="md:hidden space-y-6">
+      {/* Mobile Flow - モバイルとタブレット縦画面で表示 */}
+      <div className="lg:hidden space-y-6">
         {steps.map((step, index) => (
           <div key={index}>
             <div className="flex items-start space-x-4 p-6 bg-white rounded-card shadow-z1">

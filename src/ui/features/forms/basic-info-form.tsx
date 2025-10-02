@@ -296,7 +296,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
             control={control}
             render={({ field }) => (
               <Select value={field.value || ''} onValueChange={field.onChange}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="性別を選択してください" />
                 </SelectTrigger>
                 <SelectContent>
@@ -322,13 +322,13 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
           <p className="text-xs text-light-fg-muted mb-2">
             算命学計算に必要なため、正確な生年月日を入力してください
           </p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Controller
               name="birthdate.year"
               control={control}
               render={({ field }) => (
                 <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseInt(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="年" />
                   </SelectTrigger>
                   <SelectContent>
@@ -346,7 +346,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
               control={control}
               render={({ field }) => (
                 <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseInt(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="月" />
                   </SelectTrigger>
                   <SelectContent>
@@ -367,7 +367,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
                   value={field.value?.toString() || ''}
                   onValueChange={(value) => field.onChange(parseInt(value))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="日" />
                   </SelectTrigger>
                   <SelectContent>

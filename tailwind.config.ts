@@ -65,6 +65,8 @@ const config: Config = {
         'body-l-desktop': ['20px', { lineHeight: '28px', fontWeight: '400' }],
         'body-m-mobile': ['16px', { lineHeight: '24px', fontWeight: '400' }],
         'body-m-desktop': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'body-s-mobile': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'body-s-desktop': ['14px', { lineHeight: '20px', fontWeight: '400' }],
       },
       borderRadius: {
         'card': '8px',
