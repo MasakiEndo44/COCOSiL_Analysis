@@ -54,7 +54,7 @@ export class ChoiceQuestionGenerator {
    */
   private generateEmotionScaleQuestion(
     stage: ConversationStage,
-    context: ConversationContext
+    _context: ConversationContext // Reserved for context-aware emotion selection
   ): ChoiceQuestion {
     const emotions = [
       { name: '安心', emoji: '😌', description: '落ち着いている' },
@@ -158,9 +158,9 @@ export class ChoiceQuestionGenerator {
    * Get scale questions based on context
    */
   private getScaleQuestions(
-    stage: ConversationStage,
-    context: ConversationContext,
-    previousTopics: string[]
+    _stage: ConversationStage, // Reserved for stage-specific question filtering
+    _context: ConversationContext, // Reserved for context-aware question generation
+    _previousTopics: string[] // Reserved for topic-based question variation
   ) {
     const baseQuestions = [
       {
@@ -193,9 +193,9 @@ export class ChoiceQuestionGenerator {
    * Get multiple choice questions
    */
   private getMultipleChoiceQuestions(
-    stage: ConversationStage,
-    context: ConversationContext,
-    previousTopics: string[]
+    _stage: ConversationStage, // Reserved for stage-specific question filtering
+    _context: ConversationContext, // Reserved for context-aware question generation
+    _previousTopics: string[] // Reserved for topic-based question variation
   ) {
     const questions = [
       {
@@ -233,8 +233,8 @@ export class ChoiceQuestionGenerator {
    */
   private getSingleChoiceQuestions(
     stage: ConversationStage,
-    context: ConversationContext,
-    previousTopics: string[]
+    _context: ConversationContext, // Reserved for context-aware question generation
+    _previousTopics: string[] // Reserved for topic-based question variation
   ) {
     const warmupQuestions = [
       {
@@ -380,7 +380,7 @@ export class ChoiceQuestionGenerator {
   /**
    * Get empathy prefix based on stage and type
    */
-  private getEmpathyPrefix(stage: ConversationStage, type: string): string {
+  private getEmpathyPrefix(stage: ConversationStage, _type: string): string { // Reserved for type-specific empathy messages
     const prefixes = {
       warmup: [
         'お時間をいただき、ありがとうございます。',

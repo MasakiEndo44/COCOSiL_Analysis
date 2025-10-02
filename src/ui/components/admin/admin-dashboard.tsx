@@ -19,7 +19,7 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ session }: AdminDashboardProps) {
   const router = useRouter();
-  const [currentView, setCurrentView] = useState<'overview' | 'records' | 'stats' | 'export'>('overview');
+  const [currentView, _setCurrentView] = useState<'overview' | 'records' | 'stats' | 'export'>('overview'); // Reserved for view switching feature
   const [records, setRecords] = useState<DiagnosisRecord[]>([]);
   const [stats, setStats] = useState<DiagnosisStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,8 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
     }
   };
 
-  const handleLogout = async () => {
+  // Reserved for logout functionality (currently handled by AdminHeader)
+  const _handleLogout = async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
       router.push('/admin/login');
@@ -77,7 +78,8 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
     }
   };
 
-  const handleEdit = (id: number) => {
+  // Reserved for inline edit functionality (currently handled by EnhancedRecordsView)
+  const _handleEdit = (id: number) => {
     const record = records.find(r => r.id === id);
     if (record) {
       setEditingRecord(record);

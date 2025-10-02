@@ -17,10 +17,11 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build search condition
+    // Note: SQLite doesn't support case-insensitive mode in Prisma
+    // Using contains without mode for SQLite compatibility (case-sensitive)
     const whereCondition = query ? {
       name: {
         contains: query,
-        mode: 'insensitive' as const
       }
     } : {};
 

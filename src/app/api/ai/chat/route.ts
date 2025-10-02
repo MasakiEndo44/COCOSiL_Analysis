@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     const requestBodyText = await request.text();
     console.log('🔍 Raw request body:', requestBodyText);
     
-    // Re-create request for validation
-    const requestForValidation = new Request(request.url, {
+    // Re-create request for validation (reserved for future use)
+    const _requestForValidation = new Request(request.url, {
       method: request.method,
       headers: request.headers,
       body: requestBodyText
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const {
       messages,
-      systemPrompt: clientSystemPrompt,
+      systemPrompt: _clientSystemPrompt, // Reserved for custom system prompts
       userData: diagnosisData,
       stream = false
     } = directValidation.data;
@@ -196,8 +196,8 @@ export async function POST(request: NextRequest) {
     if (usePsychologicalSafety) {
       // === 心理的安全性システムを使用 ===
 
-      // 1. 心理的安全性スコア計算
-      const safetyScore = SafetyScoreCalculator.calculateSafetyScore(windowedMessages);
+      // 1. 心理的安全性スコア計算 (reserved for future safety metrics)
+      const _safetyScore = SafetyScoreCalculator.calculateSafetyScore(windowedMessages);
 
       // 2. 心理的安全性プロンプトエンジン初期化
       const psychoEngine = new PsychologicalSafetyPromptEngine(diagnosisData as import('@/types').UserDiagnosisData);
@@ -208,10 +208,10 @@ export async function POST(request: NextRequest) {
       
       // 質問タイプに基づいて選択式質問を生成
       if (psychoPrompt.questionType === 'choice' || psychoPrompt.questionType === 'hybrid') {
-        const extractedTopics = windowedMessages
+        const _extractedTopics = windowedMessages
           .filter(msg => msg.role === 'user')
           .map(msg => msg.content)
-          .join(' ');
+          .join(' '); // Reserved for topic extraction feature
         
         choiceQuestion = questionGenerator.generateChoiceQuestion(
           psychoPrompt.stage,
