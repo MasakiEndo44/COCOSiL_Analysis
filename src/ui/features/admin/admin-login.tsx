@@ -35,7 +35,8 @@ export function AdminLogin() {
       const result = await response.json();
 
       if (result.success) {
-        router.push('/admin');
+        // サーバーコンポーネントのセッション判定を反映するため、完全なページリロード
+        window.location.href = '/admin';
       } else {
         setError(result.error || 'ログインに失敗しました');
       }
