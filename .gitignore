@@ -45,3 +45,7 @@ next-env.d.ts
 
 # Temporary files
 docs/input/*占い*
+
+# Prisma SQLite databases (never commit)
+prisma/*.db
+prisma/*.db-journal
