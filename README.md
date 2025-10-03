@@ -529,11 +529,23 @@ MIT License - 詳細は [LICENSE](./LICENSE) を参照
 ⚠️ **検証フェーズでの利用**
 本システムは**85%実装完了**ですが、TypeScript型エラーの解決とテスト強化が必要な状況です。
 
+### ドキュメント
+
+プロジェクトの詳細ドキュメントは整理されたディレクトリ構造で管理されています：
+
+- **📚 [ドキュメント索引](./docs/INDEX.md)** - 全ドキュメントへのナビゲーション
+- **📖 [プロジェクト概要](./docs/Overview.md)** - システム全体像
+- **📊 [実装状況](./docs/Status.md)** - 開発進捗とステータス
+- **🔧 [運用ガイド](./docs/operations/)** - デプロイ・トラブルシューティング
+- **📈 [分析レポート](./docs/reports/)** - 品質・パフォーマンス分析
+- **🎯 [要件定義](./docs/requirements/)** - 仕様書・ビジネス分析
+- **🏗️ [設計ドキュメント](./docs/design/)** - アーキテクチャ判断記録
+
 ### 貢献・サポート
 
 - **Issues**: バグ報告・機能要望は [GitHub Issues](https://github.com/your-org/cocosil-analysis/issues)
 - **Pull Requests**: 改善提案歓迎（[CONTRIBUTING.md](./CONTRIBUTING.md) 参照）
-- **ドキュメント**: 詳細仕様は [`docs/`](./docs/) ディレクトリ参照
+- **開発ガイド**: 開発者向け詳細情報は [CLAUDE.md](./CLAUDE.md) 参照
 
 ---
 

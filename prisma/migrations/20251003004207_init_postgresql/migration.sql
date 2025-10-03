@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "admin_users" (
+CREATE TABLE "public"."admin_users" (
     "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE "admin_users" (
 );
 
 -- CreateTable
-CREATE TABLE "diagnosis_records" (
+CREATE TABLE "public"."diagnosis_records" (
     "id" SERIAL NOT NULL,
     "date" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE "diagnosis_records" (
 );
 
 -- CreateTable
-CREATE TABLE "animal_master" (
+CREATE TABLE "public"."animal_master" (
     "id" SERIAL NOT NULL,
     "animal" TEXT NOT NULL,
     "orientation" TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE "animal_master" (
 );
 
 -- CreateTable
-CREATE TABLE "zodiac_master" (
+CREATE TABLE "public"."zodiac_master" (
     "id" SERIAL NOT NULL,
     "zodiac" TEXT NOT NULL,
     "period" TEXT NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE "zodiac_master" (
 );
 
 -- CreateTable
-CREATE TABLE "mbti_master" (
+CREATE TABLE "public"."mbti_master" (
     "id" SERIAL NOT NULL,
     "type" TEXT NOT NULL,
     "nickname" TEXT NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE "mbti_master" (
 );
 
 -- CreateTable
-CREATE TABLE "taiheki_master" (
+CREATE TABLE "public"."taiheki_master" (
     "id" SERIAL NOT NULL,
     "number" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE "taiheki_master" (
 );
 
 -- CreateTable
-CREATE TABLE "six_star_master" (
+CREATE TABLE "public"."six_star_master" (
     "id" SERIAL NOT NULL,
     "star" TEXT NOT NULL,
     "plusminus" TEXT NOT NULL,
@@ -115,7 +115,7 @@ CREATE TABLE "six_star_master" (
 );
 
 -- CreateTable
-CREATE TABLE "system_config" (
+CREATE TABLE "public"."system_config" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "value" TEXT NOT NULL,
@@ -126,22 +126,22 @@ CREATE TABLE "system_config" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "admin_users_username_key" ON "admin_users"("username");
+CREATE UNIQUE INDEX "admin_users_username_key" ON "public"."admin_users"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "animal_master_animal_key" ON "animal_master"("animal");
+CREATE UNIQUE INDEX "animal_master_animal_key" ON "public"."animal_master"("animal");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "zodiac_master_zodiac_key" ON "zodiac_master"("zodiac");
+CREATE UNIQUE INDEX "zodiac_master_zodiac_key" ON "public"."zodiac_master"("zodiac");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "mbti_master_type_key" ON "mbti_master"("type");
+CREATE UNIQUE INDEX "mbti_master_type_key" ON "public"."mbti_master"("type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "taiheki_master_number_key" ON "taiheki_master"("number");
+CREATE UNIQUE INDEX "taiheki_master_number_key" ON "public"."taiheki_master"("number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "six_star_master_star_plusminus_key" ON "six_star_master"("star", "plusminus");
+CREATE UNIQUE INDEX "six_star_master_star_plusminus_key" ON "public"."six_star_master"("star", "plusminus");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "system_config_key_key" ON "system_config"("key");
+CREATE UNIQUE INDEX "system_config_key_key" ON "public"."system_config"("key");
