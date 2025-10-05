@@ -18,8 +18,8 @@ export default function TaihekiDiagnosisPage() {
       // 学習ページへ遷移
       router.push('/learn/taiheki');
     } else {
-      // 直接入力ページへ遷移（既存の実装を想定）
-      router.push('/diagnosis/taiheki/results');
+      // 直接入力ページへ遷移
+      router.push('/diagnosis/taiheki/direct');
     }
   };
 
