@@ -5,7 +5,7 @@
  * 本番環境での堅牢性を確保します。
  */
 
-import type { TaihekiResult } from '@/types';
+import type { TaihekiResult, TaihekiType, SecondaryTaihekiType } from '@/types';
 
 // スキーマバージョン管理
 export const TAIHEKI_SCHEMA_VERSION = '1.0.0';
@@ -138,19 +138,29 @@ export function validateTaihekiResult(data: unknown): ValidationResult {
  * localStorage形式からZustand形式への変換
  */
 export function convertToZustandFormat(data: LocalStorageTaihekiResult): TaihekiResult {
-  const primaryType = parseInt(data.primary.type.replace('type', ''));
-  const secondaryType = parseInt(data.secondary.type.replace('type', ''));
+  const primaryType = parseInt(data.primary.type.replace('type', '')) as TaihekiType;
+  const secondaryType = parseInt(data.secondary.type.replace('type', '')) as SecondaryTaihekiType;
+
+  // allScoresをRecord<TaihekiType, number>形式に変換
+  const scores: Record<TaihekiType, number> = {} as Record<TaihekiType, number>;
+  if (data.allScores) {
+    Object.keys(data.allScores).forEach((key) => {
+      const typeNum = parseInt(key.replace('type', '')) as TaihekiType;
+      scores[typeNum] = data.allScores[key];
+    });
+  }
 
   return {
     primary: primaryType,
     secondary: secondaryType,
-    confidence: data.reliability.value,
+    scores,
     characteristics: [
       data.primary.name,
       data.primary.subtitle,
       data.secondary.name,
       data.secondary.subtitle
-    ].filter(Boolean)
+    ].filter(Boolean),
+    recommendations: [] // localStorageデータには含まれていないため空配列
   };
 }
 
