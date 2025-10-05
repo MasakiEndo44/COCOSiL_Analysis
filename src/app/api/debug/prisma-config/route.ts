@@ -6,10 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Collect diagnostic information
-    const diagnostics = {
+    const diagnostics: Record<string, any> = {
       timestamp: new Date().toISOString(),
       environment: {
         NODE_ENV: process.env.NODE_ENV,
@@ -23,42 +23,30 @@ export async function GET(request: NextRequest) {
         DIRECT_URL_prefix: process.env.DIRECT_URL?.substring(0, 20) + '...',
         PRISMA_SKIP_POSTINSTALL_GENERATE: process.env.PRISMA_SKIP_POSTINSTALL_GENERATE,
       },
-      prismaClient: {
-        // Try to get Prisma Client metadata
-        // @ts-ignore - accessing internal properties for diagnostics
-        engineVersion: PrismaClient.engineVersion || 'unknown',
-      },
+      prismaClient: {},
       runtimePath: {
         // Show where the code is running (should be /var/task on Vercel)
         cwd: process.cwd(),
-        __dirname: __dirname || 'not available',
+        __dirname: typeof __dirname !== 'undefined' ? __dirname : 'not available',
       },
     };
 
     // Try to create a Prisma Client instance and catch any initialization errors
-    let clientInitError = null;
     try {
       const prisma = new PrismaClient();
       // Try to execute a simple query
       await prisma.$queryRaw`SELECT 1`;
-      diagnostics.prismaClient = {
-        ...diagnostics.prismaClient,
-        status: 'initialized_successfully',
-        queryTest: 'passed',
-      };
+      diagnostics.prismaClient.status = 'initialized_successfully';
+      diagnostics.prismaClient.queryTest = 'passed';
       await prisma.$disconnect();
     } catch (error: any) {
-      clientInitError = {
+      diagnostics.prismaClient.status = 'initialization_failed';
+      diagnostics.prismaClient.error = {
         name: error.name,
         message: error.message,
         code: error.code,
         errorCode: error.errorCode,
         stack: error.stack?.split('\n').slice(0, 5).join('\n'),
-      };
-      diagnostics.prismaClient = {
-        ...diagnostics.prismaClient,
-        status: 'initialization_failed',
-        error: clientInitError,
       };
     }
 
