@@ -32,5 +32,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "jest.setup.js"],
-  "exclude": ["node_modules", ".venv", "dist", ".next", "scripts", "archive", "tests"]
+  "exclude": ["node_modules", ".venv", "dist", ".next", "scripts", "archive", "tests", "docs/archive"]
 }

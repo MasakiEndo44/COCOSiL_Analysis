@@ -16,6 +16,31 @@ import { ANIMAL_FORTUNE_MAPPING } from '@/lib/data/animal-fortune-mapping';
 import Link from 'next/link';
 import type { FortuneResult } from '@/types';
 
+// Type definition for localStorage taiheki result
+interface LocalStorageTaihekiResult {
+  type: 'taiheki';
+  timestamp: string;
+  primary: {
+    type: string;
+    name: string;
+    subtitle: string;
+    description: string;
+    score: number;
+  };
+  secondary: {
+    type: string;
+    name: string;
+    subtitle: string;
+    score: number;
+  };
+  reliability: {
+    value: number;
+    text: string;
+    stars: number;
+  };
+  allScores: Record<string, number>;
+}
+
 const getWesternZodiac = (month: number, day: number): string => {
   const zodiacData = [
     { name: '山羊座', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19 },
@@ -620,12 +645,43 @@ export default function DiagnosisResults() {
     chatSummary,
     hasCompletedCounseling,
     overlayHints,
-    markOverlaySeen
+    markOverlaySeen,
+    setTaiheki
   } = useDiagnosisStore();
 
   // Overlay state management
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+
+  // Load taiheki result from localStorage if available
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const storedResult = localStorage.getItem('taiheki_diagnosis_result');
+    if (storedResult && !taiheki) {
+      try {
+        const parsedResult: LocalStorageTaihekiResult = JSON.parse(storedResult);
+
+        // Convert localStorage format to Zustand store format
+        const taihekiResult = {
+          primary: parseInt(parsedResult.primary.type.replace('type', '')),
+          secondary: parseInt(parsedResult.secondary.type.replace('type', '')),
+          confidence: parsedResult.reliability.value,
+          characteristics: [
+            parsedResult.primary.name,
+            parsedResult.primary.subtitle,
+            parsedResult.secondary.name,
+            parsedResult.secondary.subtitle
+          ].filter(Boolean)
+        };
+
+        setTaiheki(taihekiResult);
+        console.log('✅ localStorage から体癖診断結果を読み込みました:', taihekiResult);
+      } catch (error) {
+        console.error('❌ localStorage から体癖診断結果の読み込みに失敗しました:', error);
+      }
+    }
+  }, [taiheki, setTaiheki]);
 
   const zodiacSign = basicInfo ? getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day) : '';
   const integratedProfile = useMemo(() => {

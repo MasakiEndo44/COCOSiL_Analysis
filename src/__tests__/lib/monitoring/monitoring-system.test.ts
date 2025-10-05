@@ -4,7 +4,7 @@
 
 import { collector } from '@/lib/monitoring/collector';
 import { metricQueue, RUMCollector } from '@/lib/monitoring/queue';
-import { monitor, initializeMonitoring, getMonitoringStatus } from '@/lib/monitoring/index';
+import { monitor, initializeMonitoring, getMonitoringStatus, dev, shutdownMonitoring } from '@/lib/monitoring/index';
 
 // Mock dependencies
 jest.mock('@/lib/monitoring/queue');
@@ -191,13 +191,13 @@ describe('Monitoring System Integration Tests', () => {
       const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
       const mockAction = jest.spyOn(monitor, 'action').mockImplementation();
       const mockApi = jest.spyOn(monitor, 'api').mockImplementation();
-      
-      monitor.dev.generateTestMetrics(5);
-      
+
+      dev.generateTestMetrics(5);
+
       expect(mockAction).toHaveBeenCalledTimes(5);
       expect(mockApi).toHaveBeenCalledTimes(5);
       expect(mockConsoleLog).toHaveBeenCalledWith('Generated 5 test metrics');
-      
+
       mockConsoleLog.mockRestore();
       mockAction.mockRestore();
       mockApi.mockRestore();
@@ -206,25 +206,25 @@ describe('Monitoring System Integration Tests', () => {
     test('should simulate errors for testing', () => {
       const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
       const mockError = jest.spyOn(monitor, 'error').mockImplementation();
-      
-      monitor.dev.simulateError('critical');
-      
+
+      dev.simulateError('critical');
+
       expect(mockError).toHaveBeenCalledWith(
         expect.any(Error),
         'test-component',
         'critical'
       );
       expect(mockConsoleLog).toHaveBeenCalledWith('Simulated critical error');
-      
+
       mockConsoleLog.mockRestore();
       mockError.mockRestore();
     });
 
     test('should log monitoring stats', () => {
       const mockConsoleTable = jest.spyOn(console, 'table').mockImplementation();
-      
-      monitor.dev.logStats();
-      
+
+      dev.logStats();
+
       expect(mockConsoleTable).toHaveBeenCalledWith(
         expect.objectContaining({
           'Queue Size': expect.any(Number),
@@ -234,7 +234,7 @@ describe('Monitoring System Integration Tests', () => {
           'Alert Rules': expect.any(Number),
         })
       );
-      
+
       mockConsoleTable.mockRestore();
     });
   });
@@ -312,9 +312,9 @@ describe('Monitoring System Integration Tests', () => {
     test('should clean up resources on shutdown', () => {
       const mockClear = jest.spyOn(metricQueue, 'clear').mockImplementation();
       const mockReset = jest.spyOn(collector, 'reset').mockImplementation();
-      
-      monitor.shutdown();
-      
+
+      shutdownMonitoring();
+
       expect(mockClear).toHaveBeenCalled();
       expect(mockReset).toHaveBeenCalled();
     });

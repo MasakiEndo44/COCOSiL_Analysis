@@ -32,7 +32,7 @@ const mockRecords: DiagnosisRecord[] = [
     gender: 'male',
     zodiac: '犬（いぬ）',
     animal: 'チーター',
-    orientation: 'right',
+    orientation: 'people_oriented',
     color: '赤',
     mbti: 'INTJ',
     mainTaiheki: 1,
@@ -43,12 +43,12 @@ const mockRecords: DiagnosisRecord[] = [
     satisfaction: 4,
     duration: '45分',
     feedback: '非常に的確な診断でした。',
-    reportUrl: null,
+    reportUrl: undefined,
     isIntegratedReport: false,
-    reportVersion: null,
-    interviewScheduled: null,
-    interviewDone: null,
-    memo: null,
+    reportVersion: undefined,
+    interviewScheduled: undefined,
+    interviewDone: undefined,
+    memo: undefined,
     createdAt: new Date('2024-01-15T10:30:00Z'),
     updatedAt: new Date('2024-01-15T10:30:00Z'),
     markdownContent: '# 診断結果\n\nテストMarkdownコンテンツ',
@@ -63,7 +63,7 @@ const mockRecords: DiagnosisRecord[] = [
     gender: 'female',
     zodiac: '鳥（とり）',
     animal: 'ライオン',
-    orientation: 'left',
+    orientation: 'castle_oriented',
     color: '青',
     mbti: 'ENFP',
     mainTaiheki: 2,
@@ -74,16 +74,16 @@ const mockRecords: DiagnosisRecord[] = [
     satisfaction: 5,
     duration: '50分',
     feedback: '素晴らしい診断でした。',
-    reportUrl: null,
+    reportUrl: undefined,
     isIntegratedReport: false,
-    reportVersion: null,
-    interviewScheduled: null,
-    interviewDone: null,
-    memo: null,
+    reportVersion: undefined,
+    interviewScheduled: undefined,
+    interviewDone: undefined,
+    memo: undefined,
     createdAt: new Date('2024-01-16T11:30:00Z'),
     updatedAt: new Date('2024-01-16T11:30:00Z'),
-    markdownContent: null,
-    markdownVersion: null
+    markdownContent: undefined,
+    markdownVersion: undefined
   }
 ]
 
@@ -218,10 +218,10 @@ describe('/api/admin/records', () => {
       satisfaction: 4,
       duration: '40分',
       feedback: '参考になりました。',
-      reportUrl: null,
-      interviewScheduled: null,
-      interviewDone: null,
-      memo: null
+      reportUrl: undefined,
+      interviewScheduled: undefined,
+      interviewDone: undefined,
+      memo: undefined
     }
 
     test('should create new record with markdown generation successfully', async () => {

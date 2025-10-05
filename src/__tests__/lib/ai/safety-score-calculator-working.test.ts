@@ -111,8 +111,8 @@ describe('SafetyScoreCalculator (Working Tests)', () => {
 
     test('should return initial safety score for assistant-only messages', () => {
       const messages: ChatMessage[] = [
-        { role: 'assistant', content: 'こんにちは、今日はいかがですか？' },
-        { role: 'assistant', content: 'お話を聞かせてください。' },
+        { id: '1', timestamp: new Date(), role: 'assistant', content: 'こんにちは、今日はいかがですか？' },
+        { id: '2', timestamp: new Date(), role: 'assistant', content: 'お話を聞かせてください。' },
       ];
 
       const result = SafetyScoreCalculator.calculateSafetyScore(messages);
@@ -123,9 +123,9 @@ describe('SafetyScoreCalculator (Working Tests)', () => {
 
     test('should calculate safety score for Japanese user messages', () => {
       const messages: ChatMessage[] = [
-        { role: 'user', content: 'ありがとうございます。安心して話せます。' },
-        { role: 'assistant', content: 'お話しくださりありがとうございます。' },
-        { role: 'user', content: 'はい、この会話は良いと感じています。' },
+        { id: '1', timestamp: new Date(), role: 'user', content: 'ありがとうございます。安心して話せます。' },
+        { id: '2', timestamp: new Date(), role: 'assistant', content: 'お話しくださりありがとうございます。' },
+        { id: '3', timestamp: new Date(), role: 'user', content: 'はい、この会話は良いと感じています。' },
       ];
 
       const result = SafetyScoreCalculator.calculateSafetyScore(messages);
@@ -139,8 +139,8 @@ describe('SafetyScoreCalculator (Working Tests)', () => {
 
     test('should handle malformed message objects gracefully', () => {
       const messages: any[] = [
-        { role: 'user', content: 'テスト' }, // Valid message
-        { role: 'assistant', content: 'こんにちは' }, // Valid assistant message
+        { id: '1', timestamp: new Date(), role: 'user', content: 'テスト' }, // Valid message
+        { id: '2', timestamp: new Date(), role: 'assistant', content: 'こんにちは' }, // Valid assistant message
         // Note: messages with missing content would cause real errors in the implementation
         // This test validates it works with valid message structures
       ];

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体癖診断システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px 20px 40px 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease;
+            margin: 20px 0;
+            align-self: flex-start;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .progress-container {
+            background: #f0f0f0;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .question-number {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .question-container {
+            min-height: 400px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+            font-weight: 600;
+        }
+
+        .scale-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .scale-option {
+            flex: 1;
+            padding: 20px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+        }
+
+        .scale-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-3px);
+        }
+
+        .scale-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2));
+            font-weight: 600;
+        }
+
+        .scale-label {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .scale-text {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-prev {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-prev:hover:not(:disabled) {
+            background: #d0d0d0;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 結果画面 */
+        .results {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .main-result {
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .type-name {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .type-description {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .score-chart {
+            margin-top: 30px;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .score-label {
+            width: 100px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .score-bar-container {
+            flex: 1;
+            background: #f0f0f0;
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .score-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+        }
+
+        .score-value {
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .restart-btn, .download-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #fd7e14, #ffc107);
+        }
+
+        .restart-btn:hover, .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+        }
+
+        .info-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .info-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(23,162,184,0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .scale-options {
+                flex-direction: column;
+            }
+            
+            .scale-option {
+                padding: 15px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .restart-btn, .download-btn {
+                width: 80%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="app"></div>
+    </div>
+
+    <canvas id="result-canvas" style="display: none;"></canvas>
+
+    <script>
+        // 体癖データ定義
+        const taihekiTypes = {
+            type1: { name: '1種体癖', subtitle: '上下型・論理的思考型', description: '理論的で論理的な思考を重視。物事を言葉で説明し、善悪の判断を大切にします。' },
+            type2: { name: '2種体癖', subtitle: '上下型・心配性型', description: '慎重で真面目、マニュアルを重視。不安を感じやすく、準備を大切にします。' },
+            type3: { name: '3種体癖', subtitle: '左右型・感情表出型', description: '感情豊かで明るく社交的。美味しいものや楽しいことが大好きなムードメーカー。' },
+            type4: { name: '4種体癖', subtitle: '左右型・感情抑制型', description: 'クールで感情を抑制。他人の気持ちに寄り添い、調和を大切にします。' },
+            type5: { name: '5種体癖', subtitle: '前後型・行動的合理型', description: '行動的で合理的。効率を重視し、常に動き回るエネルギッシュなタイプ。' },
+            type6: { name: '6種体癖', subtitle: '前後型・内向的理想型', description: '理想家でロマンチスト。静かで内向的ですが、高い理想を追求します。' },
+            type7: { name: '7種体癖', subtitle: '捻れ型・闘争型', description: '闘志にあふれ、競争心が強い。親分肌でリーダーシップを発揮します。' },
+            type8: { name: '8種体癖', subtitle: '捻れ型・忍耐型', description: '我慢強く地道な努力家。義理堅く、縁の下の力持ちタイプ。' },
+            type9: { name: '9種体癖', subtitle: '開閉型・集中型', description: '凝り性で完璧主義。一つのことに集中し、深く極めることを好みます。' },
+            type10: { name: '10種体癖', subtitle: '開閉型・包容型', description: '包容力があり世話好き。大らかで、みんなをまとめる親分肌。' }
+        };
+
+        // 質問データ（ランダム化済み）
+        const questions = [
+            {
+                id: 1,
+                type: 'single',
+                weight: 2.5,
+                text: '【Q1】体型と姿勢について最も近いものは？',
+                options: [
+                    { text: '丸みがあり、なで肩、色白で曲線的', scores: {type3: 10} },
+                    { text: '胴が太い樽型、エラが張った四角顔', scores: {type8: 10} },
+                    { text: '肩幅広くV字型、胸を張る、鳩胸気味', scores: {type5: 10} },
+                    { text: '大柄で骨盤が広い、顔のパーツが大きい', scores: {type10: 10} },
+                    { text: '首が太くがっしり、前傾姿勢、後頭部が平ら', scores: {type2: 10} },
+                    { text: '小柄で猫背気味、顎が細い、三白眼', scores: {type6: 10} },
+                    { text: '小柄で骨盤が狭い、頭の幅が狭い、出っ尻', scores: {type9: 10} },
+                    { text: '直線的で、いかり肩、痩せ型で胸板が薄い', scores: {type4: 10} },
+                    { text: '細長く前かがみ、首が長い、おでこが広い', scores: {type1: 10} },
+                    { text: '筋肉質でがっちり、声が大きく響く', scores: {type7: 10} }
+                ]
+            },
+            {
+                id: 2,
+                type: 'single',
+                weight: 2.0,
+                text: '【Q2】物事を判断する時、最も優先する基準は？',
+                options: [
+                    { text: '楽しいか楽しくないか、好きか嫌いか', scores: {type3: 8} },
+                    { text: '正義に適うか、弱者を守れるか', scores: {type8: 8} },
+                    { text: '効率的か、メリットがあるか', scores: {type5: 8} },
+                    { text: 'みんなが幸せになれるか、包み込めるか', scores: {type10: 8} },
+                    { text: '安全か危険か、リスクはないか', scores: {type2: 8} },
+                    { text: '理想に近いか、美しいか', scores: {type6: 8} },
+                    { text: '完璧か、納得できるまで突き詰められるか', scores: {type9: 8} },
+                    { text: '周りが不快に思わないか、調和が保てるか', scores: {type4: 8} },
+                    { text: '論理的に正しいか、筋が通っているか', scores: {type1: 8} },
+                    { text: '勝てるか負けるか、優位に立てるか', scores: {type7: 8} }
+                ]
+            },
+            {
+                id: 3,
+                type: 'single',
+                weight: 1.5,
+                text: '【Q3】ストレスを感じた時、最も効果的な発散方法は？',
+                options: [
+                    { text: '美味しいものを思いっきり食べて忘れる', scores: {type3: 6} },
+                    { text: 'コツコツと作業に没頭し、地道に解消する', scores: {type8: 6} },
+                    { text: '体を動かしたり買い物で気分転換する', scores: {type5: 6} },
+                    { text: '人の世話を焼いて、自分を忘れる', scores: {type10: 6} },
+                    { text: '信頼できる人に不安を聞いてもらい安心する', scores: {type2: 6} },
+                    { text: '非日常的な場所に行き、現実から離れる', scores: {type6: 6} },
+                    { text: '好きなことを徹底的に極めて集中する', scores: {type9: 6} },
+                    { text: '一人で静かに過ごし、心を落ち着ける', scores: {type4: 6} },
+                    { text: '原因を論理的に分析し、言語化して整理する', scores: {type1: 6} },
+                    { text: '競争や勝負事で闘争心を発散する', scores: {type7: 6} }
+                ]
+            },
+            {
+                id: 4,
+                type: 'scale',
+                weight: 1.5,
+                text: '【Q4】「何事も理屈で考えてから判断する」',
+                scaleOptions: [
+                    { value: 5, scores: {type1: 8} },
+                    { value: 4, scores: {type1: 5, type2: 2} },
+                    { value: 3, scores: {type2: 1, type4: 1} },
+                    { value: 2, scores: {type3: 3, type5: 2} },
+                    { value: 1, scores: {type3: 6, type7: 4} }
+                ]
+            },
+            {
+                id: 5,
+                type: 'scale',
+                weight: 1.2,
+                text: '【Q5】「じっとしているより、常に動いていたい」',
+                scaleOptions: [
+                    { value: 5, scores: {type5: 6, type7: 5, type3: 3} },
+                    { value: 4, scores: {type5: 4, type7: 3, type3: 2} },
+                    { value: 3, scores: {type1: 1, type10: 1} },
+                    { value: 2, scores: {type2: 2, type4: 2, type8: 1} },
+                    { value: 1, scores: {type6: 5, type9: 4, type4: 3} }
+                ]
+            },
+            {
+                id: 6,
+                type: 'single',
+                weight: 1.0,
+                text: '【Q6】食事について最も当てはまるのは？',
+                options: [
+                    { text: '美味しいものを食べることが最高の幸せ', scores: {type3: 4} },
+                    { text: 'よく噛んでゆっくり、消化を意識', scores: {type8: 4} },
+                    { text: '食べながら他のことも同時にする', scores: {type5: 4} },
+                    { text: 'みんなでワイワイ食事するのが楽しい', scores: {type10: 4} },
+                    { text: '決まった時間に規則正しく食べないと不安', scores: {type2: 4} },
+                    { text: '一人で静かに、自分のペースで食べたい', scores: {type6: 4} },
+                    { text: '好きなものを何度も繰り返し食べる', scores: {type9: 4} },
+                    { text: '少しずつつまむ程度、食に執着がない', scores: {type4: 4} },
+                    { text: '考え事をしていて食事を忘れることが多い', scores: {type1: 4, type9: 2} },
+                    { text: '豪快にガツガツ、早食い傾向', scores: {type7: 4} }
+                ]
+            },
+            {
+                id: 7,
+                type: 'scale',
+                weight: 1.2,
+                text: '【Q7】「同じ作業を長時間続けることができる」',
+                scaleOptions: [
+                    { value: 5, scores: {type9: 8, type8: 5} },
+                    { value: 4, scores: {type9: 5, type8: 3, type2: 2} },
+                    { value: 3, scores: {type1: 1, type10: 1} },
+                    { value: 2, scores: {type3: 3, type5: 3, type7: 2} },
+                    { value: 1, scores: {type3: 5, type5: 5, type6: 3} }
+                ]
+            },
+            {
+                id: 8,
+                type: 'single',
+                weight: 2.0,
+                text: '【Q8】グループでの自然な役割は？',
+                options: [
+                    { text: '場を明るくし、楽しい雰囲気を作る盛り上げ役', scores: {type3: 8} },
+                    { text: '陰で支える、縁の下の力持ち', scores: {type8: 8} },
+                    { text: '即断即決で引っ張るアクティブなリーダー', scores: {type5: 8} },
+                    { text: '全員を包み込む、大らかなまとめ役', scores: {type10: 8} },
+                    { text: 'リスクを指摘し、慎重に調整する安全管理役', scores: {type2: 8} },
+                    { text: '独自の理想を追求する一匹狼', scores: {type6: 8} },
+                    { text: '専門分野を極めるスペシャリスト', scores: {type9: 8} },
+                    { text: '皆の気持ちを察し、調和を保つサポート役', scores: {type4: 8} },
+                    { text: '論理的なアイデアや理論を提供する頭脳役', scores: {type1: 8} },
+                    { text: '先頭に立って戦う、闘志あふれる切り込み隊長', scores: {type7: 8} }
+                ]
+            },
+            {
+                id: 9,
+                type: 'scale',
+                weight: 1.3,
+                text: '【Q9】「感情を素直に表現するほうだ」',
+                scaleOptions: [
+                    { value: 5, scores: {type3: 7, type7: 4} },
+                    { value: 4, scores: {type3: 5, type5: 2, type10: 2} },
+                    { value: 3, scores: {type1: 1} },
+                    { value: 2, scores: {type2: 2, type4: 3, type8: 2} },
+                    { value: 1, scores: {type4: 6, type6: 5, type9: 4} }
+                ]
+            },
+            {
+                id: 10,
+                type: 'single',
+                weight: 1.5,
+                text: '【Q10】仕事や勉強の取り組み方は？',
+                options: [
+                    { text: '楽しそうなら深く考えずにすぐ始める', scores: {type3: 6} },
+                    { text: '地道にコツコツ、一歩ずつ確実に進める', scores: {type8: 6} },
+                    { text: '考えるより先に体が動く、走りながら考える', scores: {type5: 6} },
+                    { text: 'みんなを巻き込んで一緒に進める', scores: {type10: 6} },
+                    { text: 'マニュアルや前例を確認してから慎重に進める', scores: {type2: 6} },
+                    { text: '理想の完成形をイメージしてから取り組む', scores: {type6: 6} },
+                    { text: '興味があることだけ異常なほど集中する', scores: {type9: 6} },
+                    { text: '周りのやり方を観察してから合わせる', scores: {type4: 6} },
+                    { text: 'まず全体の理論や仕組みを理解してから始める', scores: {type1: 6, type2: 3} },
+                    { text: 'ライバルを見つけて競争しながら進める', scores: {type7: 6} }
+                ]
+            },
+            {
+                id: 11,
+                type: 'scale',
+                weight: 1.0,
+                text: '【Q11】「大勢の人と一緒にいるのが好き」',
+                scaleOptions: [
+                    { value: 5, scores: {type3: 5, type5: 4, type10: 5} },
+                    { value: 4, scores: {type3: 3, type7: 2, type10: 3} },
+                    { value: 3, scores: {type1: 1, type2: 1} },
+                    { value: 2, scores: {type4: 2, type6: 2, type8: 1} },
+                    { value: 1, scores: {type6: 4, type9: 5} }
+                ]
+            },
+            {
+                id: 12,
+                type: 'single',
+                weight: 1.3,
+                text: '【Q12】疲れた時の身体症状は？（最も顕著なもの）',
+                options: [
+                    { text: '胃の不調、右肩のこり、食欲の変化', scores: {type3: 5} },
+                    { text: '股関節の違和感、むくみ、朝起きられない', scores: {type8: 5} },
+                    { text: '呼吸が浅い、じっとしていられない', scores: {type5: 5} },
+                    { text: '全身のだるさ、やる気の低下', scores: {type10: 5} },
+                    { text: '頭痛、首周りに違和感、考えがまとまらない', scores: {type1: 5, type2: 3} },
+                    { text: '胸の圧迫感、現実感の喪失', scores: {type6: 5} },
+                    { text: '全身の緊張、不眠、過集中の反動', scores: {type9: 5} },
+                    { text: '左肩のこり、息苦しさ、人疲れ', scores: {type4: 5} },
+                    { text: '腰痛、歯の食いしばり、イライラ', scores: {type7: 5} }
+                ]
+            },
+            {
+                id: 13,
+                type: 'scale',
+                weight: 1.2,
+                text: '【Q13】「マニュアルや説明書を読んでから始める」',
+                scaleOptions: [
+                    { value: 5, scores: {type2: 7, type4: 2} },
+                    { value: 4, scores: {type2: 4, type8: 2, type1: 1} },
+                    { value: 3, scores: {type1: 1} },
+                    { value: 2, scores: {type3: 2, type5: 3, type7: 2} },
+                    { value: 1, scores: {type5: 5, type7: 4} }
+                ]
+            },
+            {
+                id: 14,
+                type: 'single',
+                weight: 1.0,
+                text: '【Q14】最も落ち着く環境は？',
+                options: [
+                    { text: 'にぎやかで楽しい、人が集まる場所', scores: {type3: 4, type10: 2} },
+                    { text: '地道に作業できる、実直な環境', scores: {type8: 4} },
+                    { text: '活気があり、刺激的な変化のある場所', scores: {type5: 4} },
+                    { text: '温かく包容力のある、家庭的な空間', scores: {type10: 4} },
+                    { text: '予測可能で安全な、慣れ親しんだ場所', scores: {type2: 4, type4: 2} },
+                    { text: '幻想的で非日常的な、特別な空間', scores: {type6: 4} },
+                    { text: '一人で集中できる、邪魔されない場所', scores: {type9: 4} },
+                    { text: '適度な距離感がある、落ち着いた空間', scores: {type4: 4} },
+                    { text: '静かな書斎、図書館のような知的空間', scores: {type1: 4, type9: 2} },
+                    { text: '競争や緊張感のある、勝負の場', scores: {type7: 4} }
+                ]
+            },
+            {
+                id: 15,
+                type: 'scale',
+                weight: 1.0,
+                text: '【Q15】「細かいことが気になって仕方ない」',
+                scaleOptions: [
+                    { value: 5, scores: {type2: 5, type4: 3, type9: 6} },
+                    { value: 4, scores: {type1: 2, type6: 2, type8: 1} },
+                    { value: 3, scores: {} },
+                    { value: 2, scores: {type3: 2, type5: 2, type10: 1} },
+                    { value: 1, scores: {type5: 4, type7: 3, type10: 3} }
+                ]
+            },
+            {
+                id: 16,
+                type: 'single',
+                weight: 1.5,
+                text: '【Q16】何か新しいことを始める時の動機は？',
+                options: [
+                    { text: '楽しそうで、ワクワクする', scores: {type3: 6} },
+                    { text: '地道な努力が報われそう', scores: {type8: 6} },
+                    { text: '実利があり、効率的に成果が出せる', scores: {type5: 6} },
+                    { text: 'みんなで一緒に楽しめる', scores: {type10: 6} },
+                    { text: '安全性が確認でき、失敗のリスクが低い', scores: {type2: 6} },
+                    { text: '理想や美学に合致している', scores: {type6: 6} },
+                    { text: '徹底的に極められる深さがある', scores: {type9: 6} },
+                    { text: '他の人も喜んでくれそう', scores: {type4: 6} },
+                    { text: '理論的に興味深く、知的好奇心を満たせる', scores: {type1: 6} },
+                    { text: '競争相手がいて、勝負できる', scores: {type7: 6} }
+                ]
+            },
+            {
+                id: 17,
+                type: 'scale',
+                weight: 1.3,
+                text: '【Q17】「競争心が強く、負けるのが嫌い」',
+                scaleOptions: [
+                    { value: 5, scores: {type7: 8, type5: 4, type9: 2} },
+                    { value: 4, scores: {type7: 5, type8: 3, type1: 1} },
+                    { value: 3, scores: {type2: 1} },
+                    { value: 2, scores: {type4: 2, type6: 2, type10: 2} },
+                    { value: 1, scores: {type3: 2, type4: 3, type10: 3} }
+                ]
+            },
+            {
+                id: 18,
+                type: 'single',
+                weight: 1.5,
+                text: '【Q18】人間関係で最も重視することは？',
+                options: [
+                    { text: '一緒にいて楽しく、感情を共有できる', scores: {type3: 6} },
+                    { text: '信頼と義理で結ばれた、堅い絆', scores: {type8: 6} },
+                    { text: '効率的で、お互いにメリットがある', scores: {type5: 6} },
+                    { text: '誰でも受け入れる、温かい雰囲気', scores: {type10: 6} },
+                    { text: '安心感があり、予測可能で裏切らない', scores: {type2: 6} },
+                    { text: '理想や美意識を共有できる', scores: {type6: 6} },
+                    { text: '深く理解し合える、濃密な関係', scores: {type9: 6} },
+                    { text: '相手の気持ちを察し合える、優しい関係', scores: {type4: 6} },
+                    { text: '知的な議論ができ、論理的に通じ合える', scores: {type1: 6} },
+                    { text: '切磋琢磨し、互いに高め合える', scores: {type7: 6, type8: 2} }
+                ]
+            },
+            {
+                id: 19,
+                type: 'scale',
+                weight: 1.2,
+                text: '【Q19】「一人の時間がないとストレスを感じる」',
+                scaleOptions: [
+                    { value: 5, scores: {type6: 6, type9: 7, type4: 4} },
+                    { value: 4, scores: {type1: 2, type2: 2, type8: 2} },
+                    { value: 3, scores: {} },
+                    { value: 2, scores: {type3: 2, type5: 2, type7: 1} },
+                    { value: 1, scores: {type3: 4, type10: 5} }
+                ]
+            },
+            {
+                id: 20,
+                type: 'single',
+                weight: 1.5,
+                text: '【Q20】あなたの特徴的な行動パターンは？',
+                options: [
+                    { text: '感情の起伏が激しく、気分で行動が変わる', scores: {type3: 6} },
+                    { text: '我慢強く、不満を言わずに耐える', scores: {type8: 6} },
+                    { text: '即断即決、考えるより先に行動する', scores: {type5: 6} },
+                    { text: '誰にでも親切で、世話好きで包容力がある', scores: {type10: 6} },
+                    { text: '心配性で準備万端、最悪を想定して動く', scores: {type2: 6} },
+                    { text: '現実離れした理想を追い、独特な世界観を持つ', scores: {type6: 6} },
+                    { text: '一つのことに異常に執着し、完璧を求める', scores: {type9: 6} },
+                    { text: '相手に合わせ、自分を抑えて調和を保つ', scores: {type4: 6} },
+                    { text: '話が理論的で長い、言葉で全て説明したがる', scores: {type1: 6} },
+                    { text: '勝負にこだわり、常に誰かと競っている', scores: {type7: 6} }
+                ]
+            }
+        ];
+
+        // グローバル変数
+        let currentQuestion = 0;
+        let answers = {};
+        let scores = {
+            type1: 0, type2: 0, type3: 0, type4: 0, type5: 0,
+            type6: 0, type7: 0, type8: 0, type9: 0, type10: 0
+        };
+        let resultData = null;
+
+        // 初期化
+        function init() {
+            render();
+        }
+
+        // レンダリング
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (currentQuestion < questions.length) {
+                renderQuestion();
+            } else {
+                calculateResults();
+                renderResults();
+            }
+        }
+
+        // 質問画面レンダリング
+        function renderQuestion() {
+            const question = questions[currentQuestion];
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            
+            const html = `
+                <div class="header">
+                    <h1>🔮 体癖診断システム</h1>
+                    <p class="subtitle">20の質問で、あなたの体癖タイプを診断します</p>
+                    ${currentQuestion === 0 ? '<div style="text-align: center; margin-top: 15px;"><button class="info-btn" onclick="openTaihekiGuide()">📚 体癖論について学ぶ</button></div>' : ''}
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${progress}%"></div>
+                </div>
+                
+                <div class="question-number">
+                    質問 ${currentQuestion + 1} / ${questions.length}
+                </div>
+                
+                <div class="question-container">
+                    <h2 class="question-title">${question.text}</h2>
+                    ${question.type === 'single' ? '<p style="color: #888; margin-bottom: 15px; font-size: 0.9em;">※最大2つまで選択可能</p>' : ''}
+                    
+                    ${question.type === 'single' ? renderSingleOptions(question) : renderScaleOptions(question)}
+                </div>
+                
+                <div class="navigation">
+                    <button class="btn btn-prev" onclick="previousQuestion()" ${currentQuestion === 0 ? 'disabled' : ''}>
+                        戻る
+                    </button>
+                    <button class="btn btn-next" onclick="nextQuestion()" ${!hasAnswer(question.id) ? 'disabled' : ''}>
+                        次へ
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('app').innerHTML = html;
+        }
+
+        // 単一選択オプションレンダリング
+        function renderSingleOptions(question) {
+            const currentAnswers = answers[question.id] || [];
+            return `
+                <div class="options">
+                    ${question.options.map((option, index) => `
+                        <div class="option ${currentAnswers.includes(index) ? 'selected' : ''}" 
+                             onclick="selectSingleAnswer(${question.id}, ${index})">
+                            ${option.text}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // スケールオプションレンダリング
+        function renderScaleOptions(question) {
+            const currentAnswer = answers[question.id];
+            const labels = ['全く当てはまらない', 'やや当てはまらない', 'どちらでもない', 'やや当てはまる', 'とても当てはまる'];
+            
+            return `
+                <div class="scale-options">
+                    ${question.scaleOptions.map((option, index) => `
+                        <div class="scale-option ${currentAnswer === index ? 'selected' : ''}" 
+                             onclick="selectScaleAnswer(${question.id}, ${index})">
+                            <div class="scale-label">${option.value}</div>
+                            <div class="scale-text">${labels[5 - option.value]}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 単一選択回答
+        function selectSingleAnswer(questionId, answerIndex) {
+            if (!answers[questionId]) {
+                answers[questionId] = [];
+            }
+            
+            const currentAnswers = answers[questionId];
+            const indexPosition = currentAnswers.indexOf(answerIndex);
+            
+            if (indexPosition > -1) {
+                currentAnswers.splice(indexPosition, 1);
+            } else {
+                if (currentAnswers.length < 2) {
+                    currentAnswers.push(answerIndex);
+                } else {
+                    currentAnswers.shift();
+                    currentAnswers.push(answerIndex);
+                }
+            }
+            
+            render();
+        }
+
+        // スケール選択回答
+        function selectScaleAnswer(questionId, answerIndex) {
+            answers[questionId] = answerIndex;
+            render();
+        }
+
+        // 回答有無チェック
+        function hasAnswer(questionId) {
+            const answer = answers[questionId];
+            if (answer === undefined) return false;
+            if (Array.isArray(answer)) return answer.length > 0;
+            return true;
+        }
+
+        // 次の質問
+        function nextQuestion() {
+            if (hasAnswer(questions[currentQuestion].id)) {
+                currentQuestion++;
+                render();
+            }
+        }
+
+        // 前の質問
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                render();
+            }
+        }
+
+        // 結果計算
+        function calculateResults() {
+            Object.keys(scores).forEach(key => scores[key] = 0);
+            
+            questions.forEach(question => {
+                const answer = answers[question.id];
+                const weight = question.weight || 1.0;
+                
+                if (answer !== undefined) {
+                    if (question.type === 'single') {
+                        const answerIndexes = answer;
+                        answerIndexes.forEach(answerIndex => {
+                            const answerScores = question.options[answerIndex].scores;
+                            Object.entries(answerScores).forEach(([type, score]) => {
+                                const adjustedScore = answerIndexes.length > 1 ? 
+                                    Math.floor(score * weight * 0.8) : 
+                                    Math.floor(score * weight);
+                                scores[type] += adjustedScore;
+                            });
+                        });
+                    } else {
+                        const answerScores = question.scaleOptions[answer].scores;
+                        Object.entries(answerScores).forEach(([type, score]) => {
+                            scores[type] += Math.floor(score * weight);
+                        });
+                    }
+                }
+            });
+        }
+
+        // 結果画面レンダリング
+        function renderResults() {
+            const sortedScores = Object.entries(scores).sort(([,a], [,b]) => b - a);
+            
+            const primaryType = sortedScores[0][0];
+            const primaryScore = sortedScores[0][1];
+            const secondaryType = sortedScores[1][0];
+            const secondaryScore = sortedScores[1][1];
+            const maxScore = Math.max(...Object.values(scores));
+            
+            const reliability = primaryScore / (secondaryScore || 1);
+            let reliabilityText = '';
+            let reliabilityStars = '';
+            if (reliability >= 1.5) {
+                reliabilityText = '非常に高い';
+                reliabilityStars = '★★★★★';
+            } else if (reliability >= 1.3) {
+                reliabilityText = '高い';
+                reliabilityStars = '★★★★☆';
+            } else if (reliability >= 1.15) {
+                reliabilityText = '中程度';
+                reliabilityStars = '★★★☆☆';
+            } else {
+                reliabilityText = '参考程度';
+                reliabilityStars = '★★☆☆☆';
+            }
+
+            resultData = {
+                primaryType,
+                primaryScore,
+                secondaryType,
+                secondaryScore,
+                reliability,
+                reliabilityText,
+                reliabilityStars,
+                sortedScores,
+                maxScore
+            };
+            
+            const html = `
+                <div class="results">
+                    <div class="result-header">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <button class="info-btn" onclick="openTaihekiGuide()">📚 体癖論について学ぶ</button>
+                        </div>
+                        <h1 class="result-title">🎉 診断結果</h1>
+                    </div>
+                    
+                    <div class="main-result">
+                        <h2 style="color: #666; margin-bottom: 20px;">あなたの主体癖は...</h2>
+                        <div class="type-name">${taihekiTypes[primaryType].name}</div>
+                        <div style="color: #888; margin-bottom: 15px;">${taihekiTypes[primaryType].subtitle}</div>
+                        <div class="type-description">${taihekiTypes[primaryType].description}</div>
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                            <h3 style="color: #666; margin-bottom: 10px;">副体癖</h3>
+                            <div style="color: #667eea; font-weight: bold; font-size: 1.2em;">${taihekiTypes[secondaryType].name}</div>
+                            <div style="color: #888; font-size: 0.9em;">${taihekiTypes[secondaryType].subtitle}</div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9ff; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 8px;">診断の信頼度</h4>
+                            <div style="font-size: 1.2em; color: #FFD700;">${reliabilityStars}</div>
+                            <div style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                                信頼度: ${reliabilityText} 
+                                (主体癖 ${primaryScore}pt / 副体癖 ${secondaryScore}pt = ${reliability.toFixed(2)})
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="score-chart">
+                        <h3 style="text-align: center; margin-bottom: 20px; color: #666;">各体癖スコア詳細</h3>
+                        ${sortedScores.map(([type, score]) => `
+                            <div class="score-item">
+                                <div class="score-label">${taihekiTypes[type].name.replace('体癖', '')}</div>
+                                <div class="score-bar-container">
+                                    <div class="score-bar" style="width: ${(score / maxScore) * 100}%">
+                                        <span class="score-value">${score}pt</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="restart-btn" onclick="restart()">
+                            もう一度診断する
+                        </button>
+                        <button class="download-btn" onclick="downloadResult()">
+                            画像をダウンロード
+                        </button>
+                        <button class="save-result-btn" onclick="saveAndContinue()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 15px 30px; font-size: 1.1em; border-radius: 12px; cursor: pointer; margin-top: 10px; width: 100%; font-weight: 600;">
+                            診断結果を保存して続ける →
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('app').innerHTML = html;
+
+            // 診断結果をlocalStorageに自動保存
+            saveDiagnosisResult();
+            
+            setTimeout(() => {
+                document.querySelectorAll('.score-bar').forEach((bar, index) => {
+                    setTimeout(() => {
+                        bar.style.width = bar.style.width;
+                    }, index * 100);
+                });
+            }, 100);
+        }
+
+        // 結果画像生成
+        function generateResultImage() {
+            const canvas = document.getElementById('result-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 800;
+            canvas.height = 1000;
+            
+            // 背景グラデーション
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 白い背景（角丸風）
+            ctx.fillStyle = 'white';
+            ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+            
+            // タイトル
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 36px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('体癖診断結果', canvas.width / 2, 120);
+            
+            if (resultData) {
+                // 主体癖ラベル
+                ctx.font = 'bold 28px Arial, sans-serif';
+                ctx.fillStyle = '#667eea';
+                ctx.fillText('あなたの主体癖は...', canvas.width / 2, 200);
+                
+                // 主体癖名
+                ctx.font = 'bold 42px Arial, sans-serif';
+                ctx.fillStyle = '#667eea';
+                ctx.fillText(taihekiTypes[resultData.primaryType].name, canvas.width / 2, 260);
+                
+                // サブタイトル
+                ctx.font = '24px Arial, sans-serif';
+                ctx.fillStyle = '#888';
+                ctx.fillText(taihekiTypes[resultData.primaryType].subtitle, canvas.width / 2, 300);
+                
+                // 説明文
+                ctx.font = '20px Arial, sans-serif';
+                ctx.fillStyle = '#333';
+                const description = taihekiTypes[resultData.primaryType].description;
+                
+                // 文字列を複数行に分割
+                const maxWidth = canvas.width - 120;
+                const lines = wrapText(ctx, description, maxWidth);
+                let currentY = 350;
+                lines.forEach(line => {
+                    ctx.fillText(line, canvas.width / 2, currentY);
+                    currentY += 30;
+                });
+                
+                // 副体癖
+                currentY += 20;
+                ctx.font = 'bold 24px Arial, sans-serif';
+                ctx.fillStyle = '#666';
+                ctx.fillText('副体癖', canvas.width / 2, currentY);
+                
+                currentY += 40;
+                ctx.font = 'bold 32px Arial, sans-serif';
+                ctx.fillStyle = '#667eea';
+                ctx.fillText(taihekiTypes[resultData.secondaryType].name, canvas.width / 2, currentY);
+                
+                // 信頼度
+                currentY += 70;
+                ctx.font = '24px Arial, sans-serif';
+                ctx.fillStyle = '#666';
+                ctx.fillText('診断の信頼度', canvas.width / 2, currentY);
+                
+                currentY += 40;
+                ctx.font = '32px Arial, sans-serif';
+                ctx.fillStyle = '#FFD700';
+                ctx.fillText(resultData.reliabilityStars, canvas.width / 2, currentY);
+                
+                currentY += 30;
+                ctx.font = '18px Arial, sans-serif';
+                ctx.fillStyle = '#666';
+                ctx.fillText(`信頼度: ${resultData.reliabilityText}`, canvas.width / 2, currentY);
+                
+                // スコアチャート（上位5つ）
+                currentY += 60;
+                ctx.font = 'bold 24px Arial, sans-serif';
+                ctx.fillStyle = '#666';
+                ctx.fillText('主要スコア', canvas.width / 2, currentY);
+                
+                const topScores = resultData.sortedScores.slice(0, 5);
+                currentY += 40;
+                
+                topScores.forEach(([type, score], index) => {
+                    const y = currentY + index * 40;
+                    const barWidth = (score / resultData.maxScore) * 300;
+                    
+                    // ラベル
+                    ctx.font = '16px Arial, sans-serif';
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(taihekiTypes[type].name.replace('体癖', ''), 80, y + 5);
+                    
+                    // バー背景
+                    ctx.fillStyle = '#f0f0f0';
+                    ctx.fillRect(180, y - 12, 300, 20);
+                    
+                    // バー
+                    if (barWidth > 0) {
+                        const barGradient = ctx.createLinearGradient(180, y, 180 + barWidth, y);
+                        barGradient.addColorStop(0, '#667eea');
+                        barGradient.addColorStop(1, '#764ba2');
+                        ctx.fillStyle = barGradient;
+                        ctx.fillRect(180, y - 12, barWidth, 20);
+                    }
+                    
+                    // スコア
+                    ctx.font = 'bold 14px Arial, sans-serif';
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${score}pt`, 490, y + 3);
+                });
+                
+                // フッター
+                ctx.font = '16px Arial, sans-serif';
+                ctx.fillStyle = '#888';
+                ctx.textAlign = 'center';
+                ctx.fillText('体癖診断システム', canvas.width / 2, canvas.height - 60);
+            }
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        // テキスト折り返し関数
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split('');
+            const lines = [];
+            let currentLine = '';
+            
+            for (let i = 0; i < words.length; i++) {
+                const testLine = currentLine + words[i];
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine !== '') {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+            
+            return lines;
+        }
+
+        // 画像ダウンロード
+        function downloadResult() {
+            try {
+                const imageData = generateResultImage();
+                const link = document.createElement('a');
+                link.download = `体癖診断結果_${taihekiTypes[resultData.primaryType].name}.png`;
+                link.href = imageData;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('画像生成エラー:', error);
+                alert('画像の生成に失敗しました。もう一度お試しください。');
+            }
+        }
+
+        // 体癖論解説サイトを開く
+        function openTaihekiGuide() {
+            window.open('https://claude.ai/public/artifacts/635b3100-76bb-4f94-9b58-c24d7742076e', '_blank');
+        }
+
+        // 診断結果をlocalStorageに保存
+        function saveDiagnosisResult() {
+            if (!resultData) return;
+
+            const diagnosisResult = {
+                type: 'taiheki',
+                timestamp: new Date().toISOString(),
+                primary: {
+                    type: resultData.primaryType,
+                    name: taihekiTypes[resultData.primaryType].name,
+                    subtitle: taihekiTypes[resultData.primaryType].subtitle,
+                    description: taihekiTypes[resultData.primaryType].description,
+                    score: resultData.primaryScore
+                },
+                secondary: {
+                    type: resultData.secondaryType,
+                    name: taihekiTypes[resultData.secondaryType].name,
+                    subtitle: taihekiTypes[resultData.secondaryType].subtitle,
+                    score: resultData.secondaryScore
+                },
+                reliability: {
+                    value: resultData.reliability,
+                    text: resultData.reliabilityText,
+                    stars: resultData.reliabilityStars
+                },
+                allScores: resultData.sortedScores.reduce((acc, [type, score]) => {
+                    acc[type] = score;
+                    return acc;
+                }, {})
+            };
+
+            // localStorageに保存（既存のZustand診断データと統合）
+            try {
+                localStorage.setItem('taiheki_diagnosis_result', JSON.stringify(diagnosisResult));
+                console.log('診断結果を保存しました:', diagnosisResult);
+            } catch (error) {
+                console.error('診断結果の保存に失敗しました:', error);
+            }
+        }
+
+        // 診断結果を保存してNext.jsの診断ページに戻る
+        function saveAndContinue() {
+            saveDiagnosisResult();
+            // Next.jsの診断結果ページに遷移
+            window.location.href = '/diagnosis/results';
+        }
+
+        // 再開始
+        function restart() {
+            currentQuestion = 0;
+            answers = {};
+            scores = {
+                type1: 0, type2: 0, type3: 0, type4: 0, type5: 0,
+                type6: 0, type7: 0, type8: 0, type9: 0, type10: 0
+            };
+            resultData = null;
+            render();
+        }
+
+        // アプリケーション開始
+        init();
+    </script>
+</body>
+</html>

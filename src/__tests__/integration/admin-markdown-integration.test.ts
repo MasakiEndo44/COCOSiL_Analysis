@@ -15,7 +15,7 @@ describe('Admin Markdown Integration', () => {
     gender: 'male',
     zodiac: '犬（いぬ）',
     animal: 'チーター',
-    orientation: 'right',
+    orientation: 'people_oriented',
     color: '赤',
     mbti: 'INTJ',
     mainTaiheki: 1,
@@ -26,16 +26,16 @@ describe('Admin Markdown Integration', () => {
     satisfaction: 4,
     duration: '45分',
     feedback: '非常に的確な診断でした。',
-    reportUrl: null,
+    reportUrl: undefined,
     isIntegratedReport: false,
-    reportVersion: null,
-    interviewScheduled: null,
-    interviewDone: null,
-    memo: null,
+    reportVersion: undefined,
+    interviewScheduled: undefined,
+    interviewDone: undefined,
+    memo: undefined,
     createdAt: new Date('2024-01-15T10:30:00Z'),
     updatedAt: new Date('2024-01-15T10:30:00Z'),
-    markdownContent: null,
-    markdownVersion: null
+    markdownContent: undefined,
+    markdownVersion: undefined
   }
 
   test('should convert DiagnosisRecord to DiagnosisData format', () => {
@@ -92,9 +92,9 @@ describe('Admin Markdown Integration', () => {
     const incompleteRecord: DiagnosisRecord = {
       ...mockRecord,
       subTaiheki: null,
-      theme: null,
-      advice: null,
-      feedback: null
+      theme: '',
+      advice: '',
+      feedback: ''
     }
 
     const result = convertDiagnosisRecordToData(incompleteRecord)

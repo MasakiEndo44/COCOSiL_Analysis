@@ -21,7 +21,7 @@ const createMockDiagnosisRecord = (): DiagnosisRecord => ({
   gender: 'male',
   zodiac: '犬（いぬ）',
   animal: 'チーター',
-  orientation: 'right',
+  orientation: 'people_oriented',
   color: '赤',
   mbti: 'INTJ',
   mainTaiheki: 1,
@@ -32,16 +32,16 @@ const createMockDiagnosisRecord = (): DiagnosisRecord => ({
   satisfaction: 4,
   duration: '45分',
   feedback: '非常に的確な診断でした。',
-  reportUrl: null,
+  reportUrl: undefined,
   isIntegratedReport: false,
-  reportVersion: null,
-  interviewScheduled: null,
-  interviewDone: null,
-  memo: null,
+  reportVersion: undefined,
+  interviewScheduled: undefined,
+  interviewDone: undefined,
+  memo: undefined,
   createdAt: new Date('2024-01-15T10:30:00Z'),
   updatedAt: new Date('2024-01-15T10:30:00Z'),
-  markdownContent: null,
-  markdownVersion: null
+  markdownContent: undefined,
+  markdownVersion: undefined
 })
 
 describe('admin-diagnosis-converter', () => {
@@ -80,7 +80,7 @@ describe('admin-diagnosis-converter', () => {
         animalDetails: {
           character: 'チーター',
           color: '赤',
-          orientation: 'right'
+          orientation: 'people_oriented'
         }
       })
 
@@ -120,9 +120,9 @@ describe('admin-diagnosis-converter', () => {
       const record: DiagnosisRecord = {
         ...createMockDiagnosisRecord(),
         subTaiheki: null,
-        theme: null,
-        advice: null,
-        feedback: null
+        theme: '',
+        advice: '',
+        feedback: ''
       }
 
       const result = convertDiagnosisRecordToData(record)
