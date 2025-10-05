@@ -15,31 +15,8 @@ import { animals60WordBank } from '@/lib/data/animals60';
 import { ANIMAL_FORTUNE_MAPPING } from '@/lib/data/animal-fortune-mapping';
 import Link from 'next/link';
 import type { FortuneResult } from '@/types';
-
-// Type definition for localStorage taiheki result
-interface LocalStorageTaihekiResult {
-  type: 'taiheki';
-  timestamp: string;
-  primary: {
-    type: string;
-    name: string;
-    subtitle: string;
-    description: string;
-    score: number;
-  };
-  secondary: {
-    type: string;
-    name: string;
-    subtitle: string;
-    score: number;
-  };
-  reliability: {
-    value: number;
-    text: string;
-    stars: number;
-  };
-  allScores: Record<string, number>;
-}
+import { safeGetItem, safeRemoveItem } from '@/lib/localStorage-utils';
+import { parseAndValidateTaihekiResult } from '@/lib/taiheki-validation';
 
 const getWesternZodiac = (month: number, day: number): string => {
   const zodiacData = [
@@ -652,35 +629,49 @@ export default function DiagnosisResults() {
   // Overlay state management
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [taihekiLoadError, setTaihekiLoadError] = useState<string | null>(null);
 
   // Load taiheki result from localStorage if available
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const storedResult = localStorage.getItem('taiheki_diagnosis_result');
-    if (storedResult && !taiheki) {
-      try {
-        const parsedResult: LocalStorageTaihekiResult = JSON.parse(storedResult);
+    // Zustandストアに既にデータがある場合はスキップ
+    if (taiheki) return;
 
-        // Convert localStorage format to Zustand store format
-        const taihekiResult = {
-          primary: parseInt(parsedResult.primary.type.replace('type', '')),
-          secondary: parseInt(parsedResult.secondary.type.replace('type', '')),
-          confidence: parsedResult.reliability.value,
-          characteristics: [
-            parsedResult.primary.name,
-            parsedResult.primary.subtitle,
-            parsedResult.secondary.name,
-            parsedResult.secondary.subtitle
-          ].filter(Boolean)
-        };
+    const STORAGE_KEY = 'taiheki_diagnosis_result';
+    const storedJson = safeGetItem(STORAGE_KEY);
 
-        setTaiheki(taihekiResult);
-        console.log('✅ localStorage から体癖診断結果を読み込みました:', taihekiResult);
-      } catch (error) {
-        console.error('❌ localStorage から体癖診断結果の読み込みに失敗しました:', error);
-      }
+    if (!storedJson) {
+      // データが存在しない場合は何もしない（エラーではない）
+      return;
     }
+
+    // データの検証と変換
+    const { success, result, validation, error } = parseAndValidateTaihekiResult(storedJson);
+
+    if (!success || !result) {
+      // バリデーションエラー - データをクリーンアップ
+      console.error('❌ 体癖診断結果のバリデーションエラー:', error);
+      console.error('詳細:', validation?.errors);
+
+      // 無効なデータを削除
+      safeRemoveItem(STORAGE_KEY);
+      setTaihekiLoadError(error || '診断結果の読み込みに失敗しました');
+      return;
+    }
+
+    // 警告がある場合はログ出力（エラーではない）
+    if (validation?.warnings && validation.warnings.length > 0) {
+      console.warn('⚠️ 体癖診断結果に警告があります:', validation.warnings);
+    }
+
+    // Zustandストアに保存
+    setTaiheki(result);
+    console.log('✅ localStorage から体癖診断結果を読み込みました:', result);
+
+    // 成功したらlocalStorageデータをクリア（Zustandストアに移行済み）
+    safeRemoveItem(STORAGE_KEY);
+    console.log('🧹 localStorage データをクリーンアップしました（Zustand移行完了）');
   }, [taiheki, setTaiheki]);
 
   const zodiacSign = basicInfo ? getWesternZodiac(basicInfo.birthdate.month, basicInfo.birthdate.day) : '';
@@ -818,6 +809,35 @@ export default function DiagnosisResults() {
     saveDiagnosisResult();
   }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedProfile, hasCompletedCounseling, chatSummary]);
 
+
+  // エラー時のフォールバックUI
+  if (taihekiLoadError) {
+    return (
+      <div className="min-h-screen bg-light-bg flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto p-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-light-fg mb-2">
+              診断結果の読み込みエラー
+            </h1>
+            <p className="text-light-fg-muted mb-4">
+              {taihekiLoadError}
+            </p>
+            <p className="text-sm text-light-fg-muted mb-6">
+              お手数ですが、もう一度体癖診断を受けてください。
+            </p>
+            <Link href="/diagnosis/taiheki" className="inline-block">
+              <Button>体癖診断を受け直す</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Basic info and fortune result are required, MBTI and taiheki are optional
   if (!basicInfo || !fortuneResult) {
