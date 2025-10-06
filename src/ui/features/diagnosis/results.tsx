@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
 import { EmptyQAState } from '@/ui/components/counseling/empty-qa-state';
@@ -631,6 +631,9 @@ export default function DiagnosisResults() {
   const [hasMounted, setHasMounted] = useState(false);
   const [taihekiLoadError, setTaihekiLoadError] = useState<string | null>(null);
 
+  // Track if diagnosis has been saved to prevent duplicates
+  const hasSavedRef = useRef(false);
+
   // Load taiheki result from localStorage if available
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -751,6 +754,12 @@ export default function DiagnosisResults() {
   // Save diagnosis result to admin database - AUTO SAVE ENABLED
   useEffect(() => {
     const saveDiagnosisResult = async () => {
+      // Prevent duplicate saves using ref guard
+      if (hasSavedRef.current) {
+        console.log('⏭️  診断結果は既に保存済みです（重複防止）');
+        return;
+      }
+
       if (basicInfo && fortuneResult && zodiacSign) {
         // Generate integratedProfile inside useEffect to avoid reference dependency issues
         const currentProfile = (basicInfo && fortuneResult)
@@ -804,6 +813,8 @@ export default function DiagnosisResults() {
 
           if (response.ok) {
             console.log('✅ 診断結果が正常に保存されました');
+            // Mark as saved to prevent duplicates
+            hasSavedRef.current = true;
           } else {
             console.error('❌ 診断結果の保存に失敗しました:', response.status);
           }
