@@ -47,8 +47,8 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 px-4">
-      <div className="max-w-md w-full mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+      <div className="w-full max-w-md">
         <div className="bg-white rounded-card p-8 shadow-z2">
           {/* Header */}
           <div className="text-center mb-8">
