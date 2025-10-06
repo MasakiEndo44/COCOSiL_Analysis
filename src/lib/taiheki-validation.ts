@@ -6,6 +6,7 @@
  */
 
 import type { TaihekiResult, TaihekiType, SecondaryTaihekiType } from '@/types';
+import { getTaihekiRecommendations } from './data/taiheki-questions';
 
 // スキーマバージョン管理
 export const TAIHEKI_SCHEMA_VERSION = '1.0.0';
@@ -150,6 +151,9 @@ export function convertToZustandFormat(data: LocalStorageTaihekiResult): Taiheki
     });
   }
 
+  // 推奨事項を自動生成
+  const recommendations = getTaihekiRecommendations(primaryType, secondaryType);
+
   return {
     primary: primaryType,
     secondary: secondaryType,
@@ -160,7 +164,7 @@ export function convertToZustandFormat(data: LocalStorageTaihekiResult): Taiheki
       data.secondary.name,
       data.secondary.subtitle
     ].filter(Boolean),
-    recommendations: [] // localStorageデータには含まれていないため空配列
+    recommendations // 自動生成された推奨事項
   };
 }
 

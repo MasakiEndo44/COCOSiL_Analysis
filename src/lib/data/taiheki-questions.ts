@@ -323,7 +323,7 @@ function getTaihekiCharacteristics(type: TaihekiType): string[] {
   return characteristics[type] || [];
 }
 
-function getTaihekiRecommendations(primary: TaihekiType, secondary: TaihekiType): string[] {
+export function getTaihekiRecommendations(primary: TaihekiType, secondary: TaihekiType | 0): string[] {
   const recommendations = {
     1: [
       "首・肩のマッサージやストレッチを定期的に行う",
@@ -388,8 +388,8 @@ function getTaihekiRecommendations(primary: TaihekiType, secondary: TaihekiType)
   };
 
   const primaryRec = recommendations[primary] || [];
-  const secondaryRec = recommendations[secondary] || [];
-  
+  const secondaryRec = (secondary !== 0 ? recommendations[secondary as TaihekiType] : []) || [];
+
   // 主体癖の推奨事項をメインに、副体癖から補完
   return [...primaryRec, ...secondaryRec.slice(0, 2)];
 }

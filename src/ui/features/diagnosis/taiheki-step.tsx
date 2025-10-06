@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/components/ui/button';
 import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store';
-import { taihekiQuestions, calculateTaiheki } from '@/lib/data/taiheki-questions';
+import { taihekiQuestions, calculateTaiheki, getTaihekiRecommendations } from '@/lib/data/taiheki-questions';
 import type { TaihekiType, SecondaryTaihekiType } from '@/types';
 
 export function TaihekiStep() {
@@ -58,17 +58,23 @@ export function TaihekiStep() {
       }
 
       const apiResult = await response.json();
-      
+
       // 既存の形式に変換（互換性のため）
+      const primaryType = parseInt(apiResult.result.primaryType.replace('type', '')) as TaihekiType;
+      const secondaryType = parseInt(apiResult.result.secondaryType.replace('type', '')) as SecondaryTaihekiType;
+
+      // 推奨事項を自動生成
+      const recommendations = getTaihekiRecommendations(primaryType, secondaryType);
+
       const legacyResult = {
-        primary: parseInt(apiResult.result.primaryType.replace('type', '')) as TaihekiType,
-        secondary: parseInt(apiResult.result.secondaryType.replace('type', '')) as SecondaryTaihekiType,
+        primary: primaryType,
+        secondary: secondaryType,
         confidence: apiResult.result.confidence,
         characteristics: [
           apiResult.result.reliabilityText,
           `信頼度${apiResult.result.reliabilityStars}`
         ],
-        recommendations: [],
+        recommendations, // 自動生成された推奨事項
         scores: apiResult.result.typeScores || {},
         // 新しいデータも保持
         enhancedResult: apiResult.result
