@@ -9,20 +9,20 @@ interface AdminLayoutProps {
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 md:pl-64">
+    <div className="min-h-screen bg-gray-50">
       <AdminProvider>
         {/* Header */}
-        <AdminHeader />
+        <div className="md:pl-64">
+          <AdminHeader />
+        </div>
 
         <div className="flex">
           {/* Sidebar */}
           <AdminSidebar />
 
           {/* Main Content */}
-          <main className="flex-1 w-full p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
-              {children}
-            </div>
+          <main className="flex-1 md:pl-64">
+            {children}
           </main>
         </div>
       </AdminProvider>
