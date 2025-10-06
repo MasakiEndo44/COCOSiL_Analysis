@@ -9,7 +9,7 @@ interface TaihekiSelectionProps {
 }
 
 export function TaihekiSelection({ onSelect }: TaihekiSelectionProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelection = async (mode: 'guide' | 'quick') => {

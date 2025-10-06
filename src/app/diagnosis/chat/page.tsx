@@ -65,7 +65,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [_selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<'topic_selection' | 'consultation' | 'summary'>('topic_selection');
   const [userData, setUserData] = useState<UserDiagnosisData | null>(null);
   const [chatSession, setChatSessionLocal] = useState<ChatSession | null>(null);

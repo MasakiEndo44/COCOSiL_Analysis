@@ -13,7 +13,7 @@ import {
   AlertRule 
 } from './schema';
 
-interface AggregationPeriod {
+interface _AggregationPeriod {
   start: number;
   end: number;
   period: '1h' | '24h' | '7d' | '30d';

@@ -19,10 +19,12 @@ import {
   Target,
   Lightbulb
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { PersonalizedHighlightCard } from '@/ui/components/learn/personalized-highlight-card';
 import { getPersonalizedContent } from '@/lib/data/taiheki-personalized-content';
 import { TypeComparisonModal } from '@/ui/components/learn/type-comparison-modal';
+import { isChapterUnlocked } from '@/lib/data/taiheki-chapter-metadata';
+import { ChapterLockOverlay } from '@/ui/components/learn/chapter-lock-overlay';
+import { InlineChapterQuiz, type QuizQuestion } from '@/ui/components/learn/inline-chapter-quiz';
 
 interface TaihekiChapterContentProps {
   chapter: string;
@@ -37,21 +39,28 @@ interface ChapterSection {
 
 export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
   const router = useRouter();
-  const { 
-    progress, 
-    markChapterComplete, 
-    setCurrentChapter, 
+  const {
+    progress,
+    markChapterComplete,
+    setCurrentChapter,
     setQuizScore,
     isChapterCompleted,
-    getProgress
+    getProgress,
+    startChapterTimer,
+    stopChapterTimer
   } = useLearningStore();
-  
+
   const [currentSection, setCurrentSection] = useState(0);
   const [showQuiz, setShowQuiz] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
-  const [quizCompleted, setQuizCompleted] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);  // 🆕 比較モーダル
-  
+
+  // 🆕 Progressive Disclosure: Chapter unlock check
+  const { unlocked, reason: unlockReason } = isChapterUnlocked(chapter, {
+    completedChapters: progress.completedChapters,
+    quizScores: progress.quizScores,
+    chapterTimeSpent: progress.chapterTimeSpent,
+  });
+
   const chapterInfo = CHAPTER_INFO[chapter as keyof typeof CHAPTER_INFO];
   const isCompleted = isChapterCompleted(chapter);
   const chapters = Object.entries(CHAPTER_INFO).sort((a, b) => a[1].order - b[1].order);
@@ -63,11 +72,37 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
     setCurrentChapter(chapter);
   }, [chapter, setCurrentChapter]);
 
+  // 🆕 Progressive Disclosure: Chapter timer
+  useEffect(() => {
+    if (unlocked) {
+      startChapterTimer(chapter);
+    }
+
+    return () => {
+      if (unlocked) {
+        stopChapterTimer();
+      }
+    };
+  }, [chapter, unlocked, startChapterTimer, stopChapterTimer]);
+
   if (!chapterInfo) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">章が見つかりません</p>
       </div>
+    );
+  }
+
+  // 🆕 Progressive Disclosure: Show lock overlay if chapter is locked
+  if (!unlocked) {
+    return (
+      <ChapterLockOverlay
+        chapterId={chapter}
+        unlockReason={unlockReason || '前の章を完了してください'}
+        onNavigateToPrerequisite={
+          prevChapter ? () => router.push(`/learn/taiheki/${prevChapter[0]}`) : undefined
+        }
+      />
     );
   }
 
@@ -320,61 +355,79 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
     return descriptions[type] || "";
   };
 
-  const getQuizQuestions = (chapterId: string) => {
-    const quizMap: Record<string, Array<{question: string, options: string[], correct: number}>> = {
+  const getQuizQuestions = (chapterId: string): QuizQuestion[] => {
+    const quizMap: Record<string, QuizQuestion[]> = {
       'introduction': [
         {
+          id: 1,
           question: "体癖理論を体系化したのは誰ですか？",
           options: ["野口晴哉", "野口英世", "野口五郎", "野口聡一"],
-          correct: 0
+          correct: 0,
+          explanation: "野口晴哉（のぐち はるちか）が野口整体の理論として体癖を体系化しました。"
         },
         {
+          id: 2,
           question: "体癖は何種類に分類されますか？",
           options: ["8種類", "10種類", "12種類", "16種類"],
-          correct: 1
+          correct: 1,
+          explanation: "体癖は5つの軸（上下、左右、前後、捻れ、開閉）に基づいて10種類に分類されます。"
         },
         {
+          id: 3,
           question: "体癖理論の基本的な考え方として正しいものはどれですか？",
           options: ["優劣を決めるもの", "個性の特徴を理解するもの", "病気を診断するもの", "運命を占うもの"],
-          correct: 1
+          correct: 1,
+          explanation: "体癖理論は優劣ではなく、個性の特徴を理解し活かすための理論です。"
         }
       ],
       'types': [
         {
+          id: 1,
           question: "上下型（1-2種）の特徴として正しいものはどれですか？",
           options: ["感情的判断", "理論的思考", "行動重視", "協調性重視"],
-          correct: 1
+          correct: 1,
+          explanation: "上下型（1-2種）は頭部重心で、理論的思考を特徴とします。"
         },
         {
+          id: 2,
           question: "左右型（3-4種）の特徴として正しいものはどれですか？",
           options: ["頭部重心", "感情豊か", "実践的", "変化志向"],
-          correct: 1
+          correct: 1,
+          explanation: "左右型（3-4種）は感情豊かで、情緒的な判断を特徴とします。"
         }
       ],
       'primary-secondary': [
         {
+          id: 1,
           question: "主体癖について正しいものはどれですか？",
           options: ["二番目に強い特徴", "最も強く現れる特徴", "補完する役割", "変化しやすい特徴"],
-          correct: 1
+          correct: 1,
+          explanation: "主体癖は最も強く現れる特徴で、基本的な行動パターンを決定します。"
         },
         {
+          id: 2,
           question: "副体癖の役割として正しいものはどれですか？",
           options: ["主体癖を無効にする", "主体癖を強化する", "主体癖を補完する", "主体癖と対立する"],
-          correct: 2
+          correct: 2,
+          explanation: "副体癖は主体癖を補完し、バランスを取る働きをします。"
         }
       ],
       'applications': [
         {
+          id: 1,
           question: "体癖理論の日常活用として適切なものはどれですか？",
           options: ["病気の治療", "運勢の占い", "コミュニケーション改善", "成績の向上"],
-          correct: 2
+          correct: 2,
+          explanation: "体癖理論は自己理解と他者理解を深め、コミュニケーション改善に活用できます。"
         }
       ],
       'significance': [
         {
+          id: 1,
           question: "体癖診断の意義として最も重要なものはどれですか？",
           options: ["他者との優劣比較", "自己理解の深化", "将来の予測", "能力の測定"],
-          correct: 1
+          correct: 1,
+          explanation: "体癖診断は自己理解を深め、自分の特性を活かすためのツールです。"
         }
       ]
     };
@@ -383,24 +436,24 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
 
   const sections = getChapterContent(chapter);
   const quizQuestions = getQuizQuestions(chapter);
-  
-  const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
-    setQuizAnswers(prev => ({
-      ...prev,
-      [questionIndex]: answerIndex
-    }));
-  };
 
-  const handleQuizComplete = () => {
-    const correctAnswers = quizQuestions.filter((q, i) => quizAnswers[i] === q.correct).length;
-    const score = Math.round((correctAnswers / quizQuestions.length) * 100);
-    
+  // 🆕 InlineChapterQuiz integration - quiz completion handler
+  const handleQuizComplete = (score: number, passed: boolean) => {
     setQuizScore(chapter, score);
-    setQuizCompleted(true);
-    
-    if (!isCompleted) {
+
+    if (passed && !isCompleted) {
       markChapterComplete(chapter);
     }
+
+    // Auto-hide quiz after completion to show chapter nav
+    setTimeout(() => {
+      setShowQuiz(false);
+    }, 2000);
+  };
+
+  const handleQuizRetry = () => {
+    // Quiz component handles retry internally, this is just a placeholder
+    // The InlineChapterQuiz component will reset its internal state
   };
 
   const sectionProgress = ((currentSection + 1) / sections.length) * 100;
@@ -546,73 +599,15 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
           </>
         ) : (
           <>
-            {/* Quiz */}
-            <Card className="p-8">
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Award className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <h2 className="text-h2-mobile md:text-h2-desktop font-heading text-foreground">
-                    理解度チェック
-                  </h2>
-                </div>
-                
-                {!quizCompleted ? (
-                  <div className="space-y-6">
-                    {quizQuestions.map((question, qIndex) => (
-                      <div key={qIndex} className="space-y-3">
-                        <h3 className="font-semibold">
-                          問{qIndex + 1}. {question.question}
-                        </h3>
-                        <div className="space-y-2">
-                          {question.options.map((option, oIndex) => (
-                            <label
-                              key={oIndex}
-                              className={cn(
-                                "flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all",
-                                quizAnswers[qIndex] === oIndex
-                                  ? "border-brand-500 bg-brand-50"
-                                  : "border-gray-200 hover:bg-gray-50"
-                              )}
-                            >
-                              <input
-                                type="radio"
-                                name={`question-${qIndex}`}
-                                value={oIndex}
-                                checked={quizAnswers[qIndex] === oIndex}
-                                onChange={() => handleQuizAnswer(qIndex, oIndex)}
-                                className="text-brand-600 focus:ring-brand-500"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    <Button
-                      onClick={handleQuizComplete}
-                      disabled={Object.keys(quizAnswers).length < quizQuestions.length}
-                      className="w-full bg-brand-600 hover:bg-brand-700"
-                    >
-                      答えを提出
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <CheckCircle className="w-10 h-10 text-green-600" />
-                    </div>
-                    <h3 className="text-xl font-semibold">章の学習が完了しました！</h3>
-                    <p className="text-muted-foreground">
-                      スコア: {progress.quizScores[chapter]}% 
-                      ({quizQuestions.filter((q, i) => quizAnswers[i] === q.correct).length} / {quizQuestions.length} 問正解)
-                    </p>
-                  </div>
-                )}
-              </div>
-            </Card>
+            {/* 🆕 Inline Chapter Quiz Component */}
+            <InlineChapterQuiz
+              quizId={`${chapter}-quiz`}
+              title={`第${chapterInfo.order}章 理解度チェック`}
+              questions={quizQuestions}
+              passingScore={70}
+              onComplete={handleQuizComplete}
+              onRetry={handleQuizRetry}
+            />
           </>
         )}
 
@@ -650,7 +645,7 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-            ) : quizCompleted ? (
+            ) : isCompleted ? (
               <Link href="/diagnosis/taiheki">
                 <Button className="bg-brand-600 hover:bg-brand-700">
                   体癖診断を受ける

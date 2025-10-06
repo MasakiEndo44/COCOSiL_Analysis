@@ -118,7 +118,7 @@ describe('/api/admin/records', () => {
 
       const request = new NextRequest('http://localhost:3000/api/admin/records?page=1&limit=50')
 
-      const response = await GET(request)
+      const _response = await GET(request)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -138,7 +138,7 @@ describe('/api/admin/records', () => {
 
       const request = new NextRequest('http://localhost:3000/api/admin/records?page=2&limit=25')
 
-      const response = await GET(request)
+      const _response = await GET(request)
       const data = await response.json()
 
       expect(mockAdminDb.diagnosisRecord.findMany).toHaveBeenCalledWith({
@@ -161,7 +161,7 @@ describe('/api/admin/records', () => {
 
       const request = new NextRequest('http://localhost:3000/api/admin/records')
 
-      const response = await GET(request)
+      const _response = await GET(request)
 
       expect(mockAdminDb.diagnosisRecord.findMany).toHaveBeenCalledWith({
         orderBy: { createdAt: 'desc' },
@@ -176,7 +176,7 @@ describe('/api/admin/records', () => {
 
       const request = new NextRequest('http://localhost:3000/api/admin/records')
 
-      const response = await GET(request)
+      const _response = await GET(request)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -189,7 +189,7 @@ describe('/api/admin/records', () => {
 
       const request = new NextRequest('http://localhost:3000/api/admin/records')
 
-      const response = await GET(request)
+      const _response = await GET(request)
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -243,7 +243,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -279,7 +279,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       // Should still succeed
@@ -311,7 +311,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       // Should still succeed
@@ -337,7 +337,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -356,7 +356,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -373,7 +373,7 @@ describe('/api/admin/records', () => {
         }
       })
 
-      const response = await POST(request)
+      const _response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(500)

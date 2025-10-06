@@ -149,10 +149,10 @@ interface TaihekiComparisonProps {
   showCompatibility?: boolean;
 }
 
-export function TaihekiComparison({ 
-  id = 'taiheki-comparison',
+export function TaihekiComparison({
+  id: _id = 'taiheki-comparison',
   defaultTypes = [1, 3],
-  showCompatibility = true 
+  showCompatibility = true
 }: TaihekiComparisonProps) {
   const [selectedTypes, setSelectedTypes] = useState<number[]>(defaultTypes);
   const [comparisonAspect, setComparisonAspect] = useState<'strengths' | 'challenges' | 'workStyle' | 'communication'>('strengths');
@@ -272,7 +272,7 @@ export function TaihekiComparison({
               </h4>
               <div className="grid gap-2">
                 {selectedTypes.map((type1Id, i) => 
-                  selectedTypes.slice(i + 1).map((type2Id, j) => {
+                  selectedTypes.slice(i + 1).map((type2Id, _j) => {
                     const compatibility = getCompatibilityLevel(type1Id, type2Id);
                     const type1Name = getTypeData(type1Id)?.name.split('（')[0];
                     const type2Name = getTypeData(type2Id)?.name.split('（')[0];

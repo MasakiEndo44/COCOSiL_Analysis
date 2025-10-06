@@ -176,7 +176,7 @@ describe('Undefined Catchphrase Bug Fix', () => {
       { adjective: '堅実な', noun: '管理者' },
     ];
 
-    testCases.forEach((mbtiData, index) => {
+    testCases.forEach((mbtiData, _index) => {
       const result = generateNaturalCatchphrase(mbtiData, null, null);
       expect(result).not.toContain('undefined');
       expect(result.length).toBeGreaterThan(0);

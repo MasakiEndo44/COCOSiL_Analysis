@@ -217,7 +217,7 @@ export default function EnhancedRecordsView({
 
       if (failures.length > 0) {
         const ids = Array.from(selectedIds);
-        const failureDetails = failures.map((failure, index) => {
+        const failureDetails = failures.map((failure, _index) => {
           const recordId = ids[results.indexOf(failure)];
           const errorMessage = failure.reason?.message || 'Unknown error';
           return `Record ${recordId}: ${errorMessage}`;

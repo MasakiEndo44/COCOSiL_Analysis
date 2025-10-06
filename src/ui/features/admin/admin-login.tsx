@@ -11,7 +11,7 @@ interface AdminLoginFormData {
 }
 
 export function AdminLogin() {
-  const router = useRouter();
+  const _router = useRouter();
   const [error, setError] = useState('');
 
   const {

@@ -159,7 +159,7 @@ function generateSampleData(period: '1h' | '24h' | '7d' | '30d'): MetricSummary[
 }
 
 // Monitoring-specific alert generation
-async function generateSampleAlerts() {
+async function _generateSampleAlerts() {
   const alerts = [];
   
   // Simulate some active alerts

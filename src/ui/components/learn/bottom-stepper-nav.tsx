@@ -3,8 +3,9 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
 import { Button } from '@/ui/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isChapterUnlocked } from '@/lib/data/taiheki-chapter-metadata';
 
 /**
  * BottomStepperNav - モバイル向けボトムナビゲーション
@@ -20,7 +21,7 @@ import { cn } from '@/lib/utils';
 export function BottomStepperNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { setCurrentChapter } = useLearningStore();
+  const { setCurrentChapter, progress } = useLearningStore();
 
   // 章リストを順番に取得
   const chapters = Object.entries(CHAPTER_INFO).sort((a, b) => a[1].order - b[1].order);
@@ -36,6 +37,15 @@ export function BottomStepperNav() {
   const currentChapter = chapters[currentChapterIndex];
   const prevChapter = currentChapterIndex > 0 ? chapters[currentChapterIndex - 1] : null;
   const nextChapter = currentChapterIndex < chapters.length - 1 ? chapters[currentChapterIndex + 1] : null;
+
+  // 🆕 Progressive Disclosure: Check if next chapter is unlocked
+  const isNextChapterUnlocked = nextChapter
+    ? isChapterUnlocked(nextChapter[0], {
+        completedChapters: progress.completedChapters,
+        quizScores: progress.quizScores,
+        chapterTimeSpent: progress.chapterTimeSpent,
+      }).unlocked
+    : false;
 
   const handleNavigation = (chapterId: string) => {
     setCurrentChapter(chapterId);
@@ -68,37 +78,61 @@ export function BottomStepperNav() {
             第{currentChapter[1].order}章 / 全{chapters.length}章
           </span>
 
-          {/* 進捗ドット */}
+          {/* 進捗ドット（ロック状態表示付き） */}
           <div className="flex space-x-1.5">
-            {chapters.map((_, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "w-2 h-2 rounded-full transition-all duration-200",
-                  index === currentChapterIndex
-                    ? "bg-brand-500 w-6"  // 現在章は横長
-                    : index < currentChapterIndex
-                    ? "bg-brand-300"      // 完了章は薄い色
-                    : "bg-gray-300"       // 未完了章はグレー
-                )}
-              />
-            ))}
+            {chapters.map(([chapterId], index) => {
+              const { unlocked } = isChapterUnlocked(chapterId, {
+                completedChapters: progress.completedChapters,
+                quizScores: progress.quizScores,
+                chapterTimeSpent: progress.chapterTimeSpent,
+              });
+
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "relative w-2 h-2 rounded-full transition-all duration-200",
+                    index === currentChapterIndex
+                      ? "bg-brand-500 w-6"  // 現在章は横長
+                      : index < currentChapterIndex
+                      ? "bg-brand-300"      // 完了章は薄い色
+                      : unlocked
+                      ? "bg-gray-300"       // 未完了だが解除済み
+                      : "bg-gray-200 border border-gray-400"  // ロック中
+                  )}
+                >
+                  {/* ロックアイコン（小） */}
+                  {!unlocked && index > currentChapterIndex && (
+                    <Lock className="absolute -top-1 -right-1 w-2.5 h-2.5 text-gray-500" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* 次章ボタン */}
+        {/* 次章ボタン（ロック状態考慮） */}
         <Button
           variant="tertiary"
           size="sm"
-          disabled={!nextChapter}
-          onClick={() => nextChapter && handleNavigation(nextChapter[0])}
+          disabled={!nextChapter || !isNextChapterUnlocked}
+          onClick={() => nextChapter && isNextChapterUnlocked && handleNavigation(nextChapter[0])}
           className={cn(
             "min-w-[80px] h-10 text-sm font-medium",
-            !nextChapter && "opacity-30 cursor-not-allowed"
+            (!nextChapter || !isNextChapterUnlocked) && "opacity-30 cursor-not-allowed"
           )}
         >
-          次章
-          <ArrowRight className="w-4 h-4 ml-1" />
+          {nextChapter && !isNextChapterUnlocked ? (
+            <>
+              <Lock className="w-3 h-3 mr-1" />
+              次章
+            </>
+          ) : (
+            <>
+              次章
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </>
+          )}
         </Button>
       </div>
 

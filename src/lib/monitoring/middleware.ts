@@ -116,11 +116,11 @@ export function withMonitoring(
 /**
  * API Route wrapper for automatic monitoring
  */
-export function withAPIMonitoring<T extends any[], R>(
+export function withAPIMonitoring<T extends any[]>(
   handler: (...args: T) => Promise<Response> | Response
 ): (...args: T) => Promise<Response> {
   return async (...args: T): Promise<Response> => {
-    const startTime = Date.now();
+    const _startTime = Date.now();
     let request: NextRequest | undefined;
     let pathname = 'unknown';
     

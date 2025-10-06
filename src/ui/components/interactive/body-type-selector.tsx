@@ -169,12 +169,12 @@ interface BodyTypeSelectorProps {
   showComparison?: boolean;
 }
 
-export function BodyTypeSelector({ 
-  id = 'body-type-selector',
+export function BodyTypeSelector({
+  id: _id = 'body-type-selector',
   title = '体癖タイプを選択してください',
   onSelectionChange,
   maxSelections = 3,
-  showComparison = true 
+  showComparison = true
 }: BodyTypeSelectorProps) {
   const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | '上下型' | '左右型' | '前後型' | '捻れ型' | '開閉型'>('all');

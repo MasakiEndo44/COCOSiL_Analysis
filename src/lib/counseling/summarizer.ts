@@ -14,7 +14,7 @@ const defaultOptions: SummarizationOptions = {
  * Preserve full text content without truncation
  * Modified to support full transcript preservation for Claude integration
  */
-export const summarizeText = (text: string, maxLength: number): string => {
+export const summarizeText = (text: string, _maxLength: number): string => {
   // Return full text without any truncation
   return text;
 };

@@ -15,6 +15,8 @@ interface LearningProgress {
   lastVisited?: string;
   startedAt?: Date;
   userContext?: UserDiagnosisContext;  // 診断結果パーソナライゼーション
+  chapterTimeSpent?: Record<string, number>;  // 各章の滞在時間（秒）
+  chapterStartTime?: number;  // 現在の章の開始時刻（ms）
 }
 
 interface LearningState {
@@ -30,6 +32,9 @@ interface LearningActions {
   isChapterCompleted: (chapterId: string) => boolean;
   setUserContext: (primaryType: number, secondaryType: number) => void;  // 診断結果連携
   clearUserContext: () => void;  // コンテキストクリア
+  startChapterTimer: (chapterId: string) => void;  // 章の時間トラッキング開始
+  stopChapterTimer: () => void;  // 章の時間トラッキング停止
+  getChapterTimeSpent: (chapterId: string) => number;  // 章の滞在時間取得
 }
 
 type LearningStore = LearningState & LearningActions;
@@ -128,6 +133,46 @@ export const useLearningStore = create<LearningStore>()(
             userContext: undefined,
           },
         }));
+      },
+
+      // 🆕 Progressive Disclosure: Chapter time tracking
+      startChapterTimer: (chapterId: string) => {
+        set((state) => ({
+          progress: {
+            ...state.progress,
+            chapterStartTime: Date.now(),
+            currentChapter: chapterId,
+          },
+        }));
+      },
+
+      stopChapterTimer: () => {
+        set((state) => {
+          const { chapterStartTime, currentChapter, chapterTimeSpent = {} } = state.progress;
+
+          if (!chapterStartTime || !currentChapter) {
+            return state;
+          }
+
+          const elapsedSeconds = Math.floor((Date.now() - chapterStartTime) / 1000);
+          const previousTime = chapterTimeSpent[currentChapter] || 0;
+
+          return {
+            progress: {
+              ...state.progress,
+              chapterTimeSpent: {
+                ...chapterTimeSpent,
+                [currentChapter]: previousTime + elapsedSeconds,
+              },
+              chapterStartTime: undefined,
+            },
+          };
+        });
+      },
+
+      getChapterTimeSpent: (chapterId: string) => {
+        const { chapterTimeSpent = {} } = get().progress;
+        return chapterTimeSpent[chapterId] || 0;
       },
     }),
     {

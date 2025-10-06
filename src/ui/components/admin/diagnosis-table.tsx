@@ -21,7 +21,7 @@ interface DiagnosisTableProps {
 
 export default function DiagnosisTable({
   records,
-  onEdit,
+  onEdit: _onEdit,
   onDelete,
   onManageInterview,
   userRole = 'admin',

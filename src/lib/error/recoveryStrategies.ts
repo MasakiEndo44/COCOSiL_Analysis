@@ -113,7 +113,7 @@ export const getDiagnosisDataRecoveryStrategy = (
 // バリデーションエラーの復旧戦略
 export const getValidationRecoveryStrategy = (
   field: string,
-  errorType: string
+  _errorType: string
 ): RecoveryStrategy => {
   const fieldMessages: Record<string, string> = {
     name: 'お名前を正しく入力してください',

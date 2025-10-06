@@ -354,7 +354,7 @@ describe('Monitoring System Integration Tests', () => {
     });
 
     test('should handle concurrent operations', async () => {
-      const promises = Array.from({ length: 100 }, (_, i) => 
+      const promises = Array.from({ length: 100 }, (_, _i) => 
         Promise.resolve().then(() => monitor.action('page_view'))
       );
       

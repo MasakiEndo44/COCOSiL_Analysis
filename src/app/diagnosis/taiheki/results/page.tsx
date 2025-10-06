@@ -15,7 +15,7 @@ import { Button } from '@/ui/components/ui/button';
 
 export default function TaihekiResultsPage() {
   const { taiheki, setCurrentStep } = useDiagnosisStore();
-  const router = useRouter();
+  const _router = useRouter();
 
   useEffect(() => {
     setCurrentStep('taiheki_test');

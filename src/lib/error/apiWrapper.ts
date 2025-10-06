@@ -299,7 +299,7 @@ async function handleApiError(
 }
 
 // エラー分類関数
-function classifyError(error: Error, context: RequestContext): COCOSiLError {
+function classifyError(error: Error, _context: RequestContext): COCOSiLError {
   const errorMessage = error.message.toLowerCase();
   const errorStack = error.stack || '';
 

@@ -60,7 +60,7 @@ export function initializeMonitoring(config?: {
     enableRUM = true,
     enableErrorTracking = true,
     flushInterval = 30000,
-    batchSize = 50,
+    batchSize: _batchSize = 50,
   } = config || {};
 
   console.log('[Monitoring] Initializing monitoring system...');
@@ -278,10 +278,12 @@ export const dev = {
 };
 
 // Default export for convenience
-export default {
+const monitoringExport = {
   initialize: initializeMonitoring,
   monitor,
   status: getMonitoringStatus,
   shutdown: shutdownMonitoring,
   dev,
 };
+
+export default monitoringExport;

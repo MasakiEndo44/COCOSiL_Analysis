@@ -1,0 +1,88 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e7]:
+      - link "ホーム" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img [ref=e10] [cursor=pointer]
+        - generic [ref=e13] [cursor=pointer]: ホーム
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - generic [ref=e17]:
+          - img [ref=e18]
+          - generic [ref=e21]: 体癖理論学習
+    - generic [ref=e22]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - img [ref=e29]
+          - generic [ref=e32]:
+            - heading "体癖理論学習" [level=2] [ref=e33]
+            - paragraph [ref=e34]: 野口整体の基本理論
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: 学習進捗
+            - generic [ref=e38]: 0%
+          - generic [ref=e40]:
+            - generic [ref=e41]: 0 / 5 章完了
+            - generic [ref=e42]: 約45分
+        - generic [ref=e43]:
+          - heading "学習章" [level=3] [ref=e44]
+          - link "1 第1章 体癖とは 5分" [ref=e45] [cursor=pointer]:
+            - /url: /learn/taiheki/introduction
+            - generic [ref=e47] [cursor=pointer]:
+              - generic [ref=e48] [cursor=pointer]: "1"
+              - generic [ref=e49] [cursor=pointer]:
+                - heading "第1章" [level=4] [ref=e51] [cursor=pointer]
+                - paragraph [ref=e52] [cursor=pointer]: 体癖とは
+                - generic [ref=e54] [cursor=pointer]:
+                  - img [ref=e55] [cursor=pointer]
+                  - generic [ref=e58] [cursor=pointer]: 5分
+          - link "2 第2章 10種類の体癖 15分" [ref=e59] [cursor=pointer]:
+            - /url: /learn/taiheki/types
+            - generic [ref=e61] [cursor=pointer]:
+              - generic [ref=e62] [cursor=pointer]: "2"
+              - generic [ref=e63] [cursor=pointer]:
+                - heading "第2章" [level=4] [ref=e65] [cursor=pointer]
+                - paragraph [ref=e66] [cursor=pointer]: 10種類の体癖
+                - generic [ref=e68] [cursor=pointer]:
+                  - img [ref=e69] [cursor=pointer]
+                  - generic [ref=e72] [cursor=pointer]: 15分
+          - link "3 第3章 主体癖・副体癖 8分" [ref=e73] [cursor=pointer]:
+            - /url: /learn/taiheki/primary-secondary
+            - generic [ref=e75] [cursor=pointer]:
+              - generic [ref=e76] [cursor=pointer]: "3"
+              - generic [ref=e77] [cursor=pointer]:
+                - heading "第3章" [level=4] [ref=e79] [cursor=pointer]
+                - paragraph [ref=e80] [cursor=pointer]: 主体癖・副体癖
+                - generic [ref=e82] [cursor=pointer]:
+                  - img [ref=e83] [cursor=pointer]
+                  - generic [ref=e86] [cursor=pointer]: 8分
+          - link "4 第4章 体癖の活用法 10分" [ref=e87] [cursor=pointer]:
+            - /url: /learn/taiheki/applications
+            - generic [ref=e89] [cursor=pointer]:
+              - generic [ref=e90] [cursor=pointer]: "4"
+              - generic [ref=e91] [cursor=pointer]:
+                - heading "第4章" [level=4] [ref=e93] [cursor=pointer]
+                - paragraph [ref=e94] [cursor=pointer]: 体癖の活用法
+                - generic [ref=e96] [cursor=pointer]:
+                  - img [ref=e97] [cursor=pointer]
+                  - generic [ref=e100] [cursor=pointer]: 10分
+          - link "5 第5章 診断の意義 7分" [ref=e101] [cursor=pointer]:
+            - /url: /learn/taiheki/significance
+            - generic [ref=e103] [cursor=pointer]:
+              - generic [ref=e104] [cursor=pointer]: "5"
+              - generic [ref=e105] [cursor=pointer]:
+                - heading "第5章" [level=4] [ref=e107] [cursor=pointer]
+                - paragraph [ref=e108] [cursor=pointer]: 診断の意義
+                - generic [ref=e110] [cursor=pointer]:
+                  - img [ref=e111] [cursor=pointer]
+                  - generic [ref=e114] [cursor=pointer]: 7分
+        - link "学習概要に戻る" [ref=e116] [cursor=pointer]:
+          - /url: /learn/taiheki
+          - button "学習概要に戻る" [ref=e117] [cursor=pointer]
+      - main [ref=e118]:
+        - paragraph [ref=e121]: 章が見つかりません
+  - alert [ref=e122]
+```

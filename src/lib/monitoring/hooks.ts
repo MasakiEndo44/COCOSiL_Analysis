@@ -15,7 +15,7 @@ import type { UserAction } from './schema';
  */
 export function usePageTracking() {
   const pathname = usePathname();
-  const router = useRouter();
+  const _router = useRouter();
   const previousPath = useRef<string>('');
   const pageStartTime = useRef<number>(Date.now());
 

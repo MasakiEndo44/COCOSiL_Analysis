@@ -38,7 +38,7 @@ export function applyConversationWindowing(
 
   // Strategy: Keep recent messages + preserve conversation flow
   const recentMessages = messages.slice(-maxMessages);
-  const droppedCount = messages.length - maxMessages;
+  const _droppedCount = messages.length - maxMessages;
 
   // Ensure we start with a user message if possible for better context
   let startIndex = 0;

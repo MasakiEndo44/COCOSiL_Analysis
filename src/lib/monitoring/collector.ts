@@ -384,7 +384,7 @@ export const collector = new MonitoringCollector();
 export function createMonitoringMiddleware() {
   return async (
     request: NextRequest,
-    context: { params?: Record<string, string> }
+    _context: { params?: Record<string, string> }
   ) => {
     const url = new URL(request.url);
     const route = url.pathname;

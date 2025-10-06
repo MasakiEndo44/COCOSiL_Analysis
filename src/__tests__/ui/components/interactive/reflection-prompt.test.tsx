@@ -11,7 +11,7 @@ const localStorageMock = {
 }
 Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
-const mockPrompts = [
+const _mockPrompts = [
   {
     id: '1',
     title: '理解度',
@@ -140,7 +140,7 @@ describe('ReflectionPrompt Component', () => {
   })
 
   it('カテゴリ別にプロンプトが表示される', () => {
-    const mixedPrompts = [
+    const _mixedPrompts = [
       { id: 1, category: "理解度", question: "理解度について" },
       { id: 2, category: "理解度", question: "理解度について2" },
       { id: 3, category: "感想", question: "感想について" }

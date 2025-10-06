@@ -29,7 +29,7 @@ export function InteractiveQuiz({
   questions,
   passingScore = 70 
 }: InteractiveQuizProps) {
-  const { setQuizScore, progress } = useLearningStore();
+  const { setQuizScore, progress: _progress } = useLearningStore();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -40,7 +40,7 @@ export function InteractiveQuiz({
   const currentQ = questions[currentQuestion];
   const isLastQuestion = currentQuestion === questions.length - 1;
   const isAnswered = selectedAnswer !== null;
-  const isCorrect = isAnswered && selectedAnswer === currentQ.correct;
+  const _isCorrect = isAnswered && selectedAnswer === currentQ.correct;
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (!isAnswered) {

@@ -23,7 +23,7 @@ export function TypeComparisonModal({ isOpen, onClose, initialTypes = [] }: Type
   const [selectedTypes, setSelectedTypes] = useState<number[]>(initialTypes.slice(0, 3));
 
   const comparisonData = compareTypes(selectedTypes);
-  const availableTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(
+  const _availableTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(
     (type) => !selectedTypes.includes(type)
   );
 
