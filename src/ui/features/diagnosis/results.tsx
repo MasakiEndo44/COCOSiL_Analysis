@@ -814,7 +814,15 @@ export default function DiagnosisResults() {
           });
 
           if (response.ok) {
-            console.log('✅ 診断結果が正常に保存されました');
+            const result = await response.json();
+            console.log('✅ 診断結果APIレスポンス:', result);
+
+            if (result.duplicate) {
+              console.log('⏭️  診断結果は既に保存済みです（サーバー側で重複検出）');
+            } else {
+              console.log('✅ 診断結果が正常に保存されました（新規作成）');
+            }
+
             // Mark as saved to prevent duplicates
             hasSavedRef.current = true;
           } else {
