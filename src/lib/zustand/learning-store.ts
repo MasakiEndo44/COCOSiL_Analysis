@@ -1,12 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// 診断結果コンテキスト（パーソナライゼーション用）
+interface UserDiagnosisContext {
+  primaryType: number;        // 主体癖（1-10）
+  secondaryType: number;      // 副体癖（1-10）
+  diagnosedAt: string;        // 診断日時（ISO string）
+}
+
 interface LearningProgress {
   completedChapters: string[];
   currentChapter: string | null;
   quizScores: Record<string, number>;
   lastVisited?: string;
   startedAt?: Date;
+  userContext?: UserDiagnosisContext;  // 診断結果パーソナライゼーション
 }
 
 interface LearningState {
@@ -20,6 +28,8 @@ interface LearningActions {
   resetProgress: () => void;
   getProgress: () => number;
   isChapterCompleted: (chapterId: string) => boolean;
+  setUserContext: (primaryType: number, secondaryType: number) => void;  // 診断結果連携
+  clearUserContext: () => void;  // コンテキストクリア
 }
 
 type LearningStore = LearningState & LearningActions;
@@ -96,6 +106,28 @@ export const useLearningStore = create<LearningStore>()(
       isChapterCompleted: (chapterId: string) => {
         const { completedChapters } = get().progress;
         return completedChapters.includes(chapterId);
+      },
+
+      setUserContext: (primaryType: number, secondaryType: number) => {
+        set((state) => ({
+          progress: {
+            ...state.progress,
+            userContext: {
+              primaryType,
+              secondaryType,
+              diagnosedAt: new Date().toISOString(),
+            },
+          },
+        }));
+      },
+
+      clearUserContext: () => {
+        set((state) => ({
+          progress: {
+            ...state.progress,
+            userContext: undefined,
+          },
+        }));
       },
     }),
     {

@@ -51,7 +51,7 @@ export function AdminSidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <aside className="fixed left-0 top-16 h-full w-64 bg-white border-r border-border">
+    <aside className="hidden md:fixed md:left-0 md:top-16 md:h-full md:w-64 md:bg-white md:border-r md:border-border">
       <nav className="p-6">
         <ul className="space-y-2">
           {menuItems.map((item) => {

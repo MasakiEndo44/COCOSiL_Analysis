@@ -7,12 +7,12 @@ import { Card } from '@/ui/components/ui/card';
 import { Progress } from '@/ui/components/ui/progress';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  CheckCircle, 
-  ArrowLeft, 
-  ArrowRight, 
-  BookOpen, 
-  Clock, 
+import {
+  CheckCircle,
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Clock,
   Award,
   Brain,
   Users,
@@ -20,6 +20,9 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PersonalizedHighlightCard } from '@/ui/components/learn/personalized-highlight-card';
+import { getPersonalizedContent } from '@/lib/data/taiheki-personalized-content';
+import { TypeComparisonModal } from '@/ui/components/learn/type-comparison-modal';
 
 interface TaihekiChapterContentProps {
   chapter: string;
@@ -47,6 +50,7 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);  // 🆕 比較モーダル
   
   const chapterInfo = CHAPTER_INFO[chapter as keyof typeof CHAPTER_INFO];
   const isCompleted = isChapterCompleted(chapter);
@@ -421,9 +425,23 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
           </div>
           
           <div>
-            <h1 className="text-h1-mobile md:text-h1-desktop font-heading text-foreground mb-2">
-              {chapterInfo.title}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="text-h1-mobile md:text-h1-desktop font-heading text-foreground flex-1">
+                {chapterInfo.title}
+              </h1>
+
+              {/* 🆕 第2章のみ比較ボタンを表示 */}
+              {chapter === 'types' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowComparisonModal(true)}
+                  className="flex-shrink-0"
+                >
+                  🔄 タイプを比較
+                </Button>
+              )}
+            </div>
             <p className="text-body-l-mobile md:text-body-l-desktop text-muted-foreground">
               {chapterInfo.description}
             </p>
@@ -459,6 +477,37 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
                 <div className="prose max-w-none">
                   {sections[currentSection].content}
                 </div>
+
+                {/* 🆕 パーソナライズドコンテンツ */}
+                {progress.userContext && (() => {
+                  const personalizedContent = getPersonalizedContent(
+                    chapter,
+                    progress.userContext.primaryType
+                  );
+
+                  if (!personalizedContent) return null;
+
+                  return (
+                    <PersonalizedHighlightCard
+                      primaryType={progress.userContext.primaryType}
+                      secondaryType={progress.userContext.secondaryType}
+                    >
+                      <p className="font-medium mb-2">{personalizedContent.summary}</p>
+                      <ul className="space-y-1 ml-4 list-disc">
+                        {personalizedContent.characteristics.map((char, index) => (
+                          <li key={index}>{char}</li>
+                        ))}
+                      </ul>
+                      {personalizedContent.practicalTips && (
+                        <div className="mt-3 pt-3 border-t border-green-300">
+                          <p className="text-xs text-green-700">
+                            💡 <strong>実践のヒント:</strong> {personalizedContent.practicalTips}
+                          </p>
+                        </div>
+                      )}
+                    </PersonalizedHighlightCard>
+                  );
+                })()}
               </div>
             </Card>
 
@@ -615,7 +664,14 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
             )}
           </div>
         </div>
+
+        {/* 🆕 タイプ比較モーダル */}
+        <TypeComparisonModal
+          isOpen={showComparisonModal}
+          onClose={() => setShowComparisonModal(false)}
+          initialTypes={progress.userContext ? [progress.userContext.primaryType] : []}
+        />
       </div>
-    
+
   );
 }

@@ -146,4 +146,13 @@
       transform: translateY(0);
     }
   }
+
+  /* Safe Area utilities for mobile devices (iPhone notch, home indicator) */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
 }

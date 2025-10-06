@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { TaihekiNavigationSidebar } from './taiheki-navigation-sidebar';
 import { TaihekiBreadcrumbs } from './taiheki-breadcrumbs';
+import { BottomStepperNav } from '@/ui/components/learn/bottom-stepper-nav';
 import { Button } from '@/ui/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-media-query';
 
 interface TaihekiLearningLayoutProps {
   children: React.ReactNode;
@@ -12,9 +14,10 @@ interface TaihekiLearningLayoutProps {
 
 export function TaihekiLearningLayout({ children }: TaihekiLearningLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-safe-bottom">{/* モバイルボトムナビ分の余白 */}
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white border-b border-border">
         <div className="container-responsive py-4">
@@ -58,11 +61,15 @@ export function TaihekiLearningLayout({ children }: TaihekiLearningLayoutProps) 
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
-          <div className="container-responsive py-8">
+          <div className={`container-responsive py-8 ${isMobile ? 'pb-24' : ''}`}>
+            {/* モバイル時はボトムナビ分の余白 */}
             {children}
           </div>
         </main>
       </div>
+
+      {/* 🆕 モバイルボトムナビゲーション */}
+      {isMobile && <BottomStepperNav />}
     </div>
   );
 }

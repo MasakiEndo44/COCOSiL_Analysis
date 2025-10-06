@@ -17,9 +17,9 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
         <div className="flex">
           {/* Sidebar */}
           <AdminSidebar />
-          
+
           {/* Main Content */}
-          <main className="flex-1 ml-64 p-8">
+          <main className="flex-1 w-full md:ml-64 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
               {children}
             </div>

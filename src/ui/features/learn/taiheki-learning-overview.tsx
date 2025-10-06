@@ -1,16 +1,36 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLearningStore, CHAPTER_INFO } from '@/lib/zustand/learning-store';
 import { Button } from '@/ui/components/ui/button';
 import Link from 'next/link';
-import { CheckCircle, Clock, BookOpen, ArrowRight } from 'lucide-react';
+import { CheckCircle, Clock, BookOpen, ArrowRight, User } from 'lucide-react';
 
 export function TaihekiLearningOverview() {
-  const { progress, getProgress, isChapterCompleted, setCurrentChapter } = useLearningStore();
+  const searchParams = useSearchParams();
+  const { progress, getProgress, isChapterCompleted, setCurrentChapter, setUserContext } = useLearningStore();
   
   const overallProgress = getProgress();
   const chapters = Object.entries(CHAPTER_INFO).sort((a, b) => a[1].order - b[1].order);
-  
+
+  // 🆕 URLパラメータから診断結果を受け取る（診断後の学習導線）
+  useEffect(() => {
+    const myType = searchParams.get('my_type');
+    const secondary = searchParams.get('secondary');
+
+    if (myType && secondary) {
+      const primaryType = parseInt(myType, 10);
+      const secondaryType = parseInt(secondary, 10);
+
+      // バリデーション：1-10の範囲内
+      if (primaryType >= 1 && primaryType <= 10 && secondaryType >= 0 && secondaryType <= 10) {
+        setUserContext(primaryType, secondaryType);
+        console.log('✅ 診断結果パーソナライゼーション有効:', { primaryType, secondaryType });
+      }
+    }
+  }, [searchParams, setUserContext]);
+
   const handleChapterStart = (chapterId: string) => {
     setCurrentChapter(chapterId);
   };
@@ -61,6 +81,29 @@ export function TaihekiLearningOverview() {
             </div>
           )}
         </div>
+
+        {/* 🆕 パーソナライゼーションバッジ */}
+        {progress.userContext && (
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-green-900 text-lg">
+                    あなた専用の学習コンテンツ
+                  </h3>
+                  <p className="text-sm text-green-700">
+                    {progress.userContext.primaryType}種（主体癖）
+                    {progress.userContext.secondaryType > 0 && ` + ${progress.userContext.secondaryType}種（副体癖）`}
+                    を中心に、各章で個別化された内容をお届けします。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Chapter List */}
         <div className="max-w-4xl mx-auto">
