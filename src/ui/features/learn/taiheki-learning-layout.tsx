@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { TaihekiNavigationSidebar } from './taiheki-navigation-sidebar';
 import { TaihekiBreadcrumbs } from './taiheki-breadcrumbs';
 import { BottomStepperNav } from '@/ui/components/learn/bottom-stepper-nav';
+import { CelebrationToast } from '@/ui/components/learn/celebration-toast';
 import { Button } from '@/ui/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-media-query';
@@ -70,6 +71,9 @@ export function TaihekiLearningLayout({ children }: TaihekiLearningLayoutProps) 
 
       {/* 🆕 モバイルボトムナビゲーション */}
       {isMobile && <BottomStepperNav />}
+
+      {/* 🆕 Celebration Toast for Motivation System */}
+      <CelebrationToast />
     </div>
   );
 }

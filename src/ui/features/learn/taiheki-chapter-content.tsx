@@ -439,10 +439,31 @@ export function TaihekiChapterContent({ chapter }: TaihekiChapterContentProps) {
 
   // 🆕 InlineChapterQuiz integration - quiz completion handler
   const handleQuizComplete = (score: number, passed: boolean) => {
+    const store = useLearningStore.getState();
+
     setQuizScore(chapter, score);
+
+    // 🆕 Motivation: Log quiz activity
+    store.logActivity('quiz', chapter, { score });
 
     if (passed && !isCompleted) {
       markChapterComplete(chapter);
+
+      // 🆕 Motivation: Log chapter completion
+      store.logActivity('chapter', chapter);
+
+      // 🆕 Motivation: Check for celebration triggers
+      if (score === 100) {
+        store.queueCelebration('perfect-quiz', undefined, { chapterId: chapter });
+      }
+
+      store.queueCelebration('chapter-complete', undefined, { chapterId: chapter });
+
+      // Check if all chapters complete
+      const updatedCompleted = store.progress.completedChapters;
+      if (updatedCompleted.length === 5) {
+        store.queueCelebration('course-complete');
+      }
     }
 
     // Auto-hide quiz after completion to show chapter nav

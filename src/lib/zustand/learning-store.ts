@@ -1,11 +1,35 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { BadgeType, CelebrationType } from '@/domain/learn/motivation-config';
 
 // 診断結果コンテキスト（パーソナライゼーション用）
 interface UserDiagnosisContext {
   primaryType: number;        // 主体癖（1-10）
   secondaryType: number;      // 副体癖（1-10）
   diagnosedAt: string;        // 診断日時（ISO string）
+}
+
+// モチベーションシステム
+interface DailyActivity {
+  date: string;  // ISO date (YYYY-MM-DD)
+  chaptersRead: string[];
+  quizzesTaken: string[];
+  timeSpent: number;  // seconds
+}
+
+interface MotivationState {
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;  // ISO date
+  dailyLog: Record<string, DailyActivity>;  // keyed by ISO date
+  unlockedBadges: BadgeType[];
+  celebrationQueue: Array<{
+    type: CelebrationType;
+    badgeId?: BadgeType;
+    metadata?: Record<string, unknown>;
+  }>;
+  nextNudgeAt: string | null;  // ISO datetime
+  missedDays: number;
 }
 
 interface LearningProgress {
@@ -21,6 +45,7 @@ interface LearningProgress {
 
 interface LearningState {
   progress: LearningProgress;
+  motivation: MotivationState;
 }
 
 interface LearningActions {
@@ -35,6 +60,14 @@ interface LearningActions {
   startChapterTimer: (chapterId: string) => void;  // 章の時間トラッキング開始
   stopChapterTimer: () => void;  // 章の時間トラッキング停止
   getChapterTimeSpent: (chapterId: string) => number;  // 章の滞在時間取得
+
+  // Motivation actions
+  logActivity: (activityType: 'chapter' | 'quiz', chapterId: string, metadata?: Record<string, unknown>) => void;
+  unlockBadge: (badgeId: BadgeType) => void;
+  queueCelebration: (type: CelebrationType, badgeId?: BadgeType, metadata?: Record<string, unknown>) => void;
+  dismissCelebration: () => void;
+  updateStreak: () => void;
+  getActiveNudge: () => { type: string; message: string } | null;
 }
 
 type LearningStore = LearningState & LearningActions;
@@ -50,6 +83,17 @@ export const useLearningStore = create<LearningStore>()(
         currentChapter: null,
         quizScores: {},
         startedAt: undefined,
+      },
+
+      motivation: {
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityDate: null,
+        dailyLog: {},
+        unlockedBadges: [],
+        celebrationQueue: [],
+        nextNudgeAt: null,
+        missedDays: 0,
       },
 
       // アクション
@@ -174,10 +218,179 @@ export const useLearningStore = create<LearningStore>()(
         const { chapterTimeSpent = {} } = get().progress;
         return chapterTimeSpent[chapterId] || 0;
       },
+
+      // 🆕 Motivation Actions
+      logActivity: (activityType: 'chapter' | 'quiz', chapterId: string, metadata?: Record<string, unknown>) => {
+        const today = new Date().toISOString().split('T')[0];
+
+        set((state) => {
+          const currentLog = state.motivation.dailyLog[today] || {
+            date: today,
+            chaptersRead: [],
+            quizzesTaken: [],
+            timeSpent: 0,
+          };
+
+          const updatedLog: DailyActivity = {
+            ...currentLog,
+            chaptersRead:
+              activityType === 'chapter' && !currentLog.chaptersRead.includes(chapterId)
+                ? [...currentLog.chaptersRead, chapterId]
+                : currentLog.chaptersRead,
+            quizzesTaken:
+              activityType === 'quiz' && !currentLog.quizzesTaken.includes(chapterId)
+                ? [...currentLog.quizzesTaken, chapterId]
+                : currentLog.quizzesTaken,
+            timeSpent: currentLog.timeSpent + (metadata?.timeSpent as number || 0),
+          };
+
+          return {
+            motivation: {
+              ...state.motivation,
+              dailyLog: {
+                ...state.motivation.dailyLog,
+                [today]: updatedLog,
+              },
+              lastActivityDate: today,
+            },
+          };
+        });
+
+        // Update streak after logging activity
+        get().updateStreak();
+      },
+
+      unlockBadge: (badgeId: BadgeType) => {
+        set((state) => {
+          if (state.motivation.unlockedBadges.includes(badgeId)) {
+            return state; // Already unlocked
+          }
+
+          return {
+            motivation: {
+              ...state.motivation,
+              unlockedBadges: [...state.motivation.unlockedBadges, badgeId],
+            },
+          };
+        });
+      },
+
+      queueCelebration: (type: CelebrationType, badgeId?: BadgeType, metadata?: Record<string, unknown>) => {
+        set((state) => ({
+          motivation: {
+            ...state.motivation,
+            celebrationQueue: [
+              ...state.motivation.celebrationQueue,
+              { type, badgeId, metadata },
+            ],
+          },
+        }));
+      },
+
+      dismissCelebration: () => {
+        set((state) => ({
+          motivation: {
+            ...state.motivation,
+            celebrationQueue: state.motivation.celebrationQueue.slice(1),
+          },
+        }));
+      },
+
+      updateStreak: () => {
+        const { lastActivityDate } = get().motivation;
+        const today = new Date().toISOString().split('T')[0];
+
+        if (!lastActivityDate) {
+          // First activity ever
+          set((state) => ({
+            motivation: {
+              ...state.motivation,
+              currentStreak: 1,
+              longestStreak: 1,
+            },
+          }));
+          return;
+        }
+
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const daysSinceLastActivity = Math.floor(
+          (new Date(today).getTime() - new Date(lastActivityDate).getTime()) / 86400000
+        );
+
+        set((state) => {
+          let newStreak = state.motivation.currentStreak;
+
+          if (daysSinceLastActivity === 0) {
+            // Activity today - streak continues
+            return state;
+          } else if (daysSinceLastActivity === 1 || lastActivityDate === yesterday) {
+            // Consecutive day - increment streak
+            newStreak = state.motivation.currentStreak + 1;
+          } else if (daysSinceLastActivity > 1) {
+            // Streak broken - reset
+            newStreak = 1;
+          }
+
+          return {
+            motivation: {
+              ...state.motivation,
+              currentStreak: newStreak,
+              longestStreak: Math.max(newStreak, state.motivation.longestStreak),
+              missedDays: daysSinceLastActivity > 1 ? daysSinceLastActivity - 1 : 0,
+            },
+          };
+        });
+      },
+
+      getActiveNudge: () => {
+        const { completedChapters, quizScores } = get().progress;
+        const { lastActivityDate, currentStreak } = get().motivation;
+        const today = new Date().toISOString().split('T')[0];
+
+        // Welcome back nudge (24h+ absence)
+        if (lastActivityDate && lastActivityDate !== today) {
+          const daysSince = Math.floor(
+            (new Date().getTime() - new Date(lastActivityDate).getTime()) / 86400000
+          );
+          if (daysSince >= 1) {
+            return {
+              type: 'welcome-back',
+              message: '前回の続きから学習を再開しましょう',
+            };
+          }
+        }
+
+        // Streak reminder
+        if (currentStreak > 0 && lastActivityDate === today) {
+          return {
+            type: 'streak-reminder',
+            message: `${currentStreak}日連続学習中！この調子で続けましょう`,
+          };
+        }
+
+        // Completion nearby
+        if (completedChapters.length === 4) {
+          return {
+            type: 'completion-nearby',
+            message: 'あと1章でコース完了です',
+          };
+        }
+
+        // Quiz encouragement (scored below 70%)
+        const lowScoreChapters = Object.entries(quizScores).filter(([_, score]) => score < 70);
+        if (lowScoreChapters.length > 0) {
+          return {
+            type: 'quiz-encouragement',
+            message: '再挑戦してさらに理解を深めましょう',
+          };
+        }
+
+        return null;
+      },
     }),
     {
       name: 'cocosil-learning-progress',
-      partialize: (state) => ({ progress: state.progress }),
+      partialize: (state) => ({ progress: state.progress, motivation: state.motivation }),
     }
   )
 );
