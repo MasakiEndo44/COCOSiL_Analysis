@@ -751,7 +751,15 @@ export default function DiagnosisResults() {
   // Save diagnosis result to admin database - AUTO SAVE ENABLED
   useEffect(() => {
     const saveDiagnosisResult = async () => {
-      if (basicInfo && fortuneResult && zodiacSign && integratedProfile.catchphrase) {
+      if (basicInfo && fortuneResult && zodiacSign) {
+        // Generate integratedProfile inside useEffect to avoid reference dependency issues
+        const currentProfile = (basicInfo && fortuneResult)
+          ? generateIntegratedProfile(mbti, taiheki, fortuneResult, zodiacSign)
+          : { catchphrase: '', interpersonal: '', cognition: '' };
+
+        // Skip save if profile not generated yet
+        if (!currentProfile.catchphrase) return;
+
         try {
           console.log('💾 自動保存開始: 診断結果をデータベースに保存中...');
 
@@ -763,20 +771,20 @@ export default function DiagnosisResults() {
             zodiac: zodiacSign || 'Unknown',
             animal: fortuneResult.animal || 'Unknown',
             orientation: getAnimalOrientation(fortuneResult.animal || ''),
-            color: integratedProfile.catchphrase, // キャッチフレーズを色として使用
+            color: currentProfile.catchphrase, // キャッチフレーズを色として使用
             mbti: mbti?.type || 'UNKNOWN',
             mainTaiheki: taiheki?.primary || 1,
             subTaiheki: taiheki?.secondary || null,
             sixStar: fortuneResult.sixStar || 'Unknown',
-            theme: integratedProfile.catchphrase || 'No theme',
+            theme: currentProfile.catchphrase || 'No theme',
             advice: '',
             satisfaction: 5,
             duration: '自動記録',
             feedback: '診断完了時に自動保存されました',
             // 統合診断専用フィールド
-            integratedKeywords: JSON.stringify(integratedProfile),
-            aiSummary: `キャッチフレーズ: ${integratedProfile.catchphrase}\n対人的特徴: ${integratedProfile.interpersonal}\n思考と行動: ${integratedProfile.cognition}`,
-            fortuneColor: integratedProfile.catchphrase,
+            integratedKeywords: JSON.stringify(currentProfile),
+            aiSummary: `キャッチフレーズ: ${currentProfile.catchphrase}\n対人的特徴: ${currentProfile.interpersonal}\n思考と行動: ${currentProfile.cognition}`,
+            fortuneColor: currentProfile.catchphrase,
             reportVersion: 'v2.0-integrated',
             isIntegratedReport: true,
             // AIカウンセリングデータ
@@ -807,7 +815,7 @@ export default function DiagnosisResults() {
 
     // データが揃った時点で一度だけ保存実行
     saveDiagnosisResult();
-  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, integratedProfile, hasCompletedCounseling, chatSummary]);
+  }, [basicInfo, mbti, taiheki, fortuneResult, zodiacSign, hasCompletedCounseling, chatSummary]);
 
 
   // エラー時のフォールバックUI
