@@ -60,34 +60,50 @@ export function convertDiagnosisRecordToData(record: DiagnosisRecord) {
   };
 
   // ChatSummary構築（管理者記録から）
-  const chatSummary: ChatSummary | undefined = record.advice ? {
-    topicId: `topic-${record.id}`,
-    topicTitle: record.theme || '相談内容',
-    qaExchanges: [],
-    sessionDuration: 0,
-    overallInsight: record.advice,
-    keyPoints: [record.feedback],
-    fullTranscript: [
-      {
-        id: '1',
-        role: 'assistant',
-        content: `こんにちは、${record.name}さん！診断結果を基にご相談をお受けします。`,
-        timestamp: new Date()
-      },
-      {
-        id: '2',
-        role: 'user',
-        content: `「${record.theme}」について相談したいです。`,
-        timestamp: new Date()
-      },
-      {
-        id: '3',
-        role: 'assistant',
-        content: record.advice,
-        timestamp: new Date()
-      }
-    ]
-  } : undefined;
+  // 優先順位: counselingSummary（実際のAIチャット） > advice（レガシーフォールバック）
+  let chatSummary: ChatSummary | undefined = undefined;
+
+  if (record.counselingSummary) {
+    try {
+      // 実際のAIチャットサマリーをパース
+      chatSummary = JSON.parse(record.counselingSummary) as ChatSummary;
+    } catch (error) {
+      console.error('Failed to parse counselingSummary:', error);
+      // パースエラー時はフォールバック
+    }
+  }
+
+  // レガシーフォールバック（counselingSummaryがない場合）
+  if (!chatSummary && record.advice) {
+    chatSummary = {
+      topicId: `topic-${record.id}`,
+      topicTitle: record.theme || '相談内容',
+      qaExchanges: [],
+      sessionDuration: 0,
+      overallInsight: record.advice,
+      keyPoints: [record.feedback],
+      fullTranscript: [
+        {
+          id: '1',
+          role: 'assistant',
+          content: `こんにちは、${record.name}さん！診断結果を基にご相談をお受けします。`,
+          timestamp: new Date()
+        },
+        {
+          id: '2',
+          role: 'user',
+          content: `「${record.theme}」について相談したいです。`,
+          timestamp: new Date()
+        },
+        {
+          id: '3',
+          role: 'assistant',
+          content: record.advice,
+          timestamp: new Date()
+        }
+      ]
+    };
+  }
 
   return {
     basicInfo,

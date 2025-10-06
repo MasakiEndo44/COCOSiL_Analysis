@@ -30,6 +30,8 @@ const diagnosisResultSchema = z.object({
   aiSummary: z.string().optional(),
   isIntegratedReport: z.boolean().default(false),
   reportVersion: z.string().optional(),
+  // AI カウンセリング
+  counselingSummary: z.string().optional(), // JSON stringified ChatSummary
 });
 
 export async function POST(request: NextRequest) {
@@ -82,6 +84,8 @@ export async function POST(request: NextRequest) {
       aiSummary: validatedData.aiSummary,
       isIntegratedReport: validatedData.isIntegratedReport,
       reportVersion: validatedData.reportVersion || 'v2.0-integrated',
+      // AI カウンセリング
+      counselingSummary: validatedData.counselingSummary,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

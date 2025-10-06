@@ -33,6 +33,8 @@ export interface DiagnosisRecord {
   isIntegratedReport?: boolean;
   markdownContent?: string | null;
   markdownVersion?: string | null;
+  // AI カウンセリング
+  counselingSummary?: string | null; // JSON stringified ChatSummary
   createdAt: Date;
   updatedAt: Date;
 }
