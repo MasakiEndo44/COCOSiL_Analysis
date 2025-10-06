@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AdminSession } from '@/lib/admin-middleware';
 import { DiagnosisRecord, DiagnosisStats } from '@/types/admin';
 import { AdminHeader } from './admin-header';
+import { AdminSidebar } from './admin-sidebar';
 import StatsOverview from './stats-overview';
 import { RecordFormModal } from './record-form-modal';
 import { InterviewModal } from './interview-modal';
@@ -289,9 +290,17 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
+      {/* Header */}
+      <div className="md:pl-64">
+        <AdminHeader />
+      </div>
 
-      <main className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex">
+        {/* Sidebar */}
+        <AdminSidebar />
+
+        {/* Main Content */}
+        <main className="flex-1 md:pl-64 px-4 sm:px-6 lg:px-8 py-8">
         {currentView === 'overview' && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -355,8 +364,9 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
             )}
           </div>
         )}
-      </main>
-      
+        </main>
+      </div>
+
       <RecordFormModal
         isOpen={isFormModalOpen}
         onClose={handleCloseModal}
@@ -364,7 +374,7 @@ export default function AdminDashboard({ session }: AdminDashboardProps) {
         onSubmit={handleFormSubmit}
         isLoading={isSubmitting}
       />
-      
+
       <InterviewModal
         isOpen={isInterviewModalOpen}
         onClose={handleCloseInterviewModal}

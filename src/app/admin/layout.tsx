@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
 import { AdminProvider } from '@/ui/components/admin/admin-provider';
-import { AdminHeader } from '@/ui/components/admin/admin-header';
-import { AdminSidebar } from '@/ui/components/admin/admin-sidebar';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -9,24 +7,9 @@ interface AdminLayoutProps {
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminProvider>
-        {/* Header */}
-        <div className="md:pl-64">
-          <AdminHeader />
-        </div>
-
-        <div className="flex">
-          {/* Sidebar */}
-          <AdminSidebar />
-
-          {/* Main Content */}
-          <main className="flex-1 md:pl-64">
-            {children}
-          </main>
-        </div>
-      </AdminProvider>
-    </div>
+    <AdminProvider>
+      {children}
+    </AdminProvider>
   );
 }
 
