@@ -615,6 +615,7 @@ const getAnimalOrientation = (animalCharacter: string): string => {
 
 export default function DiagnosisResults() {
   const {
+    sessionId,
     basicInfo,
     mbti,
     taiheki,
@@ -773,6 +774,7 @@ export default function DiagnosisResults() {
           console.log('💾 自動保存開始: 診断結果をデータベースに保存中...');
 
           const payload = {
+            sessionId, // Idempotency key for duplicate prevention
             name: basicInfo.name || 'Unknown',
             birthDate: `${basicInfo.birthdate.year}/${String(basicInfo.birthdate.month).padStart(2, '0')}/${String(basicInfo.birthdate.day).padStart(2, '0')}`,
             gender: basicInfo.gender || 'no_answer',

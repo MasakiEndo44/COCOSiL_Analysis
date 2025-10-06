@@ -23,6 +23,7 @@ model AdminUser {
 
 model DiagnosisRecord {
   id                 Int      @id @default(autoincrement())
+  sessionId          String?  @unique // Unique session identifier for idempotency
   date               String
   name               String
   birthDate          String

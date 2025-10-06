@@ -7,6 +7,7 @@ import type { DiagnosisRecord } from '@/types/admin';
 export const dynamic = 'force-dynamic';
 
 const diagnosisResultSchema = z.object({
+  sessionId: z.string().optional(), // Idempotency key
   name: z.string().min(1),
   birthDate: z.string(), // YYYY/MM/DD format
   age: z.number().min(0),
@@ -36,8 +37,28 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = diagnosisResultSchema.parse(body);
 
+    // Idempotency check: if sessionId exists, return existing record
+    if (validatedData.sessionId) {
+      const existingRecord = await db.diagnosisRecord.findUnique({
+        where: { sessionId: validatedData.sessionId },
+      });
+
+      if (existingRecord) {
+        console.log(`⏭️  診断結果は既に保存済みです (sessionId: ${validatedData.sessionId})`);
+        return NextResponse.json({
+          success: true,
+          id: existingRecord.id,
+          message: '診断結果は既に保存されています（重複防止）',
+          duplicate: true,
+          markdownGenerated: !!existingRecord.markdownContent,
+          markdownLength: existingRecord.markdownContent?.length || 0,
+        });
+      }
+    }
+
     // Create diagnosis record with integrated fields
     const createData = {
+      sessionId: validatedData.sessionId,
       date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
       name: validatedData.name,
       birthDate: validatedData.birthDate,
