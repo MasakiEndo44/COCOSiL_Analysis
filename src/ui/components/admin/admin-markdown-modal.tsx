@@ -115,7 +115,13 @@ export function AdminMarkdownModal({
 
         {/* Markdown Preview */}
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto bg-gray-50 border rounded-lg p-6">
+          <div
+            className="h-full overflow-y-auto bg-gray-50 border rounded-lg p-6"
+            style={{
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             <div className="prose prose-gray max-w-none
               prose-headings:text-gray-900 prose-headings:font-bold
               prose-h1:text-2xl prose-h1:border-b prose-h1:pb-2

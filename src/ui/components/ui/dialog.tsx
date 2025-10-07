@@ -59,10 +59,44 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, containerClassName, hideCloseButton = false, ...props }, ref) => {
     const context = React.useContext(DialogContext);
 
+    // Body scroll lock effect
+    React.useEffect(() => {
+      if (!context?.open) return;
+
+      // Store original scroll position
+      const scrollY = window.scrollY;
+      const body = document.body;
+
+      // Add modal-open class and prevent scrolling
+      body.style.overflow = 'hidden';
+      body.style.paddingRight = `${window.innerWidth - document.documentElement.clientWidth}px`; // Prevent layout shift
+
+      // iOS-specific fix
+      const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+      if (isIOS) {
+        body.style.position = 'fixed';
+        body.style.top = `-${scrollY}px`;
+        body.style.width = '100%';
+      }
+
+      // Cleanup on unmount
+      return () => {
+        body.style.overflow = '';
+        body.style.paddingRight = '';
+
+        if (isIOS) {
+          body.style.position = '';
+          body.style.top = '';
+          body.style.width = '';
+          window.scrollTo(0, scrollY);
+        }
+      };
+    }, [context?.open]);
+
     if (!context?.open) return null;
 
     return (
-      <div className={cn("fixed inset-0 z-50 flex items-center justify-center", containerClassName)}>
+      <div className={cn("fixed inset-0 z-50 flex items-center justify-center overflow-hidden", containerClassName)}>
         {/* Overlay */}
         <div
           className="fixed inset-0 bg-black/80"
@@ -76,6 +110,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
             'relative z-50 w-full max-w-lg bg-white p-6 shadow-lg rounded-lg',
             className
           )}
+          style={{ overscrollBehavior: 'contain' }}
           {...props}
         >
           {children}
