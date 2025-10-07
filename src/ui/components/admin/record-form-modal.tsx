@@ -27,10 +27,10 @@ const recordSchema = z.object({
   subTaiheki: z.number().optional(),
   sixStar: z.string().min(1, '6星占術は必須です'),
   theme: z.string().min(1, 'テーマは必須です'),
-  advice: z.string().min(1, 'アドバイスは必須です'),
+  advice: z.string().optional().default(''),
   satisfaction: z.number().min(1, '満足度は1-5で選択してください').max(5, '満足度は1-5で選択してください'),
   duration: z.string().min(1, '所要時間は必須です'),
-  feedback: z.string().min(1, 'フィードバックは必須です'),
+  feedback: z.string().optional().default(''),
   reportUrl: z.string().optional(),
   interviewScheduled: z.string().optional(),
   interviewDone: z.string().optional(),
@@ -422,11 +422,11 @@ export function RecordFormModal({ isOpen, onClose, record, onSubmit, isLoading =
           {/* テキストエリア */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="advice">提供アドバイス *</Label>
+              <Label htmlFor="advice">提供アドバイス</Label>
               <Textarea
                 id="advice"
                 {...form.register('advice')}
-                placeholder="診断結果に基づくアドバイス内容"
+                placeholder="診断結果に基づくアドバイス内容（任意）"
                 rows={3}
               />
               {form.formState.errors.advice && (
@@ -435,11 +435,11 @@ export function RecordFormModal({ isOpen, onClose, record, onSubmit, isLoading =
             </div>
 
             <div>
-              <Label htmlFor="feedback">クライアント感想 *</Label>
+              <Label htmlFor="feedback">クライアント感想</Label>
               <Textarea
                 id="feedback"
                 {...form.register('feedback')}
-                placeholder="クライアントからのフィードバック"
+                placeholder="クライアントからのフィードバック（任意）"
                 rows={3}
               />
               {form.formState.errors.feedback && (

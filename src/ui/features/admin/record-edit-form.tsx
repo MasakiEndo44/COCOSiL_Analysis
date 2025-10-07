@@ -44,10 +44,10 @@ const recordEditSchema = z.object({
   subTaiheki: z.preprocess((val) => val === 'none' || val === '' || val === 0 || val === undefined ? null : val, z.coerce.number().int().min(1).max(12).optional().nullable()),
   sixStar: z.string().min(1, '6星占術を選択してください'),
   theme: z.string().min(1, 'テーマは必須です'),
-  advice: z.string().min(1, 'アドバイスは必須です'),
+  advice: z.string().optional().default(''),
   satisfaction: z.coerce.number().int().min(1, '満足度は1-5で選択してください').max(5, '満足度は1-5で選択してください'),
   duration: z.string().min(1, '所要時間は必須です'),
-  feedback: z.string().min(1, 'フィードバックは必須です'),
+  feedback: z.string().optional().default(''),
   reportUrl: z.string().optional(),
   interviewScheduled: z.string().optional(),
   interviewDone: z.string().optional(),
@@ -664,7 +664,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="advice">アドバイス *</Label>
+            <Label htmlFor="advice">アドバイス</Label>
             <Controller
               name="advice"
               control={form.control}
@@ -673,7 +673,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
                   {...field}
                   id="advice"
                   rows={3}
-                  placeholder="アドバイスを入力"
+                  placeholder="アドバイスを入力（任意）"
                   className={errors.advice ? 'border-red-500' : ''}
                 />
               )}
@@ -684,7 +684,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="feedback">フィードバック *</Label>
+            <Label htmlFor="feedback">フィードバック</Label>
             <Controller
               name="feedback"
               control={form.control}
@@ -693,7 +693,7 @@ export function RecordEditForm({ record }: RecordEditFormProps) {
                   {...field}
                   id="feedback"
                   rows={3}
-                  placeholder="フィードバックを入力"
+                  placeholder="フィードバックを入力（任意）"
                   className={errors.feedback ? 'border-red-500' : ''}
                 />
               )}
