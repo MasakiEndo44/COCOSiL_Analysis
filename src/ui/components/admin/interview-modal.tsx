@@ -86,7 +86,10 @@ export function InterviewModal({
   const formatDateTimeLocal = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
+    // Adjust for timezone offset to preserve local time
+    const timezoneOffsetMinutes = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - (timezoneOffsetMinutes * 60 * 1000));
+    return adjustedDate.toISOString().slice(0, 16);
   };
 
   const getInterviewStatus = () => {
@@ -144,6 +147,7 @@ export function InterviewModal({
             <Input
               id="interviewScheduled"
               type="datetime-local"
+              step="900"
               value={formatDateTimeLocal(formData.interviewScheduled || '')}
               onChange={(e) => handleChange('interviewScheduled', e.target.value)}
               className="mt-1"
@@ -162,6 +166,7 @@ export function InterviewModal({
             <Input
               id="interviewDone"
               type="datetime-local"
+              step="900"
               value={formatDateTimeLocal(formData.interviewDone || '')}
               onChange={(e) => handleChange('interviewDone', e.target.value)}
               className="mt-1"
