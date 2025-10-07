@@ -67,7 +67,7 @@ export function AdminMarkdownModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -114,7 +114,7 @@ export function AdminMarkdownModal({
         </div>
 
         {/* Markdown Preview */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div
             className="h-full overflow-y-auto bg-gray-50 border rounded-lg p-6"
             style={{
