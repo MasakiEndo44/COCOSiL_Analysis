@@ -22,7 +22,7 @@
  * @see {@link ../../../claudedocs/admin-search-improvement-spec.md} 実装仕様書
  */
 
-import wanakana from 'wanakana';
+import * as wanakana from 'wanakana';
 
 /**
  * 正規化された検索語とそのバリエーション
