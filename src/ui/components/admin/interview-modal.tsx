@@ -41,7 +41,7 @@ export function InterviewModal({
       setFormData({
         interviewScheduled: record.interviewScheduled || '',
         interviewDone: record.interviewDone || '',
-        interviewNotes: record.interviewNotes || ''
+        interviewNotes: record.memo || '' // memoフィールドから読み込み
       });
       setErrors({});
     }

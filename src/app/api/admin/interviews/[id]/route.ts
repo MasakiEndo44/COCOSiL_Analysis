@@ -17,7 +17,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { interviewScheduled, interviewDone, interviewNotes: _interviewNotes } = body;
+    const { interviewScheduled, interviewDone, interviewNotes } = body;
 
     // 日付フォーマットのバリデーション
     if (interviewScheduled && isNaN(Date.parse(interviewScheduled))) {
@@ -54,7 +54,7 @@ export async function PUT(
       data: {
         interviewScheduled: interviewScheduled || null,
         interviewDone: interviewDone || null,
-
+        memo: interviewNotes || null, // インタビューメモをmemoフィールドに保存
         updatedAt: new Date(),
       }
     });
@@ -65,6 +65,7 @@ export async function PUT(
         id: updatedRecord.id,
         interviewScheduled: updatedRecord.interviewScheduled,
         interviewDone: updatedRecord.interviewDone,
+        interviewNotes: updatedRecord.memo, // memoをinterviewNotesとして返却
       }
     });
 
@@ -100,6 +101,7 @@ export async function GET(
         date: true,
         interviewScheduled: true,
         interviewDone: true,
+        memo: true, // インタビューメモ取得
         // 診断結果の参考情報
         mbti: true,
         mainTaiheki: true,
@@ -113,7 +115,13 @@ export async function GET(
       return NextResponse.json({ error: 'レコードが見つかりません' }, { status: 404 });
     }
 
-    return NextResponse.json({ record });
+    // memoフィールドをinterviewNotesとして返却
+    return NextResponse.json({
+      record: {
+        ...record,
+        interviewNotes: record.memo,
+      }
+    });
 
   } catch (error) {
     console.error('インタビュー情報取得エラー:', error);
