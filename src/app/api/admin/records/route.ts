@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/admin-db';
 import { requireAdminAuth, requireAdminRole } from '@/lib/admin-middleware';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
+import { buildSearchCondition, validateSearchQuery } from '@/lib/search/japanese-normalizer';
 import type { DiagnosisRecord } from '@/types/admin';
 
 export const dynamic = 'force-dynamic';
@@ -16,14 +17,22 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('query') || '';
     const skip = (page - 1) * limit;
 
-    // Build search condition
-    // Note: SQLite doesn't support case-insensitive mode in Prisma
-    // Using contains without mode for SQLite compatibility (case-sensitive)
-    const whereCondition = query ? {
-      name: {
-        contains: query,
+    // 検索クエリの入力検証
+    if (query) {
+      const validationError = validateSearchQuery(query);
+      if (validationError) {
+        return NextResponse.json(
+          { success: false, error: validationError },
+          { status: 400 }
+        );
       }
-    } : {};
+    }
+
+    // 複数フィールド横断検索条件の構築（日本語正規化対応）
+    // - ひらがな/カタカナ/ローマ字の相互変換
+    // - スペース区切りキーワードのAND検索
+    // - 7フィールド横断検索（name, mbti, animal, zodiac, theme, integratedKeywords, memo）
+    const whereCondition = buildSearchCondition(query);
 
     const [records, total] = await Promise.all([
       adminDb.diagnosisRecord.findMany({
@@ -50,7 +59,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('診断記録取得エラー:', error);
-    
+
     if (error instanceof Error && error.message.includes('認証')) {
       return NextResponse.json(
         { success: false, error: error.message },

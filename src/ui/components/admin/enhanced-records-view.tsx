@@ -376,7 +376,7 @@ export default function EnhancedRecordsView({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="ユーザー名で検索..."
+                placeholder="名前、MBTI、動物、星座などで検索... (スペース区切りでAND検索)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -394,9 +394,20 @@ export default function EnhancedRecordsView({
         </form>
 
         {debouncedQuery && (
-          <div className="mt-3 text-sm text-gray-600">
-            検索キーワード: <span className="font-medium">&ldquo;{debouncedQuery}&rdquo;</span>
-            {!loading && ` (${pagination.total} 件見つかりました)`}
+          <div className="mt-3 text-sm text-gray-600 space-y-1">
+            <div>
+              <span className="font-medium text-gray-700">検索中:</span> &ldquo;{debouncedQuery}&rdquo;
+            </div>
+            {!loading && (
+              <div className="flex items-start gap-2">
+                <span className="font-semibold text-brand-600">
+                  {pagination.total} 件見つかりました
+                </span>
+              </div>
+            )}
+            <div className="text-xs text-gray-500">
+              💡 ひらがな・カタカナ・ローマ字すべて対応 | スペース区切りで複数条件検索
+            </div>
           </div>
         )}
       </div>
