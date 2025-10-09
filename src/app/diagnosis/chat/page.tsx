@@ -9,6 +9,7 @@ import { Button } from '@/ui/components/ui/button';
 import { UserDiagnosisData } from '@/types';
 import { optimizeMessagesForStorage, estimateConversationMemoryUsage } from '@/lib/chat/conversation-utils';
 import { GuidanceOverlay } from '@/ui/components/overlays/guidance-overlay';
+import { CompletionMessage } from '@/ui/components/chat/completion-message';
 
 interface ChatMessage {
   id: string;
@@ -70,6 +71,14 @@ export default function ChatPage() {
   const [userData, setUserData] = useState<UserDiagnosisData | null>(null);
   const [chatSession, setChatSessionLocal] = useState<ChatSession | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Completion detection state
+  const [completionDetection, setCompletionDetection] = useState<{
+    resolved: boolean;
+    confidence: number;
+    nextAction: string;
+    shouldShowContinueButton: boolean;
+  } | null>(null);
 
   // Overlay state management
   const [showChatOverlay, setShowChatOverlay] = useState(false);
@@ -201,6 +210,15 @@ export default function ChatPage() {
     }
   };
 
+  /**
+   * Handle continue button click from CompletionMessage
+   * Resets completion detection state to allow conversation to continue
+   */
+  const handleContinueChat = () => {
+    setCompletionDetection(null);
+    console.log('[CompletionDetection] User chose to continue conversation');
+  };
+
   const generateAIResponse = async (userMessage: string) => {
     if (!userData) return;
 
@@ -298,6 +316,17 @@ export default function ChatPage() {
 
             try {
               const parsed = JSON.parse(data);
+
+              // Handle metadata (safetyData, choiceQuestion, completionDetection)
+              if (parsed.type === 'metadata') {
+                if (parsed.completionDetection) {
+                  setCompletionDetection(parsed.completionDetection);
+                  console.log('[CompletionDetection] Received from API:', parsed.completionDetection);
+                }
+                continue; // Skip to next line
+              }
+
+              // Handle content chunks
               const content = parsed.choices?.[0]?.delta?.content || '';
               if (content) {
                 aiContent += content;
@@ -559,6 +588,15 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Completion Detection Message */}
+              {completionDetection?.shouldShowContinueButton && (
+                <CompletionMessage
+                  nextAction={completionDetection.nextAction}
+                  onContinue={handleContinueChat}
+                />
+              )}
+
               {isStreaming && (
                 <div className="flex justify-start">
                   <div className="bg-white border border-border p-4 rounded-lg">

@@ -4,13 +4,14 @@ import { IntegratedPromptEngine } from '@/lib/ai/prompt-engine';
 import { PsychologicalSafetyPromptEngine } from '@/lib/ai/psychological-safety-prompt-engine';
 import { SafetyScoreCalculator } from '@/lib/ai/safety-score-calculator';
 import { ChoiceQuestionGenerator } from '@/lib/ai/choice-question-generator';
+import { CompletionDetectionPromptEngine } from '@/lib/ai/completion-detection-prompt';
 import { applyConversationWindowing, generateContextSummary } from '@/lib/chat/conversation-utils';
 import {
   chatRequestSchema,
   userDiagnosisDataSchema
 } from '@/lib/validation/schemas';
 import { validateDiagnosisCompleteness } from '@/lib/validation/utils';
-import type { ChatMessage } from '@/types';
+import type { ChatMessage, UserDiagnosisData } from '@/types';
 
 // OpenAI クライアントの初期化
 const openai = new OpenAI({
@@ -193,6 +194,19 @@ export async function POST(request: NextRequest) {
     let safetyData: any = null;
     let choiceQuestion: any = null;
 
+    // Phase 2: 終了判定エンジンの初期化
+    let completionEngine: CompletionDetectionPromptEngine | null = null;
+    if (diagnosisData) {
+      const initialConcern = CompletionDetectionPromptEngine.extractInitialConcern(
+        diagnosisData as UserDiagnosisData
+      );
+
+      completionEngine = new CompletionDetectionPromptEngine({
+        diagnosisData: diagnosisData as UserDiagnosisData,
+        initialConcern
+      });
+    }
+
     if (usePsychologicalSafety) {
       // === 心理的安全性システムを使用 ===
 
@@ -222,6 +236,12 @@ export async function POST(request: NextRequest) {
       
       // Rogers 3条件に基づくシステムプロンプト使用
       systemPrompt = psychoPrompt.systemPrompt;
+
+      // Phase 2: 終了判定プロンプトを追加
+      if (completionEngine) {
+        systemPrompt += '\n\n' + completionEngine.generateSystemPrompt();
+      }
+
       maxTokens = Math.floor(Number(1500)); // 心理的安全性重視で適度な長さ
       temperature = 0.8; // 温かい共感的な応答のため少し高め
       
@@ -371,6 +391,21 @@ export async function POST(request: NextRequest) {
 
     const content = response.choices[0]?.message?.content || '';
 
+    // Phase 2: 終了判定結果を解析
+    let completionDetection: any = null;
+    if (completionEngine) {
+      const parsed = CompletionDetectionPromptEngine.parseCompletionDetection(content);
+      if (parsed) {
+        completionDetection = {
+          resolved: parsed.resolved,
+          confidence: parsed.confidence,
+          nextAction: parsed.nextAction,
+          shouldShowContinueButton: parsed.resolved && parsed.confidence >= 0.8
+        };
+        console.log('[CompletionDetection] Parsed result:', completionDetection);
+      }
+    }
+
     return NextResponse.json({
       message: content,
       usage: response.usage,
@@ -384,7 +419,8 @@ export async function POST(request: NextRequest) {
         }
       },
       safetyData,
-      choiceQuestion
+      choiceQuestion,
+      completionDetection // Phase 2: 新規フィールド追加
     });
 
   } catch (error) {
