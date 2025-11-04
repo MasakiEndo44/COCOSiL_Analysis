@@ -13,7 +13,7 @@
             - paragraph [ref=e12] [cursor=pointer]: 統合診断システム
         - generic [ref=e14]:
           - paragraph [ref=e15]: 基本情報入力
-          - paragraph [ref=e16]: "セッション: nj37cpa0"
+          - paragraph [ref=e16]: "セッション: 5z8086j7"
         - generic [ref=e17]:
           - button "ヘルプ" [ref=e18] [cursor=pointer]:
             - img [ref=e19] [cursor=pointer]

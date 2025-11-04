@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 /**
  * Clerk Authentication Integration E2E Tests
@@ -12,6 +12,26 @@ import { test, expect } from '@playwright/test';
  * Note: Actual Clerk sign-up/sign-in flows require manual testing
  * as Clerk uses external authentication UI that's not easily automated
  */
+
+/**
+ * Helper: Wait for Clerk authentication widget to load
+ * Clerk widgets load asynchronously and need extra time to initialize
+ */
+async function waitForClerkWidget(page: Page): Promise<void> {
+  // Run timeout and widget check in parallel
+  await Promise.race([
+    // Minimum 2-second wait for Clerk widget initialization
+    page.waitForTimeout(2000),
+
+    // Also check for Clerk widget containers to fail fast if they appear
+    page.waitForSelector('[data-clerk-wrapper], .cl-component', {
+      timeout: 5000,
+      state: 'visible'
+    }).catch(() => {
+      // Ignore errors - we'll rely on the 2s timeout
+    })
+  ]);
+}
 
 test.describe('Clerk Authentication Integration', () => {
 
@@ -61,11 +81,13 @@ test.describe('Clerk Authentication Integration', () => {
 
       // Click "Create Account" button
       const createAccountButton = page.locator('a[href="/sign-up"]').first();
+      await createAccountButton.waitFor({ state: 'visible' });
       await createAccountButton.click();
 
       // Verify redirect to sign-up page
       await expect(page).toHaveURL('/sign-up');
       await page.waitForLoadState('networkidle');
+      await waitForClerkWidget(page);
 
       // Verify Clerk sign-up component is present
       await expect(page.getByRole('heading', { name: 'COCOSiL アカウント作成' })).toBeVisible();
@@ -77,11 +99,13 @@ test.describe('Clerk Authentication Integration', () => {
 
       // Click "Sign In" button
       const signInButton = page.locator('a[href="/sign-in"]').first();
+      await signInButton.waitFor({ state: 'visible' });
       await signInButton.click();
 
       // Verify redirect to sign-in page
       await expect(page).toHaveURL('/sign-in');
       await page.waitForLoadState('networkidle');
+      await waitForClerkWidget(page);
 
       // Verify Clerk sign-in component is present
       await expect(page.getByRole('heading', { name: 'COCOSiL にサインイン' })).toBeVisible();
@@ -97,6 +121,7 @@ test.describe('Clerk Authentication Integration', () => {
 
       // Click "Continue Anonymously" button
       const anonymousButton = page.locator('button', { hasText: '匿名で続ける' }).first();
+      await anonymousButton.waitFor({ state: 'visible' });
       await anonymousButton.click();
 
       // Wait for navigation to basic info form
@@ -121,7 +146,9 @@ test.describe('Clerk Authentication Integration', () => {
       await page.waitForLoadState('networkidle');
 
       // Start anonymous diagnosis
-      await page.locator('button', { hasText: '匿名で続ける' }).first().click();
+      const anonymousButton = page.locator('button', { hasText: '匿名で続ける' }).first();
+      await anonymousButton.waitFor({ state: 'visible' });
+      await anonymousButton.click();
       await page.waitForTimeout(1000);
 
       // Fill basic info form
@@ -178,6 +205,7 @@ test.describe('Clerk Authentication Integration', () => {
     test('サインアップページが正しく表示される', async ({ page }) => {
       await page.goto('/sign-up');
       await page.waitForLoadState('networkidle');
+      await waitForClerkWidget(page);
 
       // Verify page title
       await expect(page.getByRole('heading', { name: 'COCOSiL アカウント作成' })).toBeVisible();
@@ -194,6 +222,7 @@ test.describe('Clerk Authentication Integration', () => {
     test('サインインページが正しく表示される', async ({ page }) => {
       await page.goto('/sign-in');
       await page.waitForLoadState('networkidle');
+      await waitForClerkWidget(page);
 
       // Verify page title
       await expect(page.getByRole('heading', { name: 'COCOSiL にサインイン' })).toBeVisible();
@@ -247,26 +276,48 @@ test.describe('Clerk Authentication Integration', () => {
   test.describe('Zustand Store Integration', () => {
 
     test('認証モードがstoreに正しく保存される（匿名）', async ({ page }) => {
-      await page.goto('/diagnosis');
-      await page.waitForLoadState('networkidle');
-
-      // Start anonymous diagnosis
-      await page.locator('button', { hasText: '匿名で続ける' }).first().click();
-      await page.waitForTimeout(500);
-
-      // Check store state
-      const storeState = await page.evaluate(() => {
-        const stored = localStorage.getItem('cocosil-diagnosis-store');
-        if (!stored) return null;
-        const data = JSON.parse(stored);
-        return {
-          authMode: data.state?.authMode,
-          userId: data.state?.userId
-        };
+      // Capture console logs for debugging
+      const consoleLogs: string[] = [];
+      page.on('console', msg => {
+        if (msg.text().includes('[Zustand]')) {
+          consoleLogs.push(msg.text());
+        }
       });
 
-      expect(storeState?.authMode).toBe('anonymous');
-      expect(storeState?.userId).toBeNull();
+      await test.step('Navigate to diagnosis page', async () => {
+        await page.goto('/diagnosis');
+        await page.waitForLoadState('networkidle');
+      });
+
+      await test.step('Click anonymous button and verify logging', async () => {
+        const anonymousButton = page.locator('button', { hasText: '匿名で続ける' }).first();
+        await anonymousButton.waitFor({ state: 'visible' });
+        await anonymousButton.click();
+        await page.waitForTimeout(500);
+
+        // Verify console logs appeared
+        expect(consoleLogs).toContain('[Zustand] Setting authMode to anonymous');
+        expect(consoleLogs).toContain('[Zustand] authMode set, showing diagnosis');
+      });
+
+      await test.step('Verify store state persisted to localStorage', async () => {
+        const storeState = await page.evaluate(() => {
+          const stored = localStorage.getItem('cocosil-diagnosis-store');
+          if (!stored) return null;
+          const data = JSON.parse(stored);
+          return {
+            authMode: data.state?.authMode,
+            userId: data.state?.userId,
+            fullStore: stored // Include full store for debugging
+          };
+        });
+
+        // Log store contents for debugging
+        console.log('Store contents:', storeState);
+
+        expect(storeState?.authMode).toBe('anonymous');
+        expect(storeState?.userId).toBeNull();
+      });
     });
 
   });

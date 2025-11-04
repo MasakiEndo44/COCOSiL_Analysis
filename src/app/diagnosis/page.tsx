@@ -52,7 +52,9 @@ export default function DiagnosisStartPage() {
   return (
     <AuthChoiceScreen
       onProceed={() => {
+        console.log('[Zustand] Setting authMode to anonymous');
         setAuthMode('anonymous');
+        console.log('[Zustand] authMode set, showing diagnosis');
         setShowDiagnosis(true);
       }}
     />

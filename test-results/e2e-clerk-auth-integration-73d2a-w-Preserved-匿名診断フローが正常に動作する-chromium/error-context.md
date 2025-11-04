@@ -13,7 +13,7 @@
             - paragraph [ref=e12] [cursor=pointer]: 統合診断システム
         - generic [ref=e14]:
           - paragraph [ref=e15]: 基本情報入力
-          - paragraph [ref=e16]: "セッション: n3e1smot"
+          - paragraph [ref=e16]: "セッション: bwyqj7it"
         - generic [ref=e17]:
           - button "ヘルプ" [ref=e18] [cursor=pointer]:
             - img [ref=e19] [cursor=pointer]
@@ -21,47 +21,96 @@
             - /url: /
             - img [ref=e22] [cursor=pointer]
     - generic [ref=e26]:
-      - generic [ref=e30]: 0%
-      - generic [ref=e31]:
-        - generic [ref=e33]:
-          - generic [ref=e35]: "1"
-          - paragraph [ref=e37]: 基本情報
-        - generic [ref=e39]:
-          - generic [ref=e41]: "2"
-          - paragraph [ref=e43]: MBTI
-        - generic [ref=e45]:
-          - generic [ref=e46]:
-            - generic [ref=e47]: "3"
-            - generic [ref=e48]: 任意
-          - paragraph [ref=e50]: 学習
-        - generic [ref=e52]:
-          - generic [ref=e54]: "4"
-          - paragraph [ref=e56]: 体癖診断
-        - generic [ref=e58]:
-          - generic [ref=e60]: "5"
-          - paragraph [ref=e62]: 結果
-    - main [ref=e63]:
-      - generic [ref=e66]:
-        - generic [ref=e67]:
-          - heading "診断を始める" [level=1] [ref=e68]
-          - paragraph [ref=e69]: 診断方法を選択してください
-        - link "アカウントを作成して診断を始める" [ref=e70] [cursor=pointer]:
-          - /url: /sign-up
-          - generic [ref=e71] [cursor=pointer]: 🔐
-          - generic [ref=e72] [cursor=pointer]:
-            - generic [ref=e73] [cursor=pointer]: アカウントを作成して始める
-            - generic [ref=e74] [cursor=pointer]: → 診断結果を保存・履歴閲覧可能
-        - link "サインインして診断を始める" [ref=e75] [cursor=pointer]:
-          - /url: /sign-in
-          - generic [ref=e76] [cursor=pointer]: ✅
-          - generic [ref=e77] [cursor=pointer]:
-            - generic [ref=e78] [cursor=pointer]: サインインして始める
-            - generic [ref=e79] [cursor=pointer]: → 既存アカウントで続ける
-        - button "匿名で診断を続ける" [ref=e80] [cursor=pointer]:
-          - generic [ref=e81] [cursor=pointer]: 👤
-          - generic [ref=e82] [cursor=pointer]:
-            - generic [ref=e83] [cursor=pointer]: 匿名で続ける
-            - generic [ref=e84] [cursor=pointer]: → 30日間ブラウザに保存
-        - paragraph [ref=e86]: 匿名診断の場合、診断データはブラウザのローカルストレージに保存され、 30日後に自動削除されます。
-  - alert [ref=e87]
+      - generic [ref=e32]: 20%
+      - generic [ref=e33]:
+        - generic [ref=e35]:
+          - generic [ref=e37]: "1"
+          - paragraph [ref=e39]: 基本情報
+        - generic [ref=e41]:
+          - generic [ref=e43]: "2"
+          - paragraph [ref=e45]: MBTI
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: "3"
+            - generic [ref=e50]: 任意
+          - paragraph [ref=e52]: 学習
+        - generic [ref=e54]:
+          - generic [ref=e56]: "4"
+          - paragraph [ref=e58]: 体癖診断
+        - generic [ref=e60]:
+          - generic [ref=e62]: "5"
+          - paragraph [ref=e64]: 結果
+    - main [ref=e65]:
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - generic [ref=e70]: "1"
+          - generic [ref=e71]:
+            - heading "基本情報を入力してください" [level=1] [ref=e72]
+            - paragraph [ref=e73]: 診断に必要な基本情報を入力いただきます。入力いただいた情報は診断目的のみに使用し、30日後に自動削除されます。
+        - generic [ref=e75]: ステップ 1/5 • 約2分
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - generic [ref=e80]: "1"
+            - heading "基本情報入力" [level=2] [ref=e81]
+            - paragraph [ref=e82]: 診断に必要な基本情報を入力してください
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - generic [ref=e85]:
+                - text: お名前（ニックネーム可）
+                - generic [ref=e86]: "*"
+              - textbox "例：田中太郎" [ref=e87]
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - text: メールアドレス
+                - generic [ref=e90]: "*"
+              - textbox "例：taro@example.com" [ref=e91]
+              - paragraph [ref=e92]: 診断結果の通知に使用します
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - text: 性別
+                - generic [ref=e95]: "*"
+              - combobox [ref=e96] [cursor=pointer]:
+                - generic: 回答しない
+                - img [ref=e97] [cursor=pointer]
+              - combobox [ref=e99]
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - text: 生年月日
+                - generic [ref=e102]: "*"
+              - paragraph [ref=e103]: 算命学計算に必要なため、正確な生年月日を入力してください
+              - generic [ref=e104]:
+                - combobox [ref=e105] [cursor=pointer]:
+                  - generic: 年
+                  - img [ref=e106] [cursor=pointer]
+                - combobox [ref=e108]
+                - combobox [ref=e109] [cursor=pointer]:
+                  - generic: 月
+                  - img [ref=e110] [cursor=pointer]
+                - combobox [ref=e112]
+                - combobox [ref=e113] [cursor=pointer]:
+                  - generic: 日
+                  - img [ref=e114] [cursor=pointer]
+                - combobox [ref=e116]
+            - generic [ref=e118]:
+              - checkbox "プライバシーポリシーに同意する* 入力いただいた情報は診断目的のみに使用し、第三者への提供は行いません。 詳しくはプライバシーポリシーをご確認ください。" [ref=e119]
+              - generic [ref=e120]:
+                - generic [ref=e121]: プライバシーポリシーに同意する
+                - generic [ref=e122]: "*"
+                - paragraph [ref=e123]:
+                  - text: 入力いただいた情報は診断目的のみに使用し、第三者への提供は行いません。 詳しくは
+                  - link "プライバシーポリシー" [ref=e124] [cursor=pointer]:
+                    - /url: /privacy
+                  - text: をご確認ください。
+            - button "次へ進む" [ref=e126] [cursor=pointer]
+            - paragraph [ref=e128]:
+              - text: 入力いただいた情報は診断目的のみに使用し、
+              - text: 30日後に自動削除されます
+        - generic [ref=e129]:
+          - generic [ref=e131]:
+            - img [ref=e133]
+            - generic [ref=e135]:
+              - heading "なぜこの情報が必要なのですか？" [level=3] [ref=e136]
+              - paragraph [ref=e137]: 生年月日は算命学・動物占い診断に、性別は体癖診断の精度向上に使用します。 名前とメールアドレスは結果通知と管理のために必要です。
+          - generic [ref=e138]: 次のステップ：MBTIタイプの収集（既知の場合は選択、不明の場合は12問診断）
+  - alert [ref=e139]
 ```
