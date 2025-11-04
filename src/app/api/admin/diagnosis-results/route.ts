@@ -27,12 +27,12 @@ const diagnosisResultSchema = z.object({
   duration: z.string().default(''),
   feedback: z.string().default(''),
   // 統合診断専用フィールド
-  integratedKeywords: z.string().optional(), // JSON配列形式
-  aiSummary: z.string().optional(),
+  integratedKeywords: z.string().nullish(), // JSON配列形式 (null | undefined | string)
+  aiSummary: z.string().nullish(), // null | undefined | string
   isIntegratedReport: z.boolean().default(false),
-  reportVersion: z.string().optional(),
+  reportVersion: z.string().nullish(), // null | undefined | string
   // AI カウンセリング
-  counselingSummary: z.string().optional(), // JSON stringified ChatSummary
+  counselingSummary: z.string().nullish(), // JSON stringified ChatSummary (null | undefined | string)
 });
 
 export async function POST(request: NextRequest) {
@@ -89,12 +89,12 @@ export async function POST(request: NextRequest) {
       duration: validatedData.duration,
       feedback: validatedData.feedback,
       // 統合診断専用フィールド
-      integratedKeywords: validatedData.integratedKeywords,
-      aiSummary: validatedData.aiSummary,
+      integratedKeywords: validatedData.integratedKeywords ?? undefined,
+      aiSummary: validatedData.aiSummary ?? undefined,
       isIntegratedReport: validatedData.isIntegratedReport,
-      reportVersion: validatedData.reportVersion || 'v2.0-integrated',
+      reportVersion: validatedData.reportVersion ?? 'v2.0-integrated',
       // AI カウンセリング
-      counselingSummary: validatedData.counselingSummary,
+      counselingSummary: validatedData.counselingSummary ?? undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
