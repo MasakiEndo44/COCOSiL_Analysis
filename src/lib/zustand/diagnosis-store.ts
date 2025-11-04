@@ -26,6 +26,10 @@ interface DiagnosisState {
   chatSummary: ChatSummary | null;
   hasCompletedCounseling: boolean;
 
+  // Phase 1: 認証モード管理
+  authMode: 'authenticated' | 'anonymous' | null;
+  userId: string | null; // Clerk userId for authenticated users
+
   // 状態
   currentStep: DiagnosisStep;
   completedSteps: DiagnosisStep[];
@@ -56,6 +60,9 @@ interface DiagnosisActions {
   setChatSession: (session: ChatSession) => void;
   setChatSummary: (summary: ChatSummary) => void;
   markCounselingCompleted: (completed: boolean) => void;
+
+  // Phase 1: 認証モード管理
+  setAuthMode: (mode: 'authenticated' | 'anonymous', userId?: string) => void;
 
   // 進捗管理
   setCurrentStep: (step: DiagnosisStep) => void;
@@ -101,6 +108,8 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       chatSession: null,
       chatSummary: null,
       hasCompletedCounseling: false,
+      authMode: null, // Phase 1: Authentication mode
+      userId: null,   // Phase 1: Clerk user ID
       currentStep: 'basic_info',
       completedSteps: [],
       progress: 0,
@@ -127,6 +136,8 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
           chatSession: null,
           chatSummary: null,
           hasCompletedCounseling: false,
+          authMode: null, // Phase 1: Reset auth mode
+          userId: null,   // Phase 1: Reset user ID
           overlayHints: {
             resultsIntroSeen: false,
             chatIntroSeen: false,
@@ -175,7 +186,15 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
       markCounselingCompleted: (completed: boolean) => {
         set({ hasCompletedCounseling: completed });
       },
-      
+
+      // Phase 1: 認証モード設定
+      setAuthMode: (mode: 'authenticated' | 'anonymous', userId?: string) => {
+        set({
+          authMode: mode,
+          userId: mode === 'authenticated' ? userId || null : null
+        });
+      },
+
       // 進捗管理
       setCurrentStep: (step: DiagnosisStep) => {
         const progress = calculateStepProgress(step);
@@ -264,6 +283,8 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
           chatSession: null,
           chatSummary: null,
           hasCompletedCounseling: false,
+          authMode: null,    // Phase 1: Clear auth mode
+          userId: null,      // Phase 1: Clear user ID
           currentStep: 'basic_info',
           completedSteps: [],
           progress: 0,
@@ -293,6 +314,8 @@ export const useDiagnosisStore = create<DiagnosisStore>()(
         chatSession: state.chatSession,
         chatSummary: state.chatSummary,
         hasCompletedCounseling: state.hasCompletedCounseling,
+        authMode: state.authMode,    // Phase 1: Persist auth mode
+        userId: state.userId,        // Phase 1: Persist user ID
         currentStep: state.currentStep,
         completedSteps: state.completedSteps,
         progress: state.progress,

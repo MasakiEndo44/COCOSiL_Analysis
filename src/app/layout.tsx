@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, Noto_Sans_JP } from 'next/font/google';
+import { ClerkProvider } from '@clerk/nextjs';
+import { jaJP } from '@clerk/localizations';
+import { DiagnosisMigrationWrapper } from '@/components/diagnosis/diagnosis-migration-wrapper';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,13 +33,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" className={`${notoSansJP.variable}`}>
-      <body className={`${inter.className} antialiased`}>
-        <div id="root" className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-          {children}
-        </div>
-        <div id="modal-root" />
-      </body>
-    </html>
+    <ClerkProvider localization={jaJP}>
+      <html lang="ja" className={`${notoSansJP.variable}`}>
+        <body className={`${inter.className} antialiased`}>
+          <DiagnosisMigrationWrapper />
+          <div id="root" className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+            {children}
+          </div>
+          <div id="modal-root" />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

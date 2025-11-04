@@ -3,6 +3,7 @@
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useUser } from '@clerk/nextjs';
 import { Button } from '@/ui/components/ui/button';
 import { Input } from '@/ui/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/components/ui/select';
@@ -40,8 +41,50 @@ interface BasicInfoFormProps {
 }
 
 export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
-  const { setBasicInfo, setLoading, setError, basicInfo, error, isLoading } = useDiagnosisStore();
+  const { setBasicInfo, setLoading, setError, basicInfo, error, isLoading, authMode } = useDiagnosisStore();
   const [lastSubmitData, setLastSubmitData] = React.useState<BasicInfoFormData | null>(null);
+
+  // Phase 1: Clerk user data for auto-fill
+  const { user, isLoaded: isUserLoaded } = useUser();
+
+  // Determine default values with Clerk auto-fill for authenticated users
+  const getDefaultValues = (): Partial<BasicInfoFormData> => {
+    // If there's existing data in store, use it (user is resuming)
+    if (basicInfo) {
+      return {
+        name: basicInfo.name,
+        email: basicInfo.email,
+        gender: basicInfo.gender,
+        birthdate: {
+          year: basicInfo.birthdate.year,
+          month: basicInfo.birthdate.month,
+          day: basicInfo.birthdate.day
+        },
+        privacyConsent: false
+      };
+    }
+
+    // If authenticated with Clerk and user data is loaded, auto-fill
+    if (authMode === 'authenticated' && isUserLoaded && user) {
+      const fullName = user.fullName ||
+                      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+                      '';
+      const email = user.primaryEmailAddress?.emailAddress || '';
+
+      return {
+        name: fullName,
+        email: email,
+        gender: 'no_answer',
+        privacyConsent: false
+      };
+    }
+
+    // Anonymous user - empty form
+    return {
+      gender: 'no_answer',
+      privacyConsent: false
+    };
+  };
 
   const {
     register,
@@ -52,20 +95,7 @@ export function BasicInfoForm({ onSuccess, onError }: BasicInfoFormProps) {
     setError: setFormError
   } = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: basicInfo ? {
-      name: basicInfo.name,
-      email: basicInfo.email,
-      gender: basicInfo.gender,
-      birthdate: {
-        year: basicInfo.birthdate.year,
-        month: basicInfo.birthdate.month,
-        day: basicInfo.birthdate.day
-      },
-      privacyConsent: false
-    } : {
-      gender: 'no_answer',
-      privacyConsent: false
-    }
+    defaultValues: getDefaultValues()
   });
 
   // 選択された年月に基づいて日数を動的に調整

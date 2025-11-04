@@ -13,11 +13,13 @@
 - データベース送信（API実装）
 
 ### ❌ 将来実装予定
-- ユーザー認証・アカウント管理
-- 詳細な体癖診断システム
-- 結果の永続化・履歴管理
-- 管理者ダッシュボード
-- 高度な分析機能
+- 詳細な体癖診断システム（さらなる拡張）
+- 高度な分析機能（機械学習統合）
+
+### ✅ 実装済み（段階的展開中）
+- **ユーザー認証・アカウント管理**：Clerk統合によるオプショナル認証
+- **結果の永続化・履歴管理**：認証ユーザー向けサーバー保存
+- **管理者ダッシュボード**：JWT + 4桁PIN認証システム
 
 ---
 
@@ -60,6 +62,605 @@ interface AdminDashboard {
 4. **管理者**: ダウンロードした.mdファイルを添付
 5. **Claude**: 添付ファイルを解析し、本格的な性格分析レポートを生成
 6. **管理者**: 必要に応じてユーザーにフィードバック
+
+---
+
+## 🔐 Clerk認証統合技術仕様
+
+### 概要
+COCOSiLシステムに**Clerk認証**を統合し、ユーザーに診断データの永続保存、履歴閲覧、高度なAI機能へのアクセスを提供します。既存の匿名診断フローを維持しつつ、認証ユーザーに付加価値を提供する**オプトインモデル**を採用します。
+
+### 技術スタック追加
+
+#### Clerk関連パッケージ
+```json
+{
+  "@clerk/nextjs": "^6.15.0",
+  "@clerk/localizations": "^2.10.0",
+  "svix": "^1.40.0"
+}
+```
+
+### 環境変数（Clerk）
+
+```bash
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/diagnosis
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/diagnosis
+
+# Clerk Webhook
+CLERK_WEBHOOK_SECRET=whsec_xxxxx
+
+# Cron Job Authentication
+CRON_SECRET=randomly_generated_secret_key
+```
+
+### middleware.ts 実装
+
+**認証レルム分離**：管理者認証（既存JWT）とClerk認証を完全分離
+
+```typescript
+// middleware.ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { verifyAdminJWT } from '@/lib/jwt-session'
+
+// ルートマッチャー定義
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/about',
+  '/learn/taiheki(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/fortune-calc-v2(.*)',
+  '/api/public(.*)'
+])
+
+const isAdminRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)'
+])
+
+const isDiagnosisRoute = createRouteMatcher([
+  '/diagnosis(.*)',
+  '/api/diagnosis(.*)'
+])
+
+export default async function middleware(request: NextRequest) {
+  // 管理者ルート: 既存JWT認証（Clerkをスキップ）
+  if (isAdminRoute(request)) {
+    return verifyAdminJWT(request)
+  }
+
+  // その他: Clerkミドルウェア
+  return clerkMiddleware(async (auth, req) => {
+    // 公開ルートは認証不要
+    if (isPublicRoute(req)) {
+      return NextResponse.next()
+    }
+
+    // 診断ルート: 認証推奨だが必須ではない（匿名診断継続）
+    if (isDiagnosisRoute(req)) {
+      return NextResponse.next()
+    }
+
+    // その他の保護ルート: 認証必須
+    await auth.protect()
+    return NextResponse.next()
+  })(request)
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
+}
+```
+
+### ClerkProvider統合
+
+```typescript
+// src/app/layout.tsx
+import { ClerkProvider } from '@clerk/nextjs'
+import { jaJP } from '@clerk/localizations'
+
+export default function RootLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <ClerkProvider localization={jaJP}>
+      <html lang="ja">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  )
+}
+```
+
+### 認証選択画面コンポーネント
+
+```typescript
+// src/ui/features/diagnosis/auth-choice-screen.tsx
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
+import { useDiagnosisStore } from '@/lib/zustand/diagnosis-store'
+
+export function AuthChoiceScreen() {
+  const router = useRouter()
+  const { isSignedIn } = useAuth()
+  const setAuthMode = useDiagnosisStore(state => state.setAuthMode)
+
+  const handleCreateAccount = () => {
+    setAuthMode('authenticated')
+    router.push('/sign-up')
+  }
+
+  const handleSignIn = () => {
+    setAuthMode('authenticated')
+    router.push('/sign-in')
+  }
+
+  const handleAnonymous = () => {
+    setAuthMode('anonymous')
+    router.push('/diagnosis/basic-info')
+  }
+
+  // 既にサインイン済みの場合は診断へ直接遷移
+  if (isSignedIn) {
+    setAuthMode('authenticated')
+    router.push('/diagnosis/basic-info')
+    return null
+  }
+
+  return (
+    <div className="max-w-md mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold text-center mb-6">
+        COCOSiL 診断を始める
+      </h1>
+
+      <button
+        onClick={handleCreateAccount}
+        className="w-full p-4 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+      >
+        <div className="flex items-center justify-center space-x-2">
+          <span>🔐</span>
+          <span>アカウントを作成して始める</span>
+        </div>
+        <p className="text-sm mt-2 opacity-90">
+          → 診断結果を保存・履歴閲覧可能
+        </p>
+      </button>
+
+      <button
+        onClick={handleSignIn}
+        className="w-full p-4 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+      >
+        <div className="flex items-center justify-center space-x-2">
+          <span>✅</span>
+          <span>サインインして始める</span>
+        </div>
+        <p className="text-sm mt-2 opacity-90">
+          → 既存アカウントで続ける
+        </p>
+      </button>
+
+      <button
+        onClick={handleAnonymous}
+        className="w-full p-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors border-2 border-gray-300"
+      >
+        <div className="flex items-center justify-center space-x-2">
+          <span>👤</span>
+          <span>匿名で続ける</span>
+        </div>
+        <p className="text-sm mt-2 text-gray-600">
+          → 30日間ブラウザに保存
+        </p>
+      </button>
+    </div>
+  )
+}
+```
+
+### 基本情報フォーム自動入力
+
+```typescript
+// src/ui/features/forms/basic-info-form.tsx
+import { useUser } from '@clerk/nextjs'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+export function BasicInfoForm() {
+  const { user } = useUser()
+
+  // Clerkユーザー情報から自動入力
+  const form = useForm({
+    resolver: zodResolver(basicInfoSchema),
+    defaultValues: {
+      name: user?.fullName || '',
+      email: user?.primaryEmailAddress?.emailAddress || '',
+      birthDate: user?.publicMetadata?.birthDate as string || '',
+      gender: user?.publicMetadata?.gender as string || '',
+    }
+  })
+
+  // ... 既存フォームロジック
+}
+```
+
+### Prismaスキーマ拡張
+
+```prisma
+// prisma/schema.prisma
+
+model DiagnosisRecord {
+  id          String   @id @default(uuid())
+
+  // ユーザー識別
+  clerkUserId String?  // Clerk認証ユーザー
+  anonymousId String?  // 匿名ユーザー（将来拡張用）
+
+  // 診断データ（JSON形式）
+  basicInfo   Json     // 名前、生年月日、性別など
+  mbtiResult  Json?    // MBTI診断結果
+  taihekiResult Json?  // 体癖診断結果
+  fortuneResult Json?  // 算命学診断結果
+
+  // メタデータ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime // createdAt + 30日
+
+  // インデックス
+  @@index([clerkUserId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+```
+
+### API実装：診断データ保存
+
+```typescript
+// src/app/api/diagnosis/save/route.ts
+import { auth } from '@clerk/nextjs/server'
+import { db } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+
+export async function POST(request: Request) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { basicInfo, mbtiResult, taihekiResult, fortuneResult } = body
+
+    // 30日後の削除日時を計算
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 30)
+
+    const record = await db.diagnosisRecord.create({
+      data: {
+        clerkUserId: userId,
+        basicInfo,
+        mbtiResult,
+        taihekiResult,
+        fortuneResult,
+        expiresAt,
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      recordId: record.id
+    })
+  } catch (error) {
+    console.error('Save diagnosis error:', error)
+    return NextResponse.json(
+      { error: 'Failed to save diagnosis' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### API実装：診断履歴取得
+
+```typescript
+// src/app/api/diagnosis/history/route.ts
+import { auth } from '@clerk/nextjs/server'
+import { db } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+
+export async function GET(request: Request) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const records = await db.diagnosisRecord.findMany({
+      where: {
+        clerkUserId: userId,
+        expiresAt: { gte: new Date() }, // 削除期限前のみ
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        createdAt: true,
+        basicInfo: true,
+        mbtiResult: true,
+        taihekiResult: true,
+        fortuneResult: true,
+      },
+    })
+
+    return NextResponse.json({ records })
+  } catch (error) {
+    console.error('Get history error:', error)
+    return NextResponse.json(
+      { error: 'Failed to get history' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Clerk Webhook実装（30日自動削除）
+
+```typescript
+// src/app/api/webhooks/clerk/route.ts
+import { Webhook } from 'svix'
+import { db } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+
+export async function POST(request: Request) {
+  try {
+    const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET!
+
+    if (!WEBHOOK_SECRET) {
+      throw new Error('CLERK_WEBHOOK_SECRET is not set')
+    }
+
+    const svix = new Webhook(WEBHOOK_SECRET)
+
+    const payload = await request.text()
+    const headers = {
+      'svix-id': request.headers.get('svix-id')!,
+      'svix-timestamp': request.headers.get('svix-timestamp')!,
+      'svix-signature': request.headers.get('svix-signature')!,
+    }
+
+    let event
+    try {
+      event = svix.verify(payload, headers)
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err)
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 400 }
+      )
+    }
+
+    if (event.type === 'user.deleted') {
+      const userId = event.data.id
+
+      // ユーザーの全診断データを削除
+      const result = await db.diagnosisRecord.deleteMany({
+        where: { clerkUserId: userId },
+      })
+
+      console.log(`Deleted ${result.count} records for user: ${userId}`)
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Webhook processing error:', error)
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Vercel Cron実装（期限切れデータ削除）
+
+```typescript
+// src/app/api/cron/delete-expired-diagnoses/route.ts
+import { db } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+
+export async function GET(request: Request) {
+  try {
+    // Vercel Cronからの認証トークン検証
+    const authHeader = request.headers.get('authorization')
+    const expectedToken = `Bearer ${process.env.CRON_SECRET}`
+
+    if (authHeader !== expectedToken) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const now = new Date()
+
+    // 期限切れレコードを削除
+    const result = await db.diagnosisRecord.deleteMany({
+      where: {
+        expiresAt: { lte: now },
+      },
+    })
+
+    console.log(`Deleted ${result.count} expired diagnosis records`)
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: result.count,
+      timestamp: now.toISOString(),
+    })
+  } catch (error) {
+    console.error('Cron job error:', error)
+    return NextResponse.json(
+      { error: 'Cron job failed' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Vercel Cron設定
+
+```json
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/delete-expired-diagnoses",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
+```
+
+### Zustandストア拡張
+
+```typescript
+// src/lib/zustand/diagnosis-store.ts
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+interface DiagnosisStore {
+  // 既存フィールド
+  basicInfo: BasicInfo | null
+  mbti: MBTIResult | null
+  taiheki: TaihekiResult | null
+  fortune: FortuneResult | null
+  progress: ProgressState
+
+  // 新規フィールド（認証関連）
+  authMode: 'authenticated' | 'anonymous'
+  recordId: string | null // サーバー保存時のレコードID
+
+  // 新規アクション
+  setAuthMode: (mode: 'authenticated' | 'anonymous') => void
+  saveToServer: () => Promise<void>
+  loadFromServer: (recordId: string) => Promise<void>
+
+  // 既存アクション
+  setBasicInfo: (info: BasicInfo) => void
+  setMBTI: (result: MBTIResult) => void
+  setTaiheki: (result: TaihekiResult) => void
+  setFortune: (result: FortuneResult) => void
+  updateProgress: (progress: ProgressState) => void
+  reset: () => void
+}
+
+export const useDiagnosisStore = create<DiagnosisStore>()(
+  persist(
+    (set, get) => ({
+      // 初期状態
+      basicInfo: null,
+      mbti: null,
+      taiheki: null,
+      fortune: null,
+      progress: { completedSteps: [], percentage: 0 },
+      authMode: 'anonymous',
+      recordId: null,
+
+      // アクション実装
+      setAuthMode: (mode) => set({ authMode: mode }),
+
+      saveToServer: async () => {
+        const state = get()
+        if (state.authMode === 'anonymous') return
+
+        const response = await fetch('/api/diagnosis/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            basicInfo: state.basicInfo,
+            mbtiResult: state.mbti,
+            taihekiResult: state.taiheki,
+            fortuneResult: state.fortune,
+          }),
+        })
+
+        const data = await response.json()
+        if (data.success) {
+          set({ recordId: data.recordId })
+        }
+      },
+
+      loadFromServer: async (recordId) => {
+        const response = await fetch(`/api/diagnosis/${recordId}`)
+        const data = await response.json()
+
+        set({
+          basicInfo: data.basicInfo,
+          mbti: data.mbtiResult,
+          taiheki: data.taihekiResult,
+          fortune: data.fortuneResult,
+          recordId: recordId,
+        })
+      },
+
+      // ... 既存アクション
+    }),
+    {
+      name: 'diagnosis-storage',
+      partialize: (state) => ({
+        // 認証ユーザーはサーバー保存のため、localStorageには最小限のみ
+        authMode: state.authMode,
+        recordId: state.recordId,
+        // 匿名ユーザーは全データをlocalStorageに保存
+        ...(state.authMode === 'anonymous' && {
+          basicInfo: state.basicInfo,
+          mbti: state.mbti,
+          taiheki: state.taiheki,
+          fortune: state.fortune,
+        }),
+      }),
+    }
+  )
+)
+```
+
+### セキュリティ考慮事項
+
+#### 認証レルム分離の重要性
+- **管理者認証（JWT + 4桁PIN）**と**一般ユーザー認証（Clerk）**は完全独立
+- middleware.tsで明確にルーティング分離
+- 管理者ルートはClerkミドルウェアをスキップ
+
+#### プライバシーポリシー準拠
+- 30日自動削除の2重メカニズム（Webhook + Cron）
+- GDPR「忘れられる権利」への対応
+- 個人識別情報（PII）の最小化
+
+#### フェイルセーフ設計
+- Clerk障害時も匿名診断は継続利用可能
+- 診断ルートは認証推奨だが必須ではない
+- ネットワークエラー時のlocalStorageフォールバック
 
 ---
 
@@ -662,19 +1263,58 @@ export const StreamingChat = () => {
 
 ### .env.local (開発環境)
 ```bash
+# OpenAI API
 OPENAI_API_KEY=sk-xxxxx
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/diagnosis
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/diagnosis
+CLERK_WEBHOOK_SECRET=whsec_xxxxx
+
+# Admin Authentication (既存JWT)
+ADMIN_PASSWORD=1234
+ADMIN_SECRET_KEY=admin_secret_key_dev
+
+# Cron Job Authentication
+CRON_SECRET=randomly_generated_secret_key
+
+# Application URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ADMIN_SITE_URL=http://localhost:3001
-ADMIN_SECRET_KEY=admin_secret_key_dev
+
+# Database
 DATABASE_URL=postgresql://localhost:5432/cocoseal_dev
 ```
 
 ### Vercelデプロイ時環境変数
-- `OPENAI_API_KEY`: OpenAI APIキー
-- `ADMIN_SITE_URL`: 管理者専用サイトURL (https://admin.cocoseal.com)
+
+#### OpenAI
+- `OPENAI_API_KEY`: OpenAI APIキー（GPT-4ストリーミング用）
+
+#### Clerk認証
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerkパブリッシャブルキー
+- `CLERK_SECRET_KEY`: Clerkシークレットキー
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`: サインインURL（`/sign-in`）
+- `NEXT_PUBLIC_CLERK_SIGN_UP_URL`: サインアップURL（`/sign-up`）
+- `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`: サインイン後リダイレクト（`/diagnosis`）
+- `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`: サインアップ後リダイレクト（`/diagnosis`）
+- `CLERK_WEBHOOK_SECRET`: Clerk Webhook署名検証用シークレット
+
+#### 管理者認証（既存JWT）
+- `ADMIN_PASSWORD`: 管理者4桁PIN（例: `1234`）
 - `ADMIN_SECRET_KEY`: 管理者認証用シークレットキー
-- `DATABASE_URL`: データベース接続URL（将来）
-- `NEXT_PUBLIC_APP_URL`: 本番URL
+- `ADMIN_SITE_URL`: 管理者専用サイトURL（`https://admin.cocoseal.com`）
+
+#### Cron Job
+- `CRON_SECRET`: Vercel Cron認証用ランダム秘密鍵
+
+#### アプリケーション
+- `NEXT_PUBLIC_APP_URL`: 本番URL（`https://cocoseal.com`）
+- `DATABASE_URL`: PostgreSQLデータベース接続URL
 
 ---
 

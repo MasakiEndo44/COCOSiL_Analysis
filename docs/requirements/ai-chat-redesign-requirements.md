@@ -62,6 +62,132 @@ COCOSiLプロジェクトの既存AIチャット機能において、以下の�
 - [ ] アラート応答時間 30秒以内
 - [ ] フォールバック成功率 98%以上
 
+### 2.5 F-005: ユーザー認証統合（Phase 3実装）
+**要件**: Clerk認証によるAI対話履歴の永続化と高度機能の提供
+- **現状**: localStorage のみの履歴保存（30日で消失）
+- **改善**: 認証ユーザーにサーバー保存履歴・クロスデバイス対話継続を提供
+- **実装**: Clerk認証統合 + Prisma DB保存 + 高度AIプロンプト
+
+#### 2.5.1 認証統合の基本方針
+- **オプトイン**: 匿名ユーザーも引き続きAIチャット利用可能
+- **段階的価値提供**: 認証ユーザーに追加機能を段階的提供
+- **プライバシー維持**: 30日自動削除ポリシーは認証ユーザーにも適用
+
+#### 2.5.2 匿名ユーザー（既存動作維持）
+- **利用範囲**: 全AIチャット機能利用可能
+- **履歴保存**: localStorage（30日自動削除）
+- **制限事項**:
+  - デバイス間の対話継続不可
+  - 高度AI機能（長文コンテキスト）非対応
+  - ブラウザキャッシュクリアで履歴消失
+
+#### 2.5.3 認証ユーザー（新規機能）
+- **基本機能**: 匿名ユーザーと同等のAIチャット
+- **追加機能**:
+  - **対話履歴サーバー保存**: Prisma DB に永続化（30日後自動削除）
+  - **クロスデバイス継続**: スマホ・PC間で対話継続可能
+  - **履歴閲覧機能**: `/diagnosis/chat/history` で過去対話一覧
+  - **高度AIプロンプト**: より深い洞察・長文コンテキスト対応
+
+#### 2.5.4 データモデル拡張
+**Prismaスキーマ追加**:
+```prisma
+model ChatSession {
+  id          String   @id @default(uuid())
+  clerkUserId String   // Clerk認証ユーザー
+
+  // セッション情報
+  topic       String   // 人間関係 | キャリア | 性格理解 | 将来
+  startedAt   DateTime @default(now())
+  lastMessageAt DateTime @updatedAt
+
+  // 診断結果参照
+  diagnosisRecordId String
+  diagnosisRecord   DiagnosisRecord @relation(fields: [diagnosisRecordId], references: [id])
+
+  // 対話メッセージ
+  messages    ChatMessage[]
+
+  // メタデータ
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime // startedAt + 30日
+
+  @@index([clerkUserId])
+  @@index([expiresAt])
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  role        String   // user | assistant
+  content     String   @db.Text
+
+  // Token管理
+  tokenCount  Int?
+
+  // メタデータ
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+```
+
+#### 2.5.5 API実装
+**1. チャットセッション作成**:
+```typescript
+// POST /api/chat/session
+{
+  "topic": "人間関係",
+  "diagnosisRecordId": "uuid"
+}
+```
+
+**2. メッセージ送信（ストリーミング）**:
+```typescript
+// POST /api/chat/message
+{
+  "sessionId": "uuid",
+  "message": "ユーザーの質問"
+}
+// Response: Server-Sent Events stream
+```
+
+**3. 対話履歴取得**:
+```typescript
+// GET /api/chat/sessions
+// Response: ユーザーの全セッション一覧
+
+// GET /api/chat/session/{sessionId}
+// Response: 特定セッションの全メッセージ
+```
+
+#### 2.5.6 UI/UX変更
+- **チャット画面ヘッダー**:
+  - 認証ユーザー: 「この対話は保存されます」アイコン表示
+  - 匿名ユーザー: 「この対話は30日後に消えます」警告表示
+- **履歴ボタン追加**: 認証ユーザーのみ「過去の対話」ボタン表示
+- **サインイン促進**: 匿名ユーザーに「サインインして対話を保存」CTA表示
+
+#### 2.5.7 実装フェーズ（Phase 3）
+- **Week 1**: Prismaスキーマ追加・マイグレーション実行
+- **Week 2**: チャットセッション・メッセージ保存API実装
+- **Week 3**: 履歴閲覧機能・クロスデバイス対話継続実装
+- **Week 4-5**: 高度AIプロンプト開発・A/Bテスト
+- **Week 6**: 統合テスト・品質検証
+- **Week 7**: デプロイ・監視設定
+
+**受け入れ基準**:
+- [ ] 認証ユーザーのチャット履歴がサーバーに保存される
+- [ ] 30日経過後に自動削除される
+- [ ] クロスデバイスで対話継続が可能
+- [ ] 履歴閲覧画面が正しく動作する
+- [ ] 匿名ユーザーは既存通り利用可能
+- [ ] 認証ユーザーのみ高度AIプロンプト使用可能
+- [ ] UI/UXが認証状態に応じて適切に表示される
+
 ## 3. 非機能要件
 
 ### 3.1 パフォーマンス要件
@@ -89,7 +215,11 @@ COCOSiLプロジェクトの既存AIチャット機能において、以下の�
 ### 4.1 技術制約
 - **アーキテクチャ**: 既存Next.js 14構成維持
 - **API**: OpenAI GPT-4使用（モデル変更不可）
-- **ストレージ**: localStorage使用（サーバー保存禁止）
+- **ストレージ**（Phase 3で変更）:
+  - **匿名ユーザー**: localStorage使用（既存動作維持）
+  - **認証ユーザー**: Prisma DB + PostgreSQL（サーバー保存）
+  - **30日自動削除**: 両ユーザータイプで適用
+- **認証**: Clerk統合（管理者認証JWT+PINは独立維持）
 
 ### 4.2 ビジネス制約
 - **予算**: 月額OpenAI費用 $200以下

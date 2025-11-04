@@ -1,0 +1,67 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "C COCOSiL 統合診断システム" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9] [cursor=pointer]: C
+          - generic [ref=e10] [cursor=pointer]:
+            - heading "COCOSiL" [level=1] [ref=e11] [cursor=pointer]
+            - paragraph [ref=e12] [cursor=pointer]: 統合診断システム
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: 基本情報入力
+          - paragraph [ref=e16]: "セッション: whpdtad0"
+        - generic [ref=e17]:
+          - button "ヘルプ" [ref=e18] [cursor=pointer]:
+            - img [ref=e19] [cursor=pointer]
+          - link "診断を終了" [ref=e21] [cursor=pointer]:
+            - /url: /
+            - img [ref=e22] [cursor=pointer]
+    - generic [ref=e26]:
+      - generic [ref=e30]: 0%
+      - generic [ref=e31]:
+        - generic [ref=e33]:
+          - generic [ref=e35]: "1"
+          - paragraph [ref=e37]: 基本情報
+        - generic [ref=e39]:
+          - generic [ref=e41]: "2"
+          - paragraph [ref=e43]: MBTI
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: "3"
+            - generic [ref=e48]: 任意
+          - paragraph [ref=e50]: 学習
+        - generic [ref=e52]:
+          - generic [ref=e54]: "4"
+          - paragraph [ref=e56]: 体癖診断
+        - generic [ref=e58]:
+          - generic [ref=e60]: "5"
+          - paragraph [ref=e62]: 結果
+    - main [ref=e63]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "診断を始める" [level=1] [ref=e68]
+          - paragraph [ref=e69]: 診断方法を選択してください
+        - link "アカウントを作成して診断を始める" [ref=e70] [cursor=pointer]:
+          - /url: /sign-up
+          - generic [ref=e71] [cursor=pointer]: 🔐
+          - generic [ref=e72] [cursor=pointer]:
+            - generic [ref=e73] [cursor=pointer]: アカウントを作成して始める
+            - generic [ref=e74] [cursor=pointer]: → 診断結果を保存・履歴閲覧可能
+        - link "サインインして診断を始める" [ref=e75] [cursor=pointer]:
+          - /url: /sign-in
+          - generic [ref=e76] [cursor=pointer]: ✅
+          - generic [ref=e77] [cursor=pointer]:
+            - generic [ref=e78] [cursor=pointer]: サインインして始める
+            - generic [ref=e79] [cursor=pointer]: → 既存アカウントで続ける
+        - button "匿名で診断を続ける" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81] [cursor=pointer]: 👤
+          - generic [ref=e82] [cursor=pointer]:
+            - generic [ref=e83] [cursor=pointer]: 匿名で続ける
+            - generic [ref=e84] [cursor=pointer]: → 30日間ブラウザに保存
+        - paragraph [ref=e86]: 匿名診断の場合、診断データはブラウザのローカルストレージに保存され、 30日後に自動削除されます。
+  - alert [ref=e87]
+```

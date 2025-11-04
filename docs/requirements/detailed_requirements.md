@@ -45,10 +45,10 @@
 - **体癖理論学習サイト**：体癖論教育コンテンツ、インタラクティブ学習機能
 - **管理者データベースシステム**：診断データ管理、統計分析、プロンプト生成
 - **サイト間連携機能**：4サイト間のデータ共有、ナビゲーション統合
+- **ユーザー認証機能（オプショナル）**：Clerk統合による認証ユーザー向け診断履歴保存・AI対話機能拡張（Phase 1-3で段階的実装）
 
 #### 2.1.2 OUT スコープ（本システムでは扱わない）
 - **決済機能**：検証フェーズでは無料のため実装しない
-- **ユーザー認証**：個人特定を避けるため会員システムは構築しない
 - **多言語対応**：初期段階では日本語のみ
 - **モバイルアプリ**：Webアプリケーションのみ実装
 
@@ -583,6 +583,459 @@ COCOSiLシステムで収集した[N]件のデータから、以下の傾向分�
 - [ ] 統計データプロンプトが正確に生成される
 - [ ] テンプレート編集が可能である
 - [ ] 生成結果をファイルダウンロードできる
+
+### 4.5 ユーザー認証機能（F005）
+
+**概要**：Clerk認証を段階的に統合し、ユーザーに診断データの永続保存、履歴閲覧、高度なAI機能へのアクセスを提供します。既存の匿名診断フローとプライバシーファースト設計を維持しつつ、認証ユーザーに付加価値を提供する**オプトインモデル**を採用します。
+
+**主要方針**：
+- ✅ **既存システム影響最小化**: 管理者認証（JWT + 4桁PIN）は完全維持
+- ✅ **プライバシーファースト継続**: 匿名診断フロー継続、30日自動削除ポリシー堅持
+- ✅ **段階的価値提供**: Phase 1（認証オプション）→ Phase 2（履歴）→ Phase 3（高度機能）
+- ✅ **技術負債最小化**: Clerkベストプラクティスに準拠、保守性の高い設計
+
+**実装フェーズ**：
+- **Phase 1**（2週間）：認証オプション追加・基本情報自動入力
+- **Phase 2**（2週間）：診断履歴機能・データサーバー保存
+- **Phase 3**（3週間）：高度機能（AI対話履歴、学習進捗同期、Webhook/Cron削除）
+
+#### F005-1：認証選択画面
+
+**概要**：診断開始時に「アカウント作成」「サインイン」「匿名で続行」の3択を提供
+
+**画面構成**：
+```
+┌────────────────────────────────────────┐
+│  COCOSiL 診断を始める                    │
+├────────────────────────────────────────┤
+│  [🔐 アカウントを作成して始める]          │
+│   → 診断結果を保存・履歴閲覧可能         │
+│                                        │
+│  [✅ サインインして始める]                │
+│   → 既存アカウントで続ける               │
+│                                        │
+│  [👤 匿名で続ける]                       │
+│   → 30日間ブラウザに保存                 │
+└────────────────────────────────────────┘
+```
+
+**機能要件**：
+- ユーザーは診断開始前に認証方式を選択可能
+- 「アカウント作成」→ Clerk SignUp UI へ遷移
+- 「サインイン」→ Clerk SignIn UI へ遷移
+- 「匿名で続行」→ 既存フロー（localStorage保存）
+
+**実装詳細**：
+- **実装場所**：`src/app/diagnosis/page.tsx`（診断トップ）
+- **状態管理**：Zustand `useDiagnosisStore` に `authMode: 'authenticated' | 'anonymous'` を追加
+- **UI コンポーネント**：`src/ui/features/diagnosis/auth-choice-screen.tsx`（新規作成）
+
+**受入れ基準**：
+- [ ] 認証選択画面が診断開始前に表示される
+- [ ] 「アカウント作成」ボタンでClerk SignUpページへ遷移
+- [ ] 「サインイン」ボタンでClerk SignInページへ遷移
+- [ ] 「匿名で続行」ボタンで既存診断フローが開始
+- [ ] 選択した認証方式がZustandストアに保存される
+
+#### F005-2：Clerk統合（SignIn/SignUp）
+
+**概要**：Clerk認証を Next.js 14 App Router + Middleware で統合
+
+**技術構成**：
+- **Clerkパッケージ**：`@clerk/nextjs`
+- **認証レルム分離**：`middleware.ts` で管理者認証とClerk認証を分離
+- **環境変数**：
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - `CLERK_SECRET_KEY`
+  - `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
+  - `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
+  - `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/diagnosis`
+  - `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/diagnosis`
+
+**middleware.ts 実装**：
+```typescript
+// middleware.ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { verifyAdminJWT } from '@/lib/jwt-session'
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/about',
+  '/learn/taiheki(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/fortune-calc-v2(.*)',
+  '/api/public(.*)'
+])
+
+const isAdminRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)'
+])
+
+const isDiagnosisRoute = createRouteMatcher([
+  '/diagnosis(.*)',
+  '/api/diagnosis(.*)'
+])
+
+export default async function middleware(request: NextRequest) {
+  // 管理者ルート: 既存JWT認証（Clerkをスキップ）
+  if (isAdminRoute(request)) {
+    return verifyAdminJWT(request)
+  }
+
+  // その他: Clerkミドルウェア
+  return clerkMiddleware(async (auth, req) => {
+    // 公開ルートは認証不要
+    if (isPublicRoute(req)) {
+      return NextResponse.next()
+    }
+
+    // 診断ルート: 認証推奨だが必須ではない
+    if (isDiagnosisRoute(req)) {
+      return NextResponse.next()
+    }
+
+    // その他の保護ルート: 認証必須
+    await auth.protect()
+    return NextResponse.next()
+  })(request)
+}
+```
+
+**ClerkProvider統合**：
+```typescript
+// src/app/layout.tsx
+import { ClerkProvider } from '@clerk/nextjs'
+import { jaJP } from '@clerk/localizations'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ClerkProvider localization={jaJP}>
+      <html lang="ja">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  )
+}
+```
+
+**基本情報フォーム自動入力**：
+```typescript
+// src/ui/features/forms/basic-info-form.tsx
+import { useUser } from '@clerk/nextjs'
+
+export function BasicInfoForm() {
+  const { user } = useUser()
+
+  // Clerkユーザー情報から自動入力
+  const defaultValues = {
+    name: user?.fullName || '',
+    email: user?.primaryEmailAddress?.emailAddress || '',
+    birthDate: user?.publicMetadata?.birthDate as string || '',
+    gender: user?.publicMetadata?.gender as string || '',
+  }
+
+  // 以下、既存フォームロジック
+}
+```
+
+**受入れ基準**：
+- [ ] `npm install @clerk/nextjs` でClerkパッケージがインストールされる
+- [ ] 環境変数が `.env.local` に正しく設定される
+- [ ] `middleware.ts` が管理者認証とClerk認証を正しく分離
+- [ ] ClerkProviderが `app/layout.tsx` に統合される
+- [ ] Clerk SignIn/SignUp UIが `/sign-in`, `/sign-up` で表示される
+- [ ] 認証後に `/diagnosis` ページへリダイレクトされる
+- [ ] 基本情報フォームでClerkユーザー情報が自動入力される
+
+#### F005-3：診断データサーバー保存
+
+**概要**：認証ユーザーの診断データをPrisma DBに保存
+
+**Prismaスキーマ拡張**：
+```prisma
+// prisma/schema.prisma
+
+model DiagnosisRecord {
+  id          String   @id @default(uuid())
+
+  // ユーザー識別（いずれか必須）
+  clerkUserId String?  // Clerk認証ユーザー
+  anonymousId String?  // 匿名ユーザー（未実装、将来拡張用）
+
+  // 診断データ（JSON形式）
+  basicInfo   Json     // 名前、生年月日、性別など
+  mbtiResult  Json?    // MBTI診断結果
+  taihekiResult Json?  // 体癖診断結果
+  fortuneResult Json?  // 算命学診断結果
+
+  // メタデータ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime // createdAt + 30日
+
+  // インデックス
+  @@index([clerkUserId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+```
+
+**API実装：診断データ保存**：
+```typescript
+// src/app/api/diagnosis/save/route.ts
+import { auth } from '@clerk/nextjs/server'
+import { db } from '@/lib/prisma'
+
+export async function POST(request: Request) {
+  const { userId } = await auth()
+
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json()
+  const { basicInfo, mbtiResult, taihekiResult, fortuneResult } = body
+
+  // 30日後の削除日時を計算
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + 30)
+
+  const record = await db.diagnosisRecord.create({
+    data: {
+      clerkUserId: userId,
+      basicInfo,
+      mbtiResult,
+      taihekiResult,
+      fortuneResult,
+      expiresAt,
+    },
+  })
+
+  return Response.json({ success: true, recordId: record.id })
+}
+```
+
+**Zustandストア拡張**：
+```typescript
+// src/lib/zustand/diagnosis-store.ts
+interface DiagnosisStore {
+  // 既存フィールド
+  basicInfo: BasicInfo | null
+  mbti: MBTIResult | null
+  taiheki: TaihekiResult | null
+  fortune: FortuneResult | null
+
+  // 新規フィールド
+  authMode: 'authenticated' | 'anonymous'
+  recordId: string | null // サーバー保存時のレコードID
+
+  // 新規アクション
+  saveToServer: () => Promise<void>
+}
+```
+
+**受入れ基準**：
+- [ ] Prismaスキーマに `DiagnosisRecord` モデルが追加される
+- [ ] `npm run prisma:migrate` でデータベースマイグレーションが実行される
+- [ ] POST `/api/diagnosis/save` が認証ユーザーの診断データを保存
+- [ ] 未認証ユーザーには401エラーを返す
+- [ ] `expiresAt` が作成日時 + 30日で自動設定される
+- [ ] Zustandストアに `saveToServer()` アクションが実装される
+- [ ] 診断完了時に認証ユーザーのデータが自動保存される
+
+#### F005-4：診断履歴機能
+
+**概要**：認証ユーザーが過去の診断結果を閲覧可能
+
+**画面構成**：
+```
+┌────────────────────────────────────────┐
+│  診断履歴                                │
+├────────────────────────────────────────┤
+│  📅 2025-10-20  MBTI: INTJ, 体癖: 2種   │
+│  → 詳細を見る                            │
+│                                        │
+│  📅 2025-10-15  MBTI: ENFP, 体癖: 5種   │
+│  → 詳細を見る                            │
+│                                        │
+│  📅 2025-10-10  MBTI: ISTJ, 体癖: 1種   │
+│  → 詳細を見る                            │
+└────────────────────────────────────────┘
+```
+
+**API実装：診断履歴取得**：
+```typescript
+// src/app/api/diagnosis/history/route.ts
+import { auth } from '@clerk/nextjs/server'
+import { db } from '@/lib/prisma'
+
+export async function GET(request: Request) {
+  const { userId } = await auth()
+
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const records = await db.diagnosisRecord.findMany({
+    where: {
+      clerkUserId: userId,
+      expiresAt: { gte: new Date() }, // 削除期限前のみ
+    },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      createdAt: true,
+      basicInfo: true,
+      mbtiResult: true,
+      taihekiResult: true,
+      fortuneResult: true,
+    },
+  })
+
+  return Response.json({ records })
+}
+```
+
+**画面実装**：
+- **実装場所**：`src/app/diagnosis/history/page.tsx`（新規作成）
+- **コンポーネント**：`src/ui/features/diagnosis/history-list.tsx`（新規作成）
+
+**受入れ基準**：
+- [ ] GET `/api/diagnosis/history` が認証ユーザーの診断履歴を返す
+- [ ] 削除期限（`expiresAt`）が過ぎたレコードは含まれない
+- [ ] 診断履歴画面 `/diagnosis/history` が実装される
+- [ ] 各診断レコードに「詳細を見る」リンクがある
+- [ ] 詳細リンクから過去の診断結果ページへ遷移できる
+- [ ] 未認証ユーザーがアクセスすると401エラー
+
+#### F005-5：30日自動削除（Webhook + Cron）
+
+**概要**：プライバシーポリシー準拠のため、30日経過データを自動削除
+
+**削除メカニズム**：
+1. **Clerk Webhook**：ユーザーアカウント削除時に即座実行
+2. **Vercel Cron**：毎日深夜に期限切れデータを一括削除
+
+**Clerk Webhook実装**：
+```typescript
+// src/app/api/webhooks/clerk/route.ts
+import { Webhook } from 'svix'
+import { db } from '@/lib/prisma'
+
+export async function POST(request: Request) {
+  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET!
+  const svix = new Webhook(WEBHOOK_SECRET)
+
+  const payload = await request.text()
+  const headers = Object.fromEntries(request.headers)
+
+  let event
+  try {
+    event = svix.verify(payload, headers)
+  } catch (err) {
+    return Response.json({ error: 'Invalid signature' }, { status: 400 })
+  }
+
+  if (event.type === 'user.deleted') {
+    const userId = event.data.id
+
+    // ユーザーの全診断データを削除
+    await db.diagnosisRecord.deleteMany({
+      where: { clerkUserId: userId },
+    })
+
+    console.log(`Deleted all data for user: ${userId}`)
+  }
+
+  return Response.json({ success: true })
+}
+```
+
+**Vercel Cron実装**：
+```typescript
+// src/app/api/cron/delete-expired-diagnoses/route.ts
+import { db } from '@/lib/prisma'
+
+export async function GET(request: Request) {
+  // Vercel Cronからの認証トークン検証
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const now = new Date()
+
+  // 期限切れレコードを削除
+  const result = await db.diagnosisRecord.deleteMany({
+    where: {
+      expiresAt: { lte: now },
+    },
+  })
+
+  console.log(`Deleted ${result.count} expired diagnosis records`)
+
+  return Response.json({
+    success: true,
+    deletedCount: result.count,
+    timestamp: now.toISOString(),
+  })
+}
+```
+
+**Vercel Cron設定**：
+```json
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/delete-expired-diagnoses",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
+```
+
+**環境変数**：
+- `CLERK_WEBHOOK_SECRET`: Clerk Dashboard から取得
+- `CRON_SECRET`: ランダム生成した秘密鍵
+
+**受入れ基準**：
+- [ ] Clerk Webhook `/api/webhooks/clerk` が実装される
+- [ ] `user.deleted` イベントでユーザーデータが即座削除
+- [ ] Webhook署名検証が正しく実装される
+- [ ] Vercel Cron `/api/cron/delete-expired-diagnoses` が実装される
+- [ ] 毎日深夜2時（JST）に期限切れデータが削除される
+- [ ] Cron認証トークン検証が実装される
+- [ ] `vercel.json` にCron設定が追加される
+- [ ] 削除ログが正しく出力される
+
+### 4.5.6 非機能要件
+
+#### パフォーマンス要件
+- 認証チェックのオーバーヘッド < 50ms
+- 既存診断フローのレスポンスタイムへの影響 < 5%
+- 診断履歴API レスポンスタイム < 1秒（50件取得時）
+
+#### プライバシー要件
+- GDPR、CCPA準拠
+- 30日自動削除ポリシーの堅持
+- 個人識別情報（PII）の最小化
+- 匿名診断フローの継続維持
+
+#### 可用性要件
+- 認証サービス障害時も匿名診断は継続利用可能
+- Clerk障害時は自動的に匿名フローへフォールバック
+- 管理者認証は完全に独立（Clerk障害の影響を受けない）
+
+#### 保守性要件
+- Clerkベストプラクティスに準拠
+- 既存コードベースへの変更は最小限
+- TypeScript型安全性の維持
+- テストカバレッジ 80%以上
 
 ## 5. 非機能要件
 

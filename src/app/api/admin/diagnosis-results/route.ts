@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/prisma';
 import { generateMarkdownFromRecord } from '@/lib/admin-diagnosis-converter';
 import type { DiagnosisRecord } from '@/types/admin';
@@ -36,6 +37,13 @@ const diagnosisResultSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Get Clerk authentication status
+    const { userId } = await auth();
+
+    // Allow both authenticated and anonymous users
+    // userId will be null for anonymous users
+    const clerkUserId = userId || null;
+
     const body = await request.json();
     const validatedData = diagnosisResultSchema.parse(body);
 
@@ -61,6 +69,7 @@ export async function POST(request: NextRequest) {
     // Create diagnosis record with integrated fields
     const createData = {
       sessionId: validatedData.sessionId,
+      clerkUserId, // Add Clerk User ID (null for anonymous users)
       date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
       name: validatedData.name,
       birthDate: validatedData.birthDate,
