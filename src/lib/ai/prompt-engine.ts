@@ -29,25 +29,29 @@ export class IntegratedPromptEngine {
   generateSystemPrompt(userData: DiagnosisData, topic: string): string {
     return `あなたは統合診断に基づく専門カウンセラーです。
 
-## 禁止事項（厳格遵守）
-- 相槌や挨拶は一切禁止（「そうですね」「なるほど」「よくわかります」等）
-- 一般的な励ましや慰めは不要（「がんばって」「大丈夫」「きっと」等）
-- 表面的な質問は避ける
-- 複数の質問を一度に投げかけない
+## 基本姿勢（傾聴と共感）
+- **共感のワンクッション**: ユーザーの発言に対し、まずは「それは大変でしたね」「お辛い気持ち、よく分かります」といった共感の言葉から始めてください。
+- **受容的態度**: ユーザーの感情を否定せず、ありのまま受け止めてください。
+- **温かいトーン**: 専門的でありながらも、冷たくならず、温かみのある口調を心がけてください。
+
+## 禁止事項
+- 複数の質問を一度に投げかけない（ユーザーが答えやすいよう、質問は1つに絞る）
+- 説教がましい態度や、一方的な断定
 
 ## 実行指示
-1. ${userData.mbti}型の思考パターンと意思決定スタイルを深く考慮
-2. 体癖${userData.taiheki.primary}種の身体的傾向と心理的特性を分析
-3. ${userData.fortune.animal}の性格特性と行動パターンを統合
-4. ${userData.fortune.sixStar}の運命傾向と人生の課題を加味
-5. ${topic}における根本原因を3層掘り下げて質問
+1. まずはユーザーの感情に寄り添う言葉をかける
+2. ${userData.mbti}型の思考パターンと意思決定スタイルを深く考慮
+3. 体癖${userData.taiheki.primary}種の身体的傾向と心理的特性を分析
+4. ${userData.fortune.animal}の性格特性と行動パターンを統合
+5. ${userData.fortune.sixStar}の運命傾向と人生の課題を加味
+6. ${topic}における根本原因を3層掘り下げて質問
 
 ## 応答形式（必須）
+- 共感メッセージ（冒頭）
 - 最重要質問1つのみ
 - 具体的状況の深掘り
 - 必要な長さで詳細に説明（文字数制限なし）
-- 診断結果に基づいた個別化された質問
-- ユーザーの回答を余すことなく活用した分析
+- Markdown記法（箇条書き、太字など）を適切に使用して可読性を高める
 
 ## 分析アプローチ
 - ${this.getMBTIAnalysisPrompt(userData.mbti)}
@@ -55,7 +59,7 @@ export class IntegratedPromptEngine {
 - ${this.getFortuneAnalysisPrompt(userData.fortune)}
 
 ## 質問の深度設定
-真因分析のため、以下の順序で深掘りを実施：
+真因分析のため、以下の順序で深掘りを実施（ただし、まずは共感を優先）：
 1. 表面的な症状の確認
 2. 背景にある構造的な問題の特定
 3. 根本的な価値観や思考パターンの探索`;
@@ -88,17 +92,17 @@ export class IntegratedPromptEngine {
   assessComplexity(topic: string, conversationHistory: Array<{ content: string }>): number {
     const complexTopics = ['人間関係', 'キャリア', '将来'];
     const isComplexTopic = complexTopics.includes(topic) ? 1 : 0;
-    
+
     const conversationLength = conversationHistory.length;
     const lengthComplexity = Math.min(conversationLength / 4, 2);
-    
+
     const deepKeywords = ['なぜ', '根本的', '本質的', '価値観', '信念'];
     const deepnessScore = conversationHistory.reduce((score, msg) => {
       const matches = deepKeywords.filter(keyword => msg.content.includes(keyword)).length;
       return score + matches;
     }, 0);
     const deepnessComplexity = Math.min(deepnessScore / 3, 1);
-    
+
     return Math.min(isComplexTopic + lengthComplexity + deepnessComplexity, 3);
   }
 
@@ -113,7 +117,7 @@ export class IntegratedPromptEngine {
       'ESFJ': '人間関係の調和と他者への配慮を考慮した、共感的な質問',
       // 他のMBTIタイプも同様に定義
     };
-    
+
     return mbtiPrompts[mbtiType] || '思考パターンと価値観に基づいた個別化された質問';
   }
 
@@ -129,7 +133,7 @@ export class IntegratedPromptEngine {
       5: '開閉型：開放性と内省のバランスを考慮し、コミュニケーションに関する質問',
       // 他の体癖タイプも同様に定義
     };
-    
+
     return taihekiPrompts[primaryType] || '身体的特性と心理傾向に基づいた質問';
   }
 
@@ -158,7 +162,7 @@ export class IntegratedPromptEngine {
       '戌（イヌ）': '忠実さと責任感',
       '亥（イノシシ）': '直進性と情熱'
     };
-    
+
     return characteristics[animal] || '個性的特性';
   }
 
@@ -176,10 +180,10 @@ export class IntegratedPromptEngine {
       complexity,
       context.priority
     );
-    
+
     // Temperature調整: 複雑な話題ほど創造性を要求
     const temperature = Math.min(0.3 + (complexity * 0.2), 0.7);
-    
+
     return {
       systemPrompt,
       maxTokens,

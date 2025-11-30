@@ -10,6 +10,9 @@ import { UserDiagnosisData } from '@/types';
 import { optimizeMessagesForStorage, estimateConversationMemoryUsage } from '@/lib/chat/conversation-utils';
 import { GuidanceOverlay } from '@/ui/components/overlays/guidance-overlay';
 import { CompletionMessage } from '@/ui/components/chat/completion-message';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Bot, User } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -430,7 +433,7 @@ export default function ChatPage() {
         });
 
         const storageOptimizedMessages = optimizeMessagesForStorage(messages);
-        
+
         // Complete session data with optimized storage
         const completedSession: ChatSession = {
           ...chatSession,
@@ -570,22 +573,61 @@ export default function ChatPage() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
                 >
+                  {/* AI Icon */}
+                  {message.role === 'assistant' && (
+                    <div className="flex-shrink-0 mr-3">
+                      <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center border border-brand-200">
+                        <Bot className="w-5 h-5 text-brand-600" />
+                      </div>
+                    </div>
+                  )}
+
                   <div
-                    className={`max-w-[85%] sm:max-w-[70%] p-4 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-brand-500 text-white'
-                        : 'bg-white text-foreground border border-border'
-                    }`}
+                    className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-2xl shadow-sm ${message.role === 'user'
+                        ? 'bg-brand-500 text-white rounded-tr-none'
+                        : 'bg-white text-foreground border border-border rounded-tl-none'
+                      }`}
                   >
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                    <div className={`text-xs mt-2 ${
-                      message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString()}
+                    <div className={`prose ${message.role === 'user' ? 'prose-invert' : 'prose-slate'} max-w-none text-sm sm:text-base break-words`}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Customize link rendering
+                          a: ({ node, ...props }) => (
+                            <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" />
+                          ),
+                          // Customize list rendering
+                          ul: ({ node, ...props }) => (
+                            <ul {...props} className="list-disc pl-4 my-2 space-y-1" />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol {...props} className="list-decimal pl-4 my-2 space-y-1" />
+                          ),
+                          // Customize paragraph rendering
+                          p: ({ node, ...props }) => (
+                            <p {...props} className="mb-2 last:mb-0 leading-relaxed" />
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                    <div className={`text-xs mt-2 text-right ${message.role === 'user' ? 'text-white/80' : 'text-muted-foreground'
+                      }`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
+
+                  {/* User Icon */}
+                  {message.role === 'user' && (
+                    <div className="flex-shrink-0 ml-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border border-slate-300">
+                        <User className="w-5 h-5 text-slate-600" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -602,8 +644,8 @@ export default function ChatPage() {
                   <div className="bg-white border border-border p-4 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
