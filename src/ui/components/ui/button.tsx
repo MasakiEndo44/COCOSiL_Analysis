@@ -12,6 +12,11 @@ const buttonVariants = cva(
         secondary: "border border-border bg-surface hover:bg-background active:bg-border text-foreground",
         tertiary: "hover:bg-surface active:bg-background text-foreground",
         destructive: "bg-destructive text-white hover:bg-red-600 active:bg-red-700",
+        // Map standard shadcn variants to our custom ones
+        default: "bg-brand-500 text-white hover:bg-brand-700 active:bg-brand-700",
+        outline: "border border-border bg-surface hover:bg-background active:bg-border text-foreground",
+        ghost: "hover:bg-surface active:bg-background text-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         sm: "h-10 px-3 text-xs min-h-[44px]",
@@ -28,7 +33,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   isLoading?: boolean;
 }

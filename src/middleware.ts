@@ -27,6 +27,8 @@ const isAdminRoute = (request: NextRequest) => {
 const isDiagnosisRoute = createRouteMatcher([
   '/diagnosis(.*)',
   '/api/diagnosis(.*)',
+  '/api/ai/chat(.*)',
+  '/api/ai/intelligent-summary(.*)',
 ]);
 
 // ============================================================

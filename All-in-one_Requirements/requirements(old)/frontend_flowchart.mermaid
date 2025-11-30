@@ -1,0 +1,120 @@
+flowchart TD
+    A[ランディングページ<br/>Next.js Page] --> B{初回アクセス?}
+    
+    B -->|Yes| C[基本情報入力開始<br/>Zustand初期化]
+    B -->|No| D[Zustand状態復元<br/>進捗確認]
+    
+    C --> E[名前入力<br/>React Hook Form]
+    D --> E
+    
+    E --> F[生年月日入力<br/>日付ピッカー]
+    F --> G[API Route呼び出し<br/>/api/fortune-calc]
+    
+    G --> H[サーバーサイド処理<br/>CSV読み込み・Python実行]
+    H --> I[算命学・動物占い結果<br/>JSON返却]
+    
+    I --> J[Zustand状態更新<br/>占い結果保存]
+    J --> K[MBTI入力画面]
+    
+    K --> L{MBTI既知?}
+    L -->|Yes| M[MBTI選択入力]
+    L -->|No| N[簡易MBTI診断<br/>12問フォーム]
+    
+    M --> O[Zustand状態更新]
+    N --> P[診断結果算出<br/>クライアント処理]
+    P --> O
+    
+    O --> Q[体癖理解促進ページ<br/>説明コンテンツ]
+    Q --> R[体癖診断選択]
+    
+    R --> S{体癖診断方法}
+    S -->|外部診断| T[外部リンク誘導<br/>新しいタブで開く]
+    S -->|理論学習| U[体癖理論解説<br/>学習コンテンツ]
+    S -->|スキップ| V[体癖番号入力]
+    
+    T --> W[外部診断完了後<br/>戻ってきた場合]
+    U --> W
+    W --> V
+    
+    V --> X[基本情報確認画面<br/>進捗バー100%]
+    X --> Y{入力内容OK?}
+    
+    Y -->|No| Z[修正対象選択]
+    Z --> AA{修正項目}
+    AA -->|名前| E
+    AA -->|生年月日| F
+    AA -->|MBTI| K
+    AA -->|体癖| V
+    
+    Y -->|Yes| BB[チャット準備画面<br/>ローディング表示]
+    BB --> CC[OpenAI API初期化<br/>システムプロンプト設定]
+    
+    CC --> DD[AIチャット画面開始<br/>ストリーミング対応]
+    DD --> EE[相談目的選択<br/>ボタン式UI]
+    
+    EE --> FF{相談内容選択}
+    FF -->|悩み相談| GG[現在の悩み<br/>ヒアリング開始]
+    FF -->|性格分析のみ| HH[性格・価値観<br/>深掘り質問]
+    
+    GG --> II[OpenAI API呼び出し<br/>ストリーミングレスポンス]
+    HH --> II
+    
+    II --> JJ[AIレスポンス表示<br/>リアルタイム更新]
+    JJ --> KK[ユーザー回答入力<br/>テキストエリア]
+    
+    KK --> LL[回答送信<br/>React Hook Form]
+    LL --> MM{追加質問必要?}
+    
+    MM -->|Yes| NN[次の質問生成<br/>OpenAI API]
+    NN --> II
+    MM -->|No| OO[テーマ完了判定]
+    
+    OO --> PP{全テーマ完了?}
+    PP -->|No| QQ[次のテーマへ<br/>状態遷移]
+    QQ --> GG
+    PP -->|Yes| RR[データ収集完了<br/>最終確認]
+    
+    RR --> SS[.mdファイル生成<br/>クライアント処理]
+    SS --> TTT[プレビュー画面表示<br/>ユーザー確認]
+    
+    TTT --> UUU{内容確認OK?}
+    UUU -->|修正必要| VVV[修正要求<br/>チャットに戻る]
+    VVV --> GG
+    
+    UUU -->|OK| WWW[データベース専用サイト<br/>自動送信開始]
+    WWW --> XXX[API送信<br/>/api/admin-submit]
+    
+    XXX --> YYY[管理者DB保存<br/>ダウンロードID生成]
+    YYY --> ZZZ[送信完了通知<br/>管理者アクセス情報]
+    
+    ZZZ --> UU[完了画面<br/>サンキューページ]
+    
+    %% エラーハンドリングフロー
+    G -->|Error| YY[エラー画面表示<br/>リトライ機能]
+    II -->|Error| YY
+    VV -->|Error| YY
+    YY --> ZZ[エラー詳細表示<br/>サポート情報]
+    ZZ --> AAA[リトライボタン]
+    AAA --> G
+    
+    %% プログレス管理
+    E --> BBB[進捗更新 10%<br/>Zustand]
+    F --> CCC[進捗更新 20%<br/>Zustand]
+    K --> DDD[進捗更新 40%<br/>Zustand]
+    V --> EEE[進捗更新 70%<br/>Zustand]
+    X --> FFF[進捗更新 100%<br/>Zustand]
+    
+    %% スタイリング
+    classDef userAction fill:#e1f5fe,stroke:#01579b
+    classDef systemProcess fill:#f3e5f5,stroke:#4a148c
+    classDef decision fill:#fff3e0,stroke:#e65100
+    classDef apiCall fill:#e8f5e8,stroke:#1b5e20
+    classDef errorFlow fill:#ffebee,stroke:#b71c1c
+    classDef progress fill:#f1f8e9,stroke:#33691e
+    
+    class A,E,F,K,V,X,EE,KK,LL,TT userAction
+    class C,H,J,P,BB,CC,JJ,SS,WW systemProcess
+    class B,L,S,Y,AA,FF,MM,PP decision
+    class G,I,II,NN,VV,XX apiCall
+    class YY,ZZ,AAA errorFlow
+    class BBB,CCC,DDD,EEE,FFF progress

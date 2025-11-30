@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "es6"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -13,7 +17,11 @@
     "jsx": "preserve",
     "incremental": true,
     "target": "es2022",
-    "types": ["jest", "@testing-library/jest-dom", "node"],
+    "types": [
+      "jest",
+      "@testing-library/jest-dom",
+      "node"
+    ],
     "plugins": [
       {
         "name": "next"
@@ -21,16 +29,48 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/ui/components/*"],
-      "@/features/*": ["./src/ui/features/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/data/*": ["./data/*"],
-      "@/scripts/*": ["./scripts/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./src/ui/components/*"
+      ],
+      "@/features/*": [
+        "./src/ui/features/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ],
+      "@/data/*": [
+        "./data/*"
+      ],
+      "@/scripts/*": [
+        "./scripts/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "jest.setup.js"],
-  "exclude": ["node_modules", ".venv", "dist", ".next", "scripts", "archive", "tests", "docs/archive"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "jest.setup.js"
+  ],
+  "exclude": [
+    "node_modules",
+    ".venv",
+    "dist",
+    ".next",
+    "scripts",
+    "archive",
+    "tests",
+    "docs/archive",
+    "All-in-one_Requirements"
+  ]
 }
