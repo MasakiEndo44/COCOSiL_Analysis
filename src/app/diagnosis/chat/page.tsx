@@ -12,13 +12,20 @@ import { GuidanceOverlay } from '@/ui/components/overlays/guidance-overlay';
 import { CompletionMessage } from '@/ui/components/chat/completion-message';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
   role: 'assistant' | 'user';
   content: string;
   timestamp: Date;
+}
+
+interface CompletionDetectionResult {
+  resolved: boolean;
+  confidence: number;
+  nextAction: string;
+  shouldShowContinueButton: boolean;
 }
 
 interface ConsultationTopic {
@@ -76,12 +83,8 @@ export default function ChatPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
 
   // Completion detection state
-  const [completionDetection, setCompletionDetection] = useState<{
-    resolved: boolean;
-    confidence: number;
-    nextAction: string;
-    shouldShowContinueButton: boolean;
-  } | null>(null);
+  const [completionDetection, setCompletionDetection] = useState<CompletionDetectionResult | null>(null);
+  const [messageFeedback, setMessageFeedback] = useState<Record<string, 'helpful' | 'not_helpful' | null>>({});
 
   // Overlay state management
   const [showChatOverlay, setShowChatOverlay] = useState(false);
@@ -220,6 +223,46 @@ export default function ChatPage() {
   const handleContinueChat = () => {
     setCompletionDetection(null);
     console.log('[CompletionDetection] User chose to continue conversation');
+  };
+
+  const handleFeedback = async (messageId: string, rating: 'helpful' | 'not_helpful') => {
+    // Update local state immediately for UI feedback
+    setMessageFeedback(prev => ({
+      ...prev,
+      [messageId]: prev[messageId] === rating ? null : rating
+    }));
+
+    // Send to API endpoint
+    try {
+      const response = await fetch('/api/chat/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId,
+          rating: messageFeedback[messageId] === rating ? null : rating, // Toggle: null if clicking same button
+          sessionId: chatSession?.sessionId || null,
+          userId: null // TODO: Add Clerk user ID when authenticated
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to submit feedback');
+        // Revert UI state on error
+        setMessageFeedback(prev => ({
+          ...prev,
+          [messageId]: null
+        }));
+      } else {
+        console.log('Feedback submitted successfully');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      // Revert UI state on error
+      setMessageFeedback(prev => ({
+        ...prev,
+        [messageId]: null
+      }));
+    }
   };
 
   const generateAIResponse = async (userMessage: string) => {
@@ -586,37 +629,68 @@ export default function ChatPage() {
 
                   <div
                     className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-2xl shadow-sm ${message.role === 'user'
-                        ? 'bg-brand-500 text-white rounded-tr-none'
-                        : 'bg-white text-foreground border border-border rounded-tl-none'
+                      ? 'bg-brand-500 text-white rounded-tr-none'
+                      : 'bg-white text-foreground border border-border rounded-tl-none'
                       }`}
                   >
-                    <div className={`prose ${message.role === 'user' ? 'prose-invert' : 'prose-slate'} max-w-none text-sm sm:text-base break-words`}>
+                    <div className={message.role === 'user' ? '' : 'prose prose-slate max-w-none text-sm sm:text-base break-words'}>
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
                           // Customize link rendering
                           a: ({ node, ...props }) => (
-                            <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" />
+                            <a {...props} target="_blank" rel="noopener noreferrer" className={message.role === 'user' ? 'text-white underline hover:text-white/90' : 'text-blue-500 hover:underline'} />
                           ),
                           // Customize list rendering
                           ul: ({ node, ...props }) => (
-                            <ul {...props} className="list-disc pl-4 my-2 space-y-1" />
+                            <ul {...props} className={`list-disc pl-4 my-2 space-y-1 ${message.role === 'user' ? 'text-white' : ''}`} />
                           ),
                           ol: ({ node, ...props }) => (
-                            <ol {...props} className="list-decimal pl-4 my-2 space-y-1" />
+                            <ol {...props} className={`list-decimal pl-4 my-2 space-y-1 ${message.role === 'user' ? 'text-white' : ''}`} />
                           ),
                           // Customize paragraph rendering
                           p: ({ node, ...props }) => (
-                            <p {...props} className="mb-2 last:mb-0 leading-relaxed" />
+                            <p {...props} className={`mb-2 last:mb-0 leading-relaxed ${message.role === 'user' ? 'text-white' : ''}`} />
+                          ),
+                          // Customize strong (bold) rendering
+                          strong: ({ node, ...props }) => (
+                            <strong {...props} className={message.role === 'user' ? 'font-bold text-white' : 'font-bold'} />
+                          ),
+                          // Customize em (italic) rendering
+                          em: ({ node, ...props }) => (
+                            <em {...props} className={message.role === 'user' ? 'italic text-white' : 'italic'} />
                           ),
                         }}
                       >
                         {message.content}
                       </ReactMarkdown>
                     </div>
-                    <div className={`text-xs mt-2 text-right ${message.role === 'user' ? 'text-white/80' : 'text-muted-foreground'
-                      }`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div className="flex items-center justify-between mt-2">
+                      <div className={`text-xs ${message.role === 'user' ? 'text-white/80' : 'text-muted-foreground'}`}>
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+
+                      {/* Feedback buttons for AI messages */}
+                      {message.role === 'assistant' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleFeedback(message.id, 'helpful')}
+                            className={`p-1 rounded hover:bg-slate-100 transition-colors ${messageFeedback[message.id] === 'helpful' ? 'bg-green-100 text-green-600' : 'text-slate-400'
+                              }`}
+                            title="役に立った"
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleFeedback(message.id, 'not_helpful')}
+                            className={`p-1 rounded hover:bg-slate-100 transition-colors ${messageFeedback[message.id] === 'not_helpful' ? 'bg-red-100 text-red-600' : 'text-slate-400'
+                              }`}
+                            title="改善が必要"
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

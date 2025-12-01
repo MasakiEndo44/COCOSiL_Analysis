@@ -132,3 +132,17 @@ model SystemConfig {
 
   @@map("system_config")
 }
+
+model ChatMessageFeedback {
+  id          String   @id @default(cuid())
+  messageId   String   // ID of the AI message being rated
+  rating      String   // 'helpful' | 'not_helpful'
+  sessionId   String?  // Optional session ID for tracking
+  userId      String?  // Optional user ID (Clerk or anonymous)
+  createdAt   DateTime @default(now())
+
+  @@index([messageId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("chat_message_feedback")
+}

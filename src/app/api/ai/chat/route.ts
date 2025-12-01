@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { IntegratedPromptEngine } from '@/lib/ai/prompt-engine';
-import { PsychologicalSafetyPromptEngine } from '@/lib/ai/psychological-safety-prompt-engine';
+import { UnifiedPromptEngine } from '@/lib/ai/unified-prompt-engine';
 import { SafetyScoreCalculator } from '@/lib/ai/safety-score-calculator';
 import { ChoiceQuestionGenerator } from '@/lib/ai/choice-question-generator';
 import { CompletionDetectionPromptEngine } from '@/lib/ai/completion-detection-prompt';
 import { applyConversationWindowing, generateContextSummary } from '@/lib/chat/conversation-utils';
+import { calculateOptimalTokens, estimateContextLength } from '@/lib/ai/token-optimizer';
 import {
   chatRequestSchema,
   userDiagnosisDataSchema
@@ -18,9 +18,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// プロンプトエンジンのインスタンス
-const promptEngine = new IntegratedPromptEngine();
-
 export async function POST(request: NextRequest) {
   try {
     console.log('=== AI Chat API Request Start ===');
@@ -28,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Log raw request body for debugging
     const requestBodyText = await request.text();
     console.log('🔍 Raw request body:', requestBodyText);
-    
+
     // Re-create request for validation (reserved for future use)
     const _requestForValidation = new Request(request.url, {
       method: request.method,
@@ -169,7 +166,7 @@ export async function POST(request: NextRequest) {
             canProceed: completenessCheck.canProceedToChat,
             suggestions: [
               'MBTI診断を完了してください',
-              '体癖診断を完了してください', 
+              '体癖診断を完了してください',
               '基本情報（お名前・年齢）を入力してください'
             ]
           },
@@ -207,92 +204,66 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (usePsychologicalSafety) {
-      // === 心理的安全性システムを使用 ===
+    // === 統一プロンプトエンジンを使用 ===
 
-      // 1. 心理的安全性スコア計算 (reserved for future safety metrics)
-      const _safetyScore = SafetyScoreCalculator.calculateSafetyScore(windowedMessages);
+    // 1. 心理的安全性スコア計算 (reserved for future safety metrics)
+    const _safetyScore = SafetyScoreCalculator.calculateSafetyScore(windowedMessages);
 
-      // 2. 心理的安全性プロンプトエンジン初期化
-      const psychoEngine = new PsychologicalSafetyPromptEngine(diagnosisData as import('@/types').UserDiagnosisData);
-      const psychoPrompt = psychoEngine.generatePsychologicalSafetyPrompt(windowedMessages);
+    // 2. 統一プロンプトエンジン初期化
+    const unifiedEngine = new UnifiedPromptEngine(diagnosisData as import('@/types').UserDiagnosisData);
+    const psychoPrompt = unifiedEngine.generatePrompt(windowedMessages);
 
-      // 3. 選択式質問生成（必要に応じて）
-      const questionGenerator = new ChoiceQuestionGenerator(diagnosisData as import('@/types').UserDiagnosisData);
-      
-      // 質問タイプに基づいて選択式質問を生成
-      if (psychoPrompt.questionType === 'choice' || psychoPrompt.questionType === 'hybrid') {
-        const _extractedTopics = windowedMessages
-          .filter(msg => msg.role === 'user')
-          .map(msg => msg.content)
-          .join(' '); // Reserved for topic extraction feature
-        
-        choiceQuestion = questionGenerator.generateChoiceQuestion(
-          psychoPrompt.stage,
-          windowedMessages,
-          [] // previous topics - could be extracted from conversation history
-        );
-      }
-      
-      // Rogers 3条件に基づくシステムプロンプト使用
-      systemPrompt = psychoPrompt.systemPrompt;
+    // 3. 選択式質問生成（必要に応じて）
+    const questionGenerator = new ChoiceQuestionGenerator(diagnosisData as import('@/types').UserDiagnosisData);
 
-      // Phase 2: 終了判定プロンプトを追加
-      if (completionEngine) {
-        systemPrompt += '\n\n' + completionEngine.generateSystemPrompt();
-      }
+    // 質問タイプに基づいて選択式質問を生成
+    if (psychoPrompt.questionType === 'choice' || psychoPrompt.questionType === 'hybrid') {
+      const _extractedTopics = windowedMessages
+        .filter(msg => msg.role === 'user')
+        .map(msg => msg.content)
+        .join(' '); // Reserved for topic extraction feature
 
-      maxTokens = Math.floor(Number(1500)); // 心理的安全性重視で適度な長さ
-      temperature = 0.8; // 温かい共感的な応答のため少し高め
-      
-      safetyData = {
-        safetyScore: psychoPrompt.safetyScore,
-        stage: psychoPrompt.stage,
-        questionType: psychoPrompt.questionType,
-        recoveryActions: psychoPrompt.recoveryActions
-      };
-      
-    } else {
-      // === 従来のシステムを使用 ===
-
-      // Filter out system messages and transform to PromptContext format
-      const filteredMessages = windowedMessages
-        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-        .map(msg => ({ role: msg.role as 'user' | 'assistant', content: msg.content }));
-
-      const promptContext = {
-        topic,
-        conversationHistory: filteredMessages,
-        complexity: promptEngine.assessComplexity(topic, windowedMessages),
-        priority: priority as 'speed' | 'quality'
-      };
-
-      // Transform UserDiagnosisData to simplified DiagnosisData format for prompt engine
-      const simplifiedDiagnosisData = {
-        mbti: diagnosisData.mbti?.type || 'INFP',
-        taiheki: {
-          primary: diagnosisData.taiheki?.primary || 1,
-          secondary: diagnosisData.taiheki?.secondary || 0
-        },
-        fortune: {
-          animal: diagnosisData.fortune?.animal || '未知',
-          sixStar: diagnosisData.fortune?.sixStar || '未知'
-        },
-        basic: {
-          age: diagnosisData.basic?.age || 0,
-          name: diagnosisData.basic?.name || 'ユーザー'
-        }
-      };
-
-      const promptResult = promptEngine.generateContextualPrompt(
-        simplifiedDiagnosisData,
-        promptContext
+      choiceQuestion = questionGenerator.generateChoiceQuestion(
+        psychoPrompt.stage,
+        windowedMessages,
+        [] // previous topics - could be extracted from conversation history
       );
-
-      systemPrompt = promptResult.systemPrompt;
-      maxTokens = Math.floor(Number(promptResult.maxTokens));
-      temperature = promptResult.temperature;
     }
+
+    // Rogers 3条件に基づくシステムプロンプト使用
+    systemPrompt = psychoPrompt.systemPrompt;
+
+    // Phase 2: 終了判定プロンプトを追加
+    if (completionEngine) {
+      systemPrompt += '\n\n' + completionEngine.generateSystemPrompt();
+    }
+
+    // Dynamic token optimization based on conversation stage and context
+    const contextLength = estimateContextLength(windowedMessages);
+    const tokenOptimization = calculateOptimalTokens({
+      conversation_stage: psychoPrompt.stage.stage,
+      message_count: windowedMessages.length,
+      context_length: contextLength,
+      priority: 'quality'
+    });
+
+    maxTokens = tokenOptimization.maxTokens;
+    temperature = 0.8; // 温かい共感的な応答のため少し高め
+
+    console.log('Token Optimization:', {
+      stage: psychoPrompt.stage.stage,
+      contextLength,
+      calculatedTokens: maxTokens,
+      reasoning: tokenOptimization.reasoning,
+      estimatedCost: `$${tokenOptimization.costEstimate.toFixed(6)}`
+    });
+
+    safetyData = {
+      safetyScore: psychoPrompt.safetyScore,
+      stage: psychoPrompt.stage,
+      questionType: psychoPrompt.questionType,
+      recoveryActions: psychoPrompt.recoveryActions
+    };
 
     // Performance monitoring logs
     console.log('Performance Metrics:', {
@@ -312,7 +283,7 @@ export async function POST(request: NextRequest) {
         { role: 'system' as const, content: systemPrompt },
         ...windowedMessages
       ];
-      
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: enhancedMessages,
@@ -381,7 +352,7 @@ export async function POST(request: NextRequest) {
       { role: 'system' as const, content: systemPrompt },
       ...windowedMessages
     ];
-    
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: enhancedMessages,
@@ -425,7 +396,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('OpenAI API エラー:', error);
-    
+
     if (error instanceof Error) {
       return NextResponse.json(
         { error: `AI応答の生成中にエラーが発生しました: ${error.message}` },
