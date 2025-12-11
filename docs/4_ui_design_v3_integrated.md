@@ -560,7 +560,7 @@ boxShadow: {
 </Card>
 ```
 
-### 6.4 ダッシュボード（/dashboard）
+### 6.4 ダッシュボード（/home）
 
 **デスクトップレイアウト**:
 
@@ -570,19 +570,19 @@ boxShadow: {
   <aside className="w-64 border-r border-border bg-surface p-6">
     <Logo />
     <nav className="mt-8 space-y-2">
-      <NavItem icon={Home} href="/dashboard" active>
+      <NavItem icon={Home} href="/home" active>
         ダッシュボード
       </NavItem>
-      <NavItem icon={BarChart} href="/dashboard/diagnosis">
+      <NavItem icon={BarChart} href="/home/diagnosis">
         診断管理
       </NavItem>
-      <NavItem icon={MessageSquare} href="/dashboard/chat">
+      <NavItem icon={MessageSquare} href="/home/chat">
         AIチャット
       </NavItem>
-      <NavItem icon={User} href="/dashboard/profile">
+      <NavItem icon={User} href="/home/profile">
         プロファイル
       </NavItem>
-      <NavItem icon={Settings} href="/dashboard/settings">
+      <NavItem icon={Settings} href="/home/settings">
         設定
       </NavItem>
     </nav>
@@ -649,17 +649,18 @@ boxShadow: {
     {/* 同様のカード配置、縦並び */}
   </main>
   
-  {/* ボトムナビゲーション */}
+  {/* ボトムナビゲーション（5アイテム） */}
   <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border px-4 py-2 flex justify-around">
-    <NavButton icon={Home} label="ホーム" active />
-    <NavButton icon={BarChart} label="診断" />
-    <NavButton icon={MessageSquare} label="チャット" />
-    <NavButton icon={User} label="設定" />
+    <NavButton icon={BarChart} label="診断管理" href="/home/diagnosis" />
+    <NavButton icon={MessageSquare} label="チャット" href="/home/chat" />
+    <NavButton icon={Home} label="ホーム" href="/home" active isFab />
+    <NavButton icon={FileText} label="結果" href="/home/results" />
+    <NavButton icon={User} label="設定" href="/home/settings" />
   </nav>
 </div>
 ```
 
-### 6.5 AIチャット（/dashboard/chat）
+### 6.5 AIチャット（/home/chat）
 
 ```tsx
 <div className="flex flex-col h-screen">

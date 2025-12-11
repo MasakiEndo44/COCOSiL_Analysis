@@ -156,6 +156,8 @@ CREATE TABLE users (
   clerk_user_id VARCHAR(255) NOT NULL UNIQUE,
   nickname VARCHAR(50) NOT NULL,
   birth_date DATE NOT NULL,
+  purpose VARCHAR(50),
+  research_consent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -169,12 +171,16 @@ COMMENT ON COLUMN users.id IS 'ユーザーID（内部用UUID）';
 COMMENT ON COLUMN users.clerk_user_id IS 'Clerk認証のユーザーID';
 COMMENT ON COLUMN users.nickname IS 'ニックネーム（3-20文字）';
 COMMENT ON COLUMN users.birth_date IS '生年月日（算命学系診断に使用）';
+COMMENT ON COLUMN users.purpose IS '診断目的（self_understanding/relationships/career/growth/fun）';
+COMMENT ON COLUMN users.research_consent IS '匿名データ研究利用への同意';
 ```
 
 **制約**:
 - `clerk_user_id`: UNIQUE（Clerkとの1:1対応）
 - `nickname`: NOT NULL、3-50文字
 - `birth_date`: NOT NULL、1930-01-01以降
+- `purpose`: 任意、値: self_understanding / relationships / career / growth / fun
+- `research_consent`: デフォルトFALSE
 
 **サンプルデータ**:
 ```sql
@@ -224,7 +230,8 @@ COMMENT ON COLUMN fortune_results.is_active IS 'ONの場合true、OFFの場合fa
 - `mbti`: MBTI
 - `taiheki`: 体癖論
 - `big5`: Big5診断
-- `kyusei`: 9星気学（Phase 2以降）
+
+> **注**: 9星気学（kyusei）は実装対象外
 
 **result_dataのスキーマ例**:
 
