@@ -767,8 +767,7 @@ CREATE TRIGGER update_diagnosis_settings_updated_at BEFORE UPDATE ON diagnosis_s
 supabase/migrations/
 ├── 20251105_001_initial_schema.sql
 ├── 20251105_002_seed_data.sql（開発環境用）
-├── 20251210_003_add_kyusei_diagnosis.sql（Phase 2: 9星気学追加）
-└── 20260115_004_add_premium_features.sql（Phase 4: プレミアム機能）
+└── 20260115_003_add_premium_features.sql（Phase 4: プレミアム機能）
 ```
 
 ### 5.3 ロールバック戦略

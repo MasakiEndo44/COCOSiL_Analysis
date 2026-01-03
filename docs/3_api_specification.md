@@ -168,6 +168,8 @@ Authorization: Bearer <token>
     "nickname": "山田太郎",
     "birth_date": "1985-06-15",
     "age": 39,
+    "purpose": "self_understanding",
+    "research_consent": false,
     "created_at": "2025-11-01T10:00:00.000Z",
     "updated_at": "2025-11-05T12:00:00.000Z"
   }
@@ -255,7 +257,7 @@ Authorization: Bearer <token>
 ```
 
 **クエリパラメータ**:
-- `format`: `json` or `csv`（デフォルト: `json`）
+- `format`: `json` / `csv` / `pdf`（デフォルト: `json`）
 
 **レスポンス（JSON）**:
 ```json

@@ -34,7 +34,7 @@
 ## 3. 要件カバレッジ一覧
 | カテゴリ | 主文書 | 補足・未決事項 |
 | --- | --- | --- |
-| プロダクト全体像 / 技術スタック | `docs/1_system_requirements.md`, `docs/cocosil-requirements-confirmed.md` | 9星気学の算出ロジック確定待ち。旧資料の算命学API改善要望を反映すること。 |
+| プロダクト全体像 / 技術スタック | `docs/1_system_requirements.md`, `docs/cocosil-requirements-confirmed.md` | 9星気学は実装対象外と決定済み。旧資料の算命学API改善要望を反映すること。 |
 | データベース & RLS | `docs/2_database_design.md` | 体癖/MBTI/Big5の入力履歴要件（履歴か最新のみか）を旧仕様と揃っているか確認。 |
 | API & AI連携 | `docs/3_api_specification.md`, `requirements(old)/ai-chat-redesign-requirements.md` | AI応答長（300文字）、論理的質問特化など旧要望を必ず反映。Agent Builder仕様は別途詳細化が必要。 |
 | UI/UX | `docs/4_ui_design*.md`, `front_ui/` | 旧要望にあるボタン間隔・体癖カード表現・不要ボタン削除などを設計書とUIへ反映。 |
@@ -72,8 +72,8 @@
 ## 5. ギャップ & TODO
 1. **算命学API整合性**  
    - 旧資料で指摘された星座・動物占い・六星占術の計算誤差を再検証し、API仕様＆テストケースに追記。
-2. **9星気学ロジック確定**  
-   - 算出方法・参照テーブル・暦補正の定義が未確定。決定後は DB設計・API・UIに一括反映。
+2. ~~**9星気学ロジック確定**~~ ✅ 解決済み  
+   - 決定: 9星気学は実装しない
 3. **UI改善反映**  
    - 診断結果画面のボタン間隔、体癖タイプのタグ表示、不要ボタン削除、ボトムナビのIAなどを `docs/4_ui_design*.md` と `front_ui` の双方で同期。
 4. **AIチャット要件の厳密化**  
